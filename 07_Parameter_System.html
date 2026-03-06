@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Parameter System</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117; --surface: #1a1d27; --surface2: #232633; --surface3: #2a2e3f;
+            --border: #2e3248; --text: #e1e4ed; --text-muted: #8b8fa7;
+            --accent: #6c8aff; --accent2: #a78bfa; --accent3: #c084fc;
+            --success: #4ade80; --warning: #fbbf24; --error: #f87171;
+            --info: #38bdf8; --teal: #2dd4bf; --pink: #f472b6; --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 16px; font-size: 13px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a { display: block; padding: 6px 20px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; transition: all 0.15s; border-left: 3px solid transparent; }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        .topnav { position: fixed; top: 0; left: 300px; right: 0; z-index: 200; height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 24px; font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; }
+
+        #btt { position: fixed; bottom: 28px; right: 28px; z-index: 300; width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #000; border: none; font-size: 17px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+        h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 24px 0 10px; }
+        h4 { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        p { margin-bottom: 12px; font-size: 14px; }
+        ul, ol { padding-left: 20px; margin-bottom: 12px; font-size: 14px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+        code { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12.5px; background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+        section { scroll-margin-top: 60px; }
+
+        pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.65; }
+        pre code { background: none; border: none; padding: 0; font-size: inherit; }
+        .kw { color: #c084fc; } .ty { color: #38bdf8; } .fn { color: #6c8aff; }
+        .st { color: #4ade80; } .cm { color: #4b5563; font-style: italic; } .nu { color: #fb923c; }
+        .tl { color: var(--teal); } .wa { color: var(--warning); } .pk { color: var(--pink); }
+        .gr { color: var(--success); } .dim { color: var(--text-muted); } .in { color: var(--info); }
+
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal  { background: rgba(45,212,191,0.12);  color: var(--teal);    border: 1px solid rgba(45,212,191,0.3); }
+        .b-blue  { background: rgba(108,138,255,0.12); color: var(--accent);  border: 1px solid rgba(108,138,255,0.3); }
+        .b-green { background: rgba(74,222,128,0.12);  color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow{ background: rgba(251,191,36,0.12);  color: var(--warning); border: 1px solid rgba(251,146,60,0.3); }
+        .b-red   { background: rgba(248,113,113,0.12); color: var(--error);   border: 1px solid rgba(248,113,113,0.3); }
+        .b-purple{ background: rgba(167,139,250,0.12); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+        .b-orange{ background: rgba(251,146,60,0.12);  color: var(--orange);  border: 1px solid rgba(251,146,60,0.3); }
+        .b-gray  { background: rgba(139,143,167,0.12); color: var(--text-muted); border: 1px solid rgba(139,143,167,0.3); }
+
+        .alert { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13.5px; }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,0.08); border-color: var(--warning); }
+        .alert-ok   { background: rgba(74,222,128,0.08); border-color: var(--success); }
+
+        .f { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12px; color: var(--text-muted); background: var(--surface2); border-left: 3px solid var(--teal); padding: 6px 12px; border-radius: 0 6px 6px 0; display: block; margin: 8px 0; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0; }
+        .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-top: 3px solid var(--teal); }
+        .gcard h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gcard p  { font-size: 13px; margin-bottom: 6px; }
+        .gcard ul { font-size: 13px; }
+        .gcard.blue { border-top-color: var(--accent); }
+        .gcard.blue h4 { color: var(--accent); }
+        .gcard.purple { border-top-color: var(--accent2); }
+        .gcard.purple h4 { color: var(--accent2); }
+        .gcard.yellow { border-top-color: var(--warning); }
+        .gcard.yellow h4 { color: var(--warning); }
+        .gcard.orange { border-top-color: var(--orange); }
+        .gcard.orange h4 { color: var(--orange); }
+        .gcard.pink { border-top-color: var(--pink); }
+        .gcard.pink h4 { color: var(--pink); }
+        .gcard.green { border-top-color: var(--success); }
+        .gcard.green h4 { color: var(--success); }
+
+        .struct-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+        .struct-title { background: var(--surface2); padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .sf { display: flex; gap: 12px; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: baseline; flex-wrap: wrap; }
+        .sf:last-child { border-bottom: none; }
+        .sf-type { color: var(--info); font-family: monospace; width: 130px; flex-shrink: 0; font-size: 12px; }
+        .sf-name { color: var(--teal); font-family: monospace; width: 240px; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; flex: 1; }
+
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-or { background: rgba(251,146,60,0.12);  border-color: var(--orange);  color: var(--orange); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tr:hover td { background: var(--surface); }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .grid2, .grid3 { grid-template-columns: 1fr; }
+            .topnav { left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Parameter System — Doc 07</small>
+    </div>
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#overview">Architecture &amp; Data Flow</a>
+
+    <a href="#tier1" class="sh">Tier 1 — Static Params</a>
+    <a href="#tier1">IParam &amp; Param base classes</a>
+    <a href="#tier1-types" class="sub">Concrete Types</a>
+    <a href="#tier1-catalog" class="sub">Full Parameter Catalog</a>
+    <a href="#eyelayer-param" class="sub">EyeLayerParam</a>
+    <a href="#custom-param" class="sub">CustomParam</a>
+
+    <a href="#tier2" class="sh">Tier 2 — ScriptableParams</a>
+    <a href="#tier2">ScriptableParameter&lt;T&gt;</a>
+    <a href="#tier2-lifecycle" class="sub">Lifecycle</a>
+    <a href="#tier2-types" class="sub">Concrete Types</a>
+    <a href="#tier2-create" class="sub">Creating &amp; Assigning</a>
+    <a href="#background-mode" class="sub">BackgroundModeParameter</a>
+
+    <a href="#matching" class="sh">Matching &amp; Update</a>
+    <a href="#matching">OnParametersUpdated()</a>
+    <a href="#equality" class="sub">Equality &amp; Skip Logic</a>
+    <a href="#errors" class="sub">Error Handling</a>
+
+    <a href="#broker-events" class="sh">Broker Events</a>
+    <a href="#broker-events">ObjectSizeChanged</a>
+    <a href="#broker-events">ObjectDistanceChanged</a>
+
+    <a href="#await" class="sh">Async Await</a>
+    <a href="#await">AwaitFirstParameterArrive()</a>
+
+    <a href="#game-specific" class="sh">Game-Specific Params</a>
+    <a href="#game-specific">Per-Game Extensions</a>
+    <a href="#game-specific-table" class="sub">Known Extensions</a>
+
+    <a href="#howto" class="sh">How-To Guide</a>
+    <a href="#howto-add-scriptable" class="sub">Add a ScriptableParameter</a>
+    <a href="#howto-add-static" class="sub">Add a static Param (legacy)</a>
+    <a href="#howto-override" class="sub">Override for one game</a>
+</nav>
+
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <span class="current">Parameters</span>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<div class="main">
+
+<h1>Parameter System</h1>
+<p class="hero-sub">How therapy parameters travel from the dashboard to individual game behaviours — covering both the legacy static-param tier and the modern ScriptableParameter tier.</p>
+
+<!-- ═══════════════════════════════════════════════ OVERVIEW -->
+<section id="overview">
+<h2>1. Architecture &amp; Data Flow</h2>
+
+<p>Parameters are sent by the dashboard REST API, polled by <code>LoaderController</code> roughly every 1.5 s, and broadcast globally via <code>Messenger</code>. <code>UGCParametersController</code> receives the list, finds the matching parameter object by name, and calls <code>UpdateParameter()</code> on it — which parses the raw string value and fires a typed callback so consumers (VFX, game logic) can react.</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-gy">Dashboard REST API — <code>Sessionsetgame.Param[]</code> list in HTTP response</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">LoaderController.PollServer() — every ~1.5 s</div>
+        <div class="fc-conn">
+            <div class="fc-line"></div>
+            <div class="fc-arrow-d"></div>
+            <div class="fc-note">Messenger.Broadcast("paramsUpdated", List&lt;Param&gt;)</div>
+        </div>
+        <div class="fc-box fc-tl">UGCParametersController.OnParametersUpdated()</div>
+        <div class="fc-conn">
+            <div class="fc-line"></div>
+            <div class="fc-arrow-d"></div>
+            <div class="fc-note">name-match loop over static HashSet&lt;IParam&gt;</div>
+        </div>
+        <div class="fc-box fc-yw">IParam.UpdateParameter(Sessionsetgame.Param) — parse string → typed value</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">Tier 1 static Param</div>
+                <div class="fc-box fc-pu">OnUpdate Action&lt;T&gt; callback<br><span style="font-size:11px;font-weight:400">subscriber e.g. UGCTherapeuticEventsController</span></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">Tier 2 ScriptableParameter</div>
+                <div class="fc-box fc-gn">Changed event Action&lt;ScriptableParameter&lt;T&gt;, T&gt;<br><span style="font-size:11px;font-weight:400">subscriber registered in Inspector or code</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Two-Tier Design</h3>
+<p>The parameter system has two coexisting tiers. The older tier used static C# fields on <code>UGCParametersController</code>; the newer tier uses <code>ScriptableObject</code> assets that can be swapped per-game in the Inspector without touching code.</p>
+
+<div class="grid2">
+    <div class="gcard yellow">
+        <h4>Tier 1 — Static Params <span class="b b-yellow" style="margin-left:6px">[Obsolete]</span></h4>
+        <p>Static fields of type <code>IntParam</code>, <code>FloatParam</code>, <code>BoolParam</code>, <code>EyeLayerParam</code>, <code>CustomParam&lt;T&gt;</code>, <code>CustomParam&lt;T,U&gt;</code> declared directly on <code>UGCParametersController</code>.</p>
+        <ul>
+            <li>Registered automatically via base <code>Param</code> constructor calling <code>UGCParametersController.AddParam(this)</code></li>
+            <li>Callback is an <code>Action&lt;T&gt;</code> passed at construction or via <code>OnUpdate +=</code></li>
+            <li>Shared as <code>public static</code> — any class can read <code>blurParam.Value</code> directly</li>
+        </ul>
+    </div>
+    <div class="gcard green">
+        <h4>Tier 2 — ScriptableParameter <span class="b b-green" style="margin-left:6px">Preferred</span></h4>
+        <p><code>ScriptableObject</code> assets assigned to <code>UGCParametersController.scriptableParameter[]</code> in the Inspector. Each asset carries its own names list, default value, and parse function.</p>
+        <ul>
+            <li>Added to the static <code>HashSet&lt;IParam&gt;</code> in <code>Awake()</code></li>
+            <li>Callback via <code>Changed</code> event — <code>Action&lt;ScriptableParameter&lt;T&gt;, T&gt;</code></li>
+            <li>Can be replaced per-game by assigning a different asset in the scene</li>
+        </ul>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    Both tiers share the same <code>IParam</code> interface and live in the same <code>HashSet&lt;IParam&gt;</code>. The matching algorithm in <code>OnParametersUpdated()</code> does not distinguish between them.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ TIER 1 -->
+<section id="tier1">
+<h2>2. Tier 1 — Static Params (Legacy)</h2>
+
+<p>All legacy params inherit from the abstract <code>Param</code> base (marked <code>[Obsolete]</code>) which itself implements <code>IParam</code>.</p>
+
+<h3>IParam Interface</h3>
+<span class="f">Assets/UGC-Protype/IParam.cs</span>
+
+<div class="struct-box">
+    <div class="struct-title">interface IParam : IEquatable&lt;Sessionsetgame.Param&gt;</div>
+    <div class="sf"><div class="sf-type">string</div><div class="sf-name">Name</div><div class="sf-desc">Primary server-side parameter name (matched case-sensitively)</div></div>
+    <div class="sf"><div class="sf-type">string</div><div class="sf-name">SecondName</div><div class="sf-desc">Optional secondary name alias (second match candidate)</div></div>
+    <div class="sf"><div class="sf-type">string</div><div class="sf-name">StringValue</div><div class="sf-desc">Last raw string value received from the API (used for equality check to skip no-change updates)</div></div>
+    <div class="sf"><div class="sf-type">void</div><div class="sf-name">Reset()</div><div class="sf-desc">Restore default value; fires callback if value actually changed</div></div>
+    <div class="sf"><div class="sf-type">void</div><div class="sf-name">UpdateParameter(Param)</div><div class="sf-desc">Parse <code>param.startvalue</code> string → typed value; never throws</div></div>
+</div>
+
+<h3 id="tier1-types">Concrete Param Types</h3>
+<span class="f">Assets/UGC-Protype/Param.cs</span>
+
+<div class="tbl-wrap">
+<table>
+    <thead><tr><th>Type</th><th>Generic</th><th>Parse Behaviour</th><th>Status</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>IntParam</code></td>
+            <td><code>Param&lt;int&gt;</code></td>
+            <td><code>int.TryParse()</code> — throws <code>ParamParseException</code> on failure</td>
+            <td><span class="b b-yellow">Obsolete → IntParameter</span></td>
+        </tr>
+        <tr>
+            <td><code>FloatParam</code></td>
+            <td><code>Param&lt;float&gt;</code></td>
+            <td><code>float.TryParse()</code> — throws <code>ParamParseException</code> on failure</td>
+            <td><span class="b b-yellow">Obsolete</span></td>
+        </tr>
+        <tr>
+            <td><code>BoolParam</code></td>
+            <td><code>Param&lt;bool&gt;</code></td>
+            <td><code>"on"/"włączony"</code> → true; <code>"off"/"wyłączony"</code> → false</td>
+            <td><span class="b b-yellow">Obsolete → BoolParameter</span></td>
+        </tr>
+        <tr>
+            <td><code>CustomParam&lt;T&gt;</code></td>
+            <td><code>Param&lt;T&gt;</code></td>
+            <td>Caller-supplied <code>Func&lt;string, T&gt;</code> lambda</td>
+            <td><span class="b b-yellow">Obsolete</span></td>
+        </tr>
+        <tr>
+            <td><code>CustomParam&lt;T,U&gt;</code></td>
+            <td><code>Param&lt;T,U&gt;</code></td>
+            <td>Caller-supplied <code>Func&lt;string,(T,U)&gt;</code> lambda; holds two output values</td>
+            <td><span class="b b-yellow">Obsolete</span></td>
+        </tr>
+        <tr>
+            <td><code>EyeLayerParam</code></td>
+            <td><code>Param</code> (direct)</td>
+            <td>Maps Polish/English strings to <code>(EyeLayer, bool IsAlternating, bool IsDichoptic)</code></td>
+            <td><span class="b b-red">Refactor needed</span></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<h3 id="tier1-catalog">Full Shared Parameter Catalog</h3>
+<p>All of the following are <code>public static</code> fields on <code>UGCParametersController</code>, accessible from anywhere as <code>UGCParametersController.blurParam.Value</code>.</p>
+<span class="f">Assets/UGC-Protype/UGCParametersController.cs — lines 78–211</span>
+
+<div class="tbl-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Field Name</th>
+            <th>Server Key</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Purpose</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td><code>currentIPDParam</code></td><td><code>ipd</code></td><td><code>IntParam</code></td><td>65</td><td>Inter-pupillary distance in mm; drives camera separation</td></tr>
+        <tr><td><code>gameTimeParam</code></td><td><code>game-time</code></td><td><code>FloatParam</code></td><td>0</td><td>Total session duration in seconds</td></tr>
+        <tr><td><code>dominantEyeParam</code></td><td><code>dominant-eye</code></td><td><code>CustomParam&lt;EyeVR&gt;</code></td><td>EyeVR.Left</td><td>"lewe oko" → Left, "prawe oko" → Right</td></tr>
+        <tr><td><code>objectSizeParam</code></td><td><code>object-size-dynamic</code></td><td><code>CustomParam&lt;ObjectSize,float&gt;</code></td><td>Medium</td><td>"Mały"/"Średni"/"Duży"; also resets difficulty; fires <code>Broker&lt;ObjectSizeChanged&gt;</code></td></tr>
+        <tr><td><code>blurParam</code></td><td><code>blur-dominant</code></td><td><code>IntParam</code></td><td>0</td><td>Blur level on dominant eye (0 = none)</td></tr>
+        <tr><td><code>brightnessParam</code></td><td><code>brightness</code></td><td><code>FloatParam</code></td><td>0</td><td>Additive brightness offset for dominant eye</td></tr>
+        <tr><td><code>darknessParam</code></td><td><code>darkness</code></td><td><code>FloatParam</code></td><td>0</td><td>Darkening strength for dominant eye (0–1)</td></tr>
+        <tr><td><code>contrastParam</code></td><td><code>contrast</code></td><td><code>FloatParam</code></td><td>0</td><td>Contrast shift for dominant eye</td></tr>
+        <tr><td><code>transparencyInteractableParam</code></td><td><code>transparency-int</code></td><td><code>CustomParam&lt;float&gt;</code></td><td>1</td><td>Alpha for interactable objects; 0% API → alpha 1.0; 100% → 0.2</td></tr>
+        <tr><td><code>transparencyDeployerParam</code></td><td><code>transparency-dep</code></td><td><code>CustomParam&lt;float&gt;</code></td><td>1</td><td>Alpha for deployer/spawner objects</td></tr>
+        <tr><td><code>transparencyControllerParam</code></td><td><code>transparency-con</code></td><td><code>CustomParam&lt;float&gt;</code></td><td>1</td><td>Alpha for controller visuals</td></tr>
+        <tr><td><code>aimingCamParam</code></td><td><code>celowanie</code></td><td><code>EyeLayerParam</code></td><td>Both</td><td>Which eye can see the aiming reticle</td></tr>
+        <tr><td><code>deployerObjectCameraParam</code></td><td><code>main-object-starfish</code></td><td><code>EyeLayerParam</code></td><td>Both</td><td>Which eye can see the deployer/starfish object</td></tr>
+        <tr><td><code>interactableObjectCameraParam</code></td><td><code>main-object</code></td><td><code>EyeLayerParam</code></td><td>Both</td><td>Which eye can see the main interactable; alias <code>main-object-diamond</code></td></tr>
+        <tr><td><code>speedParam</code></td><td><code>tempo</code></td><td><code>FloatParam</code></td><td>1</td><td>Movement / animation speed multiplier</td></tr>
+        <tr><td><code>objectDistanceParam</code></td><td><code>object-distance-norm</code></td><td><code>CustomParam&lt;DistanceMode,float&gt;</code></td><td>Static / 2 m</td><td>"mieszane" → Dynamic; "minimalny vac"/"near" → 1.7 m; "far" → 6 m; float string → parsed meters; fires <code>Broker&lt;ObjectDistanceChanged&gt;</code></td></tr>
+        <tr><td><code>worldBasedSceneDistanceParam</code></td><td><code>focus-objects-distan</code></td><td><code>FloatParam</code></td><td>0</td><td>Distance offset for world-anchored objects</td></tr>
+        <tr><td><code>controllImagesParam</code></td><td><code>controll-images</code></td><td><code>BoolParam</code></td><td>false</td><td>Whether controller images are visible</td></tr>
+        <tr><td><code>snapToHeadParam</code></td><td><code>snap-to-head</code></td><td><code>BoolParam</code></td><td>false</td><td>Lock scene position to head orientation</td></tr>
+    </tbody>
+</table>
+</div>
+
+<h3 id="eyelayer-param">EyeLayerParam — Special Parsing</h3>
+
+<p><code>EyeLayerParam</code> is unique: it derives directly from <code>Param</code> (not <code>Param&lt;T&gt;</code>) and produces three output values. The Polish-language strings are defined by the dashboard API.</p>
+
+<div class="tbl-wrap">
+<table>
+    <thead><tr><th>Input String (Polish)</th><th>EyeLayer</th><th>IsAlternatingEye</th><th>IsDichoptic</th></tr></thead>
+    <tbody>
+        <tr><td><code>prawe oko</code></td><td>RightEye</td><td>false</td><td>false</td></tr>
+        <tr><td><code>lewe oko</code></td><td>LeftEye</td><td>false</td><td>false</td></tr>
+        <tr><td><code>obuocznie</code></td><td>Both</td><td>false</td><td>false</td></tr>
+        <tr><td><code>naprzemiennie</code></td><td>Both</td><td>true</td><td>false</td></tr>
+        <tr><td><code>dwuocznie</code></td><td>Both</td><td>true</td><td>true</td></tr>
+    </tbody>
+</table>
+</div>
+
+<p>When <code>IsAlternatingEye</code> is true, <code>SwapAlternatingLayer()</code> is called by the VFX controller each frame or on a timer to toggle which physical eye renders the object. <code>GetAlternatingLayer()</code> returns the currently active side.</p>
+
+<h3 id="custom-param">CustomParam&lt;T,U&gt; — Two-Value Params</h3>
+
+<p>For parameters that simultaneously control two related values, <code>CustomParam&lt;T,U&gt;</code> (and its base <code>Param&lt;T,U&gt;</code>) stores <code>FirstValue</code> and <code>SecondValue</code>. Examples in use:</p>
+<ul>
+    <li><code>objectSizeParam</code> — (<code>ObjectSize</code> enum, <code>float</code> distance reference)</li>
+    <li><code>objectDistanceParam</code> — (<code>DistanceMode</code> enum, <code>float</code> meters)</li>
+</ul>
+<p>The parse lambda returns a C# value tuple <code>(T, U)</code> which is destructured directly into the two fields.</p>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ TIER 2 -->
+<section id="tier2">
+<h2>3. Tier 2 — ScriptableParameter&lt;T&gt; (Preferred)</h2>
+<span class="f">Assets/Shared/Scripts/GameParameters/ScriptableParameter.cs</span>
+
+<p><code>ScriptableParameter&lt;T&gt;</code> is a <code>ScriptableObject</code> that also implements <code>IParam</code>. Because it is a <code>ScriptableObject</code>, each concrete parameter is a <em>project asset</em> — it survives scene changes, can be shared across multiple scenes, and can be replaced per-game by assigning a different asset in the Inspector.</p>
+
+<h3 id="tier2-lifecycle">Lifecycle</h3>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-gy">Scene loads → UGCParametersController.Awake()</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div><div class="fc-note">foreach scriptableParameter → parameters.Add(param); param.Reset()</div></div>
+        <div class="fc-box fc-bl">Subscriber code calls: <code>myParam.Changed += OnMyParamChanged</code></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Server update arrives → <code>UpdateParameter()</code> called</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div><div class="fc-note">ParseFunction(startvalue) → newValue (throws on bad input, caught internally)</div></div>
+        <div class="fc-box fc-gn"><code>Changed</code> event fired with (ScriptableParameter&lt;T&gt; source, T newValue)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">Scene unloads → UGCParametersController.OnDestroy()</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div><div class="fc-note">foreach scriptableParameter → parameters.Remove(param)</div></div>
+        <div class="fc-box fc-rd">ScriptableObject.OnDisable() — _onUpdate delegate set to null</div>
+    </div>
+</div>
+
+<div class="alert alert-warn">
+    <strong>Important:</strong> <code>ScriptableObject.OnDisable()</code> nulls the internal <code>_onUpdate</code> delegate — this prevents stale cross-scene callbacks. Always subscribe in <code>OnEnable</code> / <code>Start</code> and unsubscribe in <code>OnDisable</code> / <code>OnDestroy</code> to avoid missing the event after a scene reload.
+</div>
+
+<h3>Class Hierarchy</h3>
+
+<pre><code><span class="ty">ScriptableObject</span>
+  └─ <span class="ty">ScriptableParameter</span>              <span class="cm">// abstract — non-generic; implements IParam</span>
+       <span class="cm">// string Name, SecondName, StringValue</span>
+       <span class="cm">// abstract: Names, Reset(), UpdateParameter()</span>
+       <span class="cm">// [Button] UpdateFromParsedString() — Editor only</span>
+       └─ <span class="ty">ScriptableParameter&lt;T&gt;</span>         <span class="cm">// abstract — typed</span>
+            <span class="cm">// string[] names, T defaultValue (Inspector)</span>
+            <span class="cm">// T Value { get }</span>
+            <span class="cm">// event Changed → Action&lt;ScriptableParameter&lt;T&gt;, T&gt;</span>
+            <span class="cm">// abstract Func&lt;string,T&gt; ParseFunction</span>
+            ├─ <span class="ty">BoolParameter</span>               <span class="cm">// [CreateAssetMenu] Parameters/Bool</span>
+            ├─ <span class="ty">IntParameter</span>                <span class="cm">// [CreateAssetMenu] Parameters/Int</span>
+            └─ <span class="ty">BackgroundModeParameter</span>     <span class="cm">// [CreateAssetMenu] Parameters/BackgroundMode</span></code></pre>
+
+<h3 id="tier2-types">Concrete Types</h3>
+
+<div class="tbl-wrap">
+<table>
+    <thead><tr><th>Class</th><th>Menu Path</th><th>T</th><th>Parse Logic</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>BoolParameter</code></td>
+            <td>Parameters/Bool</td>
+            <td><code>bool</code></td>
+            <td><code>"on"/"włączony"</code> → true; <code>"off"/"wyłączony"</code> → false; otherwise throws <code>ParamParsePartialException</code></td>
+        </tr>
+        <tr>
+            <td><code>IntParameter</code></td>
+            <td>Parameters/Int</td>
+            <td><code>int</code></td>
+            <td><code>int.Parse()</code> directly; throws <code>FormatException</code> on bad input (caught by base class)</td>
+        </tr>
+        <tr>
+            <td><code>BackgroundModeParameter</code></td>
+            <td>Parameters/BackgroundMode</td>
+            <td><code>BackgroundMode</code> struct</td>
+            <td>Looks up lowercased string in Inspector-configured <code>Pair&lt;string, BackgroundMode&gt;[]</code>; throws <code>ParamParseException</code> if not found</td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<h3 id="tier2-create">Creating &amp; Assigning a ScriptableParameter</h3>
+
+<ol>
+    <li>In the Project window: <strong>Right-click → Parameters → Bool / Int / BackgroundMode</strong></li>
+    <li>Name the asset (convention: <code>{Game}_{ParamPurpose}.asset</code>, e.g. <code>MiceGame_FruitCount.asset</code>)</li>
+    <li>In the Inspector: set <strong>Names</strong> array to the server-side parameter key(s) and set <strong>Default Value</strong></li>
+    <li>Drag the asset into the game scene's <code>UGCParametersController.scriptableParameter[]</code> array</li>
+    <li>Subscribe to the <code>Changed</code> event in a MonoBehaviour: <code>myParam.Changed += HandleChange;</code></li>
+</ol>
+
+<div class="alert alert-ok">
+    Assets live in <code>Assets/THERAPY MODULES/{GameName}/Parameters/</code>. Shared overrides for multiple games live in <code>Assets/THERAPY MODULES/SharedParameters/</code>.
+</div>
+
+<h3 id="background-mode">BackgroundModeParameter — Lookup Table</h3>
+<span class="f">Assets/Shared/Scripts/GameParameters/BackgroundModeParameter.cs</span>
+
+<p>The <code>BackgroundMode</code> struct carries two fields: <code>DisplayOriginalBackground</code> (bool) and <code>BackGroundColor</code> (Color). The asset holds a <code>Pair&lt;string, BackgroundMode&gt;[]</code> lookup table configured in the Inspector, mapping server-sent strings to colour presets. If the incoming string is not found in the table, a <code>ParamParseException</code> is thrown and the value stays unchanged.</p>
+
+<pre><code><span class="cm">// BackgroundMode struct</span>
+<span class="kw">public static readonly</span> <span class="ty">BackgroundMode</span> Default = <span class="kw">new</span> <span class="ty">BackgroundMode</span>
+{
+    displayOriginalBackground = <span class="nu">true</span>,
+    backGroundColor = <span class="ty">Color</span>.black
+};
+
+<span class="cm">// ParseFunction in BackgroundModeParameter</span>
+<span class="kw">public override</span> <span class="ty">Func</span>&lt;<span class="ty">string</span>, <span class="ty">BackgroundMode</span>&gt; ParseFunction =&gt; (stringValue) =&gt;
+{
+    stringValue = stringValue.<span class="fn">ToLower</span>();
+    <span class="kw">foreach</span> (<span class="kw">var</span> pair <span class="kw">in</span> NameToColorList)
+        <span class="kw">if</span> (pair.First == stringValue) <span class="kw">return</span> pair.Second;
+    <span class="kw">throw new</span> <span class="ty">ParamParseException</span>(<span class="kw">this</span>, <span class="fn">$"No background mode found for name {stringValue}"</span>);
+};</code></pre>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ MATCHING -->
+<section id="matching">
+<h2>4. Matching &amp; Update Logic</h2>
+<span class="f">Assets/UGC-Protype/UGCParametersController.cs — OnParametersUpdated()</span>
+
+<p>When the server payload arrives, <code>OnParametersUpdated()</code> iterates over the incoming <code>List&lt;Sessionsetgame.Param&gt;</code> and for each entry performs a linear scan of <code>parameters</code> (<code>HashSet&lt;IParam&gt;</code>) matching <code>param.game_parameters.name</code> against <code>IParam.Name</code> or <code>IParam.SecondName</code>.</p>
+
+<pre><code><span class="kw">foreach</span> (<span class="kw">var</span> sessionsetParam <span class="kw">in</span> @params)
+{
+    <span class="kw">string</span> paramName = sessionsetParam.game_parameters.name;
+    <span class="kw">foreach</span> (<span class="kw">var</span> ugcParam <span class="kw">in</span> parameters)
+    {
+        <span class="kw">if</span> (paramName == ugcParam.Name || paramName == ugcParam.SecondName)
+        {
+            sessionParam = sessionsetParam;
+            param = ugcParam;
+            <span class="kw">break</span>;
+        }
+    }
+    <span class="kw">if</span> (sessionParam != <span class="kw">null</span>)
+    {
+        <span class="kw">if</span> (!param.Equals(sessionParam))   <span class="cm">// skip if value unchanged</span>
+            param.UpdateParameter(sessionParam);
+    }
+    <span class="kw">else</span>
+    {
+<span class="nu">#if</span> UNITY_EDITOR
+        Debug.LogWarning(<span class="fn">$"Unable to find param: {paramName}"</span>);
+<span class="nu">#endif</span>
+    }
+}</code></pre>
+
+<h3 id="equality">Equality &amp; Skip Logic</h3>
+
+<p>Before calling <code>UpdateParameter()</code>, the controller checks <code>!param.Equals(sessionParam)</code>. This compares <code>IParam.StringValue</code> (the last raw string received) with <code>sessionParam.startvalue</code>. If they are identical the update is silently skipped, preventing redundant parse and callback overhead on every poll cycle.</p>
+
+<div class="alert alert-info">
+    <strong>Implication for debugging:</strong> if a parameter value is sent but the callback never fires, verify that the incoming <code>startvalue</code> string differs from the last received value. You can read <code>IParam.StringValue</code> at runtime via the Editor mock window or Debug.Log.
+</div>
+
+<h3 id="errors">Error Handling</h3>
+
+<p>Parse errors are fully absorbed — they never propagate to the Unity main loop:</p>
+
+<ul>
+    <li><strong>Tier 1 (<code>Param&lt;T&gt;</code>)</strong>: catches <code>Exception</code> in <code>UpdateParameter()</code>, calls <code>ParsingFailed()</code> which restores the default value and logs an error including scene name and current level. The <code>OnUpdate</code> callback is <em>not</em> fired.</li>
+    <li><strong>Tier 2 (<code>ScriptableParameter&lt;T&gt;</code>)</strong>: catches exceptions from <code>ParseFunction</code> and from the <code>_onUpdate</code> delegate separately. Parse failure: logs error, value unchanged. Callback exception: logs error, but <code>StringValue</code> and <code>_value</code> are <em>still updated</em> via <code>finally</code> block.</li>
+</ul>
+
+<div class="alert alert-warn">
+    In Tier 2, if a subscriber's callback throws, the value is still committed (the <code>finally</code> block runs). This means the next poll will see the value as unchanged and skip the update — the subscriber will not get a second chance unless the server sends a different value.
+</div>
+
+<p>Two exception types are defined in <code>Param.cs</code>:</p>
+
+<div class="struct-box">
+    <div class="struct-title">Exception Types (Param.cs)</div>
+    <div class="sf"><div class="sf-type">Exception</div><div class="sf-name">ParamParseException</div><div class="sf-desc">Full parse failure — carries param name and bad string value</div></div>
+    <div class="sf"><div class="sf-type">Exception</div><div class="sf-name">ParamParsePartialException</div><div class="sf-desc">Thrown by inner lambdas; wrapped into <code>ParamParseException</code> by <code>CustomParam&lt;T,U&gt;</code></div></div>
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ BROKER EVENTS -->
+<section id="broker-events">
+<h2>5. Broker Events Fired by Parameters</h2>
+
+<p>Two parameters fire typed <code>Broker&lt;T&gt;</code> events in addition to their own callbacks. This allows scene objects to react without needing a direct reference to the parameter.</p>
+<span class="f">Assets/Shared/Scripts/Events/TherapeuticParameterEvents/</span>
+
+<div class="grid2">
+    <div class="gcard blue">
+        <h4>ObjectSizeChanged</h4>
+        <p>Fired by <code>objectSizeParam</code> on every size change. Carries <code>ObjectSize</code> enum (<code>Small</code>, <code>Medium</code>, <code>Big</code>).</p>
+        <p>Subscribe: <code>Broker&lt;ObjectSizeChanged&gt;.Subscribe(this, OnSizeChanged);</code></p>
+        <p><span class="b b-yellow">[Obsolete]</span> — migrate to ScriptableParameter.</p>
+    </div>
+    <div class="gcard purple">
+        <h4>ObjectDistanceChanged</h4>
+        <p>Fired by <code>objectDistanceParam</code>. Carries <code>float Distance</code> (metres) and <code>DistanceMode</code> (<code>Static</code> / <code>Dynamic</code>).</p>
+        <p>Subscribe: <code>Broker&lt;ObjectDistanceChanged&gt;.Subscribe(this, OnDistanceChanged);</code></p>
+        <p>Consumed by <code>AngularSizeable</code> for FOV-correct scaling at varying depths.</p>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    The <code>HierarchicalBroker</code> assembly has <code>noEngineReferences: true</code>. Event structs (<code>ObjectSizeChanged</code>, <code>ObjectDistanceChanged</code>) implement <code>IEventArgs</code> from that assembly. They are <code>readonly struct</code> — no heap allocation per event.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ AWAIT -->
+<section id="await">
+<h2>6. Async — AwaitFirstParameterArrive()</h2>
+<span class="f">Assets/UGC-Protype/UGCParametersController.cs — line 312</span>
+
+<p>Game controllers sometimes need to defer game startup until at least one parameter payload has been applied (to avoid running the first frame with all-default values). <code>AwaitFirstParameterArrive()</code> provides a UniTask-based awaitable for this.</p>
+
+<pre><code><span class="cm">// Typical usage in a game controller</span>
+<span class="kw">await</span> parametersController.<span class="fn">AwaitFirstParameterArrive</span>(destroyCancellationToken);
+<span class="fn">StartGame</span>();   <span class="cm">// guaranteed: at least one UpdateParameter() call has completed</span></code></pre>
+
+<p>Internally it uses a <code>List&lt;UniTaskCompletionSource&gt;</code>. The first call to <code>SignalParameterArrive()</code> (triggered from any <code>UpdateParameter()</code> success) completes all pending tasks and sets a flag so future calls to <code>AwaitFirstParameterArrive()</code> return immediately.</p>
+
+<div class="alert alert-info">
+    The flag is cleared on scene reload (<code>OnLevelFinishedLoading</code>) so the next game scene must await again. However, the <code>paramsArrived</code> flag is an instance field — it resets when the new scene's <code>UGCParametersController</code> is instantiated.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ GAME-SPECIFIC -->
+<section id="game-specific">
+<h2>7. Game-Specific Parameters</h2>
+
+<p>Games that require additional parameters subclass <code>UGCParametersController</code> and declare extra <code>static</code> fields. Because the base <code>Param</code> constructor calls <code>UGCParametersController.AddParam(this)</code>, game-specific params are automatically registered when the subclass is first touched by Unity's static initializer.</p>
+
+<h3 id="game-specific-table">Known Game-Specific Extensions</h3>
+
+<div class="tbl-wrap">
+<table>
+    <thead>
+        <tr><th>Subclass</th><th>Game</th><th>Extra Params</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>UGCMiceGameParametersController</code></td>
+            <td>Hungry Fish (ID 9)</td>
+            <td><code>fruitDepthDiffModeParam</code>, <code>numberOfObjectsParam</code>, <code>depthBetweenObjsFactor</code></td>
+            <td><code>fruit-count "Auto"</code> → DifficultyBased mode; <code>stereo-angle</code> parses arc-minute strings (e.g. <code>20"</code>, <code>40''</code>)</td>
+        </tr>
+        <tr>
+            <td><code>UGCNiedowidzenieParametersController</code></td>
+            <td>Surprise Egg (ID 8)</td>
+            <td>Game-specific params for amblyopia exercises</td>
+            <td>See <code>Assets/UGC-Protype/Niedowidzenie/</code></td>
+        </tr>
+        <tr>
+            <td><code>UGCSakadyParametersController</code></td>
+            <td>Space Drawings (ID 14)</td>
+            <td>Saccade-specific params</td>
+            <td>See <code>Assets/UGC-Protype/Sakady/</code></td>
+        </tr>
+        <tr>
+            <td><code>UGCSnowmanGameParametersController</code></td>
+            <td>Snowball Fight (ID 19)</td>
+            <td>Snowball / difficulty params</td>
+            <td>See <code>Assets/UGC-Protype/SnowmanGame/</code></td>
+        </tr>
+        <tr>
+            <td><code>UGCFollowGameRaceParametersController</code></td>
+            <td>Sea Race (ID 18)</td>
+            <td>Follow-path difficulty params</td>
+            <td>See <code>Assets/UGC-Protype/FollowGameRace/</code></td>
+        </tr>
+        <tr>
+            <td><code>UGCWodzenieParametersController</code></td>
+            <td>Underwater Treasures (ID 10)</td>
+            <td>Smooth pursuit params</td>
+            <td>See <code>Assets/UGC-Protype/Wodzenie/</code></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<p>Subclasses generally only add static <code>CustomParam</code> / <code>BoolParam</code> / <code>FloatParam</code> fields. The actual game scene's <code>UGCParametersController</code> component must be set to the concrete subclass type in the Inspector.</p>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════ HOW-TO -->
+<section id="howto">
+<h2>8. How-To Guide</h2>
+
+<h3 id="howto-add-scriptable">Add a ScriptableParameter (recommended)</h3>
+
+<ol>
+    <li>
+        <strong>Create the asset:</strong>
+        <code>Project window → Right-click → Parameters → Bool / Int / BackgroundMode</code><br>
+        Save to <code>Assets/THERAPY MODULES/{GameName}/Parameters/{Name}.asset</code>
+    </li>
+    <li>
+        <strong>Configure in Inspector:</strong> set <code>Names</code> (server key, e.g. <code>["my-param"]</code>) and <code>Default Value</code>.
+    </li>
+    <li>
+        <strong>Assign to scene:</strong> drag the asset into <code>UGCParametersController → scriptableParameter[]</code> on the game scene's controller GameObject.
+    </li>
+    <li>
+        <strong>Subscribe in code:</strong>
+        <pre><code><span class="cm">// Typically in a MonoBehaviour that handles the effect</span>
+[<span class="ty">SerializeField</span>] <span class="kw">private</span> <span class="ty">BoolParameter</span> myParam;
+
+<span class="kw">private void</span> <span class="fn">OnEnable</span>() =&gt; myParam.Changed += <span class="fn">OnMyParamChanged</span>;
+<span class="kw">private void</span> <span class="fn">OnDisable</span>() =&gt; myParam.Changed -= <span class="fn">OnMyParamChanged</span>;
+
+<span class="kw">private void</span> <span class="fn">OnMyParamChanged</span>(<span class="ty">ScriptableParameter</span>&lt;<span class="kw">bool</span>&gt; src, <span class="kw">bool</span> newVal)
+{
+    <span class="cm">// react to value change</span>
+}</code></pre>
+    </li>
+    <li>
+        <strong>Test in Editor:</strong> use the <code>[Button] UpdateFromEditor(T newValue)</code> on the asset to simulate a value change without a server connection.
+    </li>
+</ol>
+
+<h3 id="howto-add-static">Add a static Param (legacy — avoid for new work)</h3>
+
+<pre><code><span class="cm">// In UGCParametersController or a subclass</span>
+<span class="kw">public static</span> <span class="ty">FloatParam</span> myNewParam = <span class="kw">new</span> <span class="ty">FloatParam</span>(<span class="st">"server-key"</span>, <span class="nu">0f</span>,
+    value =&gt; { <span class="cm">/* callback */</span> });
+
+<span class="cm">// Read from anywhere:</span>
+<span class="ty">float</span> v = <span class="ty">UGCParametersController</span>.myNewParam.Value;</code></pre>
+
+<div class="alert alert-warn">
+    The base <code>Param</code> constructor calls <code>UGCParametersController.AddParam(this)</code> at field-initialization time. This means the field must be initialized before <code>UGCParametersController.Awake()</code> iterates <code>parameters</code>. Static fields in C# are initialized before any instance constructor runs, so order within the same class is top-to-bottom. Subclass static fields are initialized when the subclass type is first used.
+</div>
+
+<h3 id="howto-override">Override a shared param for one game</h3>
+
+<p>The simplest way is to shadow the static field with a <code>new</code> declaration in the subclass:</p>
+
+<pre><code><span class="kw">public class</span> <span class="ty">UGCMyGameParametersController</span> : <span class="ty">UGCParametersController</span>
+{
+    <span class="cm">// Replaces the base objectSizeParam with a game-specific parse function</span>
+    <span class="kw">public new static</span> <span class="ty">CustomParam</span>&lt;<span class="ty">ObjectSize</span>, <span class="kw">float</span>&gt; objectSizeParam =
+        <span class="kw">new</span> <span class="ty">CustomParam</span>&lt;<span class="ty">ObjectSize</span>, <span class="kw">float</span>&gt;(<span class="st">"object-size-dynamic"</span>, <span class="ty">ObjectSize</span>.Medium, <span class="nu">1f</span>,
+            value =&gt; { <span class="cm">/* game-specific parse */</span> });
+}</code></pre>
+
+<p>For <code>ScriptableParameter</code> assets: simply assign a different asset of the same type to the scene's <code>scriptableParameter[]</code> array — no code change needed.</p>
+</section>
+
+</div><!-- .main -->
+
+<script>
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('visible', window.scrollY > 400);
+    });
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const match = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+                if (match) match.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-60px 0px -70% 0px' });
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

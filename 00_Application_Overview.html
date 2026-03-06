@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Application Overview</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232633;
+            --surface3: #2a2e3f;
+            --border: #2e3248;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa7;
+            --accent: #6c8aff;
+            --accent2: #a78bfa;
+            --accent3: #c084fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #38bdf8;
+            --teal: #2dd4bf;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 300px; height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 20px 0; overflow-y: auto; z-index: 100;
+        }
+        .sidebar-brand {
+            padding: 0 20px 16px;
+            font-size: 13px; font-weight: 800;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a {
+            display: block; padding: 6px 20px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: 12.5px; transition: all 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+
+        /* ── Main ── */
+        .main { margin-left: 300px; padding: 40px 56px; max-width: 1140px; }
+
+        h1 { font-size: 40px; font-weight: 900;
+            background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .hero-sub { font-size: 16px; color: var(--text-muted); margin-bottom: 36px; }
+        h2 {
+            font-size: 24px; font-weight: 700;
+            margin: 52px 0 16px; padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        h3 { font-size: 18px; font-weight: 600; margin: 28px 0 10px; color: var(--teal); }
+        h4 { font-size: 15px; font-weight: 600; margin: 18px 0 6px; color: var(--accent2); }
+        p { margin-bottom: 12px; }
+
+        /* ── Cards / Boxes ── */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin: 14px 0; }
+        .card-title { font-weight: 700; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* ── Badges ── */
+        .b { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+        .b-blue { background: rgba(108,138,255,.15); color: var(--accent); }
+        .b-purple { background: rgba(167,139,250,.15); color: var(--accent2); }
+        .b-green { background: rgba(74,222,128,.15); color: var(--success); }
+        .b-yellow { background: rgba(251,191,36,.15); color: var(--warning); }
+        .b-red { background: rgba(248,113,113,.15); color: var(--error); }
+        .b-teal { background: rgba(45,212,191,.15); color: var(--teal); }
+        .b-pink { background: rgba(244,114,182,.15); color: var(--pink); }
+        .b-orange { background: rgba(251,146,60,.15); color: var(--orange); }
+        .b-info { background: rgba(56,189,248,.15); color: var(--info); }
+
+        /* ── Flow Diagram ── */
+        .flow {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 24px 28px; margin: 16px 0;
+            font-family: 'Cascadia Code','Fira Code',monospace;
+            font-size: 12.5px; line-height: 1.85; white-space: pre; overflow-x: auto;
+            color: var(--text-muted);
+        }
+        .flow .hl { color: var(--teal); font-weight: 700; }
+        .flow .ok { color: var(--success); }
+        .flow .er { color: var(--error); }
+        .flow .wa { color: var(--warning); }
+        .flow .in { color: var(--info); }
+        .flow .pk { color: var(--pink); }
+        .flow .tl { color: var(--teal); }
+        .flow .or { color: var(--orange); }
+
+        /* ── Code ── */
+        pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+            padding: 18px; margin: 10px 0; overflow-x: auto;
+            font-family: 'Cascadia Code','Fira Code',monospace; font-size: 12.5px; line-height: 1.6;
+        }
+        code { font-family: 'Cascadia Code','Fira Code',monospace; background: var(--surface2);
+            padding: 2px 6px; border-radius: 4px; font-size: 12.5px;
+        }
+        pre code { background: none; padding: 0; }
+        .kw { color: #c678dd; } .st { color: #98c379; } .cm { color: #5c6370; font-style: italic; }
+        .ty { color: #e5c07b; } .fn { color: #61afef; } .nu { color: #d19a66; }
+
+        /* ── Tables ── */
+        table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+        thead th { background: var(--surface2); padding: 10px 14px; text-align: left; font-weight: 600;
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-muted); border-bottom: 2px solid var(--border);
+        }
+        tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:hover { background: var(--surface); }
+
+        /* ── Grids ── */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+        .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+        .gcard strong { display: block; font-size: 13px; margin-bottom: 4px; }
+        .gcard p { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+        /* ── Alerts ── */
+        .alert { padding: 14px 18px; border-radius: 8px; margin: 14px 0; font-size: 13.5px; border-left: 4px solid; }
+        .alert-info { background: rgba(56,189,248,.06); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,.06); border-color: var(--warning); }
+        .alert b { display: block; margin-bottom: 2px; }
+
+        /* ── File Ref ── */
+        .f { display: flex; align-items: center; gap: 6px; background: var(--surface2);
+            padding: 4px 12px; border-radius: 5px; width: fit-content;
+            font-family: 'Cascadia Code','Fira Code',monospace; font-size: 11.5px;
+            color: var(--text-muted); margin: -4px 0 14px;
+            border-left: 3px solid var(--teal);
+        }
+        .f::before { content: "📄"; font-size: 11px; }
+
+        /* Zebra striping for readability on long tables */
+        tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+        /* ── Flow Legend ── */
+        .flow-legend {
+            display: flex; flex-wrap: wrap; gap: 14px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 18px; margin: -4px 0 16px;
+            font-size: 12px;
+        }
+        .flow-legend span { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+        .flow-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── System Map ── */
+        .sys-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+        .sys-box {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 12px; text-align: center; font-size: 12px; transition: all 0.15s;
+            cursor: default;
+        }
+        .sys-box:hover { border-color: var(--teal); transform: translateY(-2px); }
+        .sys-box strong { display: block; font-size: 13px; margin-bottom: 4px; }
+        .sys-box span { color: var(--text-muted); font-size: 11px; }
+
+        ul, ol { margin: 6px 0 12px 22px; }
+        li { margin: 3px 0; font-size: 13.5px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+        /* ── Game Cards Grid ── */
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+        .game-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 16px; transition: border-color 0.15s;
+        }
+        .game-card:hover { border-color: var(--teal); }
+        .game-card .gid { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        .game-card .gname { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+        .game-card .gdesc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+        .game-card .gfolder { font-family: monospace; font-size: 11px; color: var(--teal); margin-top: 6px; }
+
+        @media (max-width: 960px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .grid2, .grid3, .sys-map { grid-template-columns: 1fr; }
+            .game-grid { grid-template-columns: 1fr 1fr; }
+            .topnav { left: 0; }
+        }
+
+        /* ── Top Nav Bar ── */
+        .topnav {
+            position: fixed; top: 0; left: 300px; right: 0; z-index: 200;
+            height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 24px;
+            gap: 10px; font-size: 12px;
+        }
+        .topnav span { color: var(--text-muted); font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 5px; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; cursor: default; }
+
+        /* ── Back-to-top button ── */
+        #btt {
+            position: fixed; bottom: 28px; right: 28px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--teal); color: #000;
+            border: none; cursor: pointer; font-size: 18px;
+            display: none; align-items: center; justify-content: center;
+            box-shadow: 0 4px 14px rgba(45,212,191,0.3);
+            transition: opacity 0.2s, transform 0.2s; z-index: 200;
+        }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        /* ── Active sidebar link ── */
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        /* ── Code language label ── */
+        .code-block { position: relative; margin: 10px 0; }
+        .code-block pre { margin: 0; }
+        .code-lang {
+            position: absolute; top: 8px; right: 12px;
+            font-size: 10px; font-weight: 600; text-transform: uppercase;
+            color: var(--text-muted); letter-spacing: 1px; pointer-events: none;
+        }
+
+        /* ── Main content top padding for topnav ── */
+        .main { padding-top: 64px; }
+
+        /* ── Visual Flowchart ── */
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-decision { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; border: 1.5px dashed var(--warning); color: var(--warning); background: rgba(251,191,36,0.08); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+        .fc-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-divider::before, .fc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    </style>
+</head>
+<body>
+
+<!-- ── Top Navigation Bar ── -->
+<div class="topnav">
+    <span class="current">Overview</span>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<!-- ── Back to Top ── -->
+<button id="btt" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ═══════════ SIDEBAR ═══════════ -->
+<nav class="sidebar">
+    <div class="sidebar-brand">📋 NeuraSim VR<small>Application Overview — Doc 00</small></div>
+
+    <a href="#intro" class="sh">Introduction</a>
+    <a href="#tech-stack" class="sub">Tech Stack</a>
+    <a href="#system-map" class="sub">System Map</a>
+
+    <a href="#scene-flow" class="sh">Scene Flow</a>
+    <a href="#scene-list" class="sub">Scene Inventory</a>
+    <a href="#scene-transitions" class="sub">Transition Logic</a>
+
+    <a href="#auth" class="sh">Authentication</a>
+    <a href="#auth-summary" class="sub">Device-Based Auth</a>
+
+    <a href="#therapy" class="sh">Therapy Session</a>
+    <a href="#session-lifecycle" class="sub">Session Lifecycle</a>
+    <a href="#therapy-modes" class="sub">Stationary vs Home</a>
+    <a href="#param-polling" class="sub">Parameter Polling</a>
+
+    <a href="#game-framework" class="sh">Game Framework (UGC)</a>
+    <a href="#ugc-game-ctrl" class="sub">UGCGameController</a>
+    <a href="#ugc-level-mgr" class="sub">Level Manager</a>
+    <a href="#playable" class="sub">Playable Hierarchy</a>
+
+    <a href="#params" class="sh">Parameter System</a>
+    <a href="#params-tier1" class="sub">Tier 1: Static Params</a>
+    <a href="#params-tier2" class="sub">Tier 2: Scriptable</a>
+    <a href="#params-flow" class="sub">Data Flow Pipeline</a>
+
+    <a href="#vfx" class="sh">Therapeutic VFX</a>
+    <a href="#eye-patching" class="sub">Eye Patching</a>
+    <a href="#ipd" class="sub">IPD Control</a>
+    <a href="#blur-bright" class="sub">Blur / Brightness</a>
+
+    <a href="#difficulty" class="sh">Difficulty &amp; Combo</a>
+
+    <a href="#events" class="sh">Event Systems</a>
+    <a href="#messenger" class="sub">Messenger (Legacy)</a>
+    <a href="#broker" class="sub">HierarchicalBroker</a>
+    <a href="#therapy-events" class="sub">TherapyEventBroker</a>
+
+    <a href="#tablet" class="sh">Tablet Communication</a>
+    <a href="#tcp-protocol" class="sub">TCP Protocol</a>
+    <a href="#discovery" class="sub">Discovery</a>
+
+    <a href="#games" class="sh">Therapy Modules</a>
+
+    <a href="#localization" class="sh">Localization</a>
+    <a href="#ota" class="sh">OTA Updates</a>
+    <a href="#vr" class="sh">VR Systems</a>
+    <a href="#persistence" class="sh">Data Persistence</a>
+    <a href="#editor" class="sh">Editor &amp; Build</a>
+    <a href="#deps" class="sh">Dependencies</a>
+    <a href="#doc-index" class="sh">Documentation Index</a>
+
+    <div style="border-top: 1px solid var(--border); margin-top: 16px; padding: 12px 20px;">
+        <a href="01_Login_Flow.html" style="color: var(--info); font-size: 12px; display:flex; align-items:center; gap:6px; text-decoration:none;">🔐 Login Flow →</a>
+    </div>
+</nav>
+
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
+<div class="main">
+
+<h1>NeuraSim VR</h1>
+<p class="hero-sub">Complete technical overview of the BeeVee VR vision therapy platform &mdash; architecture, systems, and data flow.</p>
+
+<!-- ═══════════ 1. INTRODUCTION ═══════════ -->
+<h2 id="intro">1. Introduction</h2>
+
+<p><strong>NeuraSim VR</strong> (product name: <strong>BeeVee</strong>) is a VR-based vision therapy application. It delivers interactive therapy games on Android VR headsets (Pico Neo, DPVR), controlled either by a therapist via a companion tablet (<em>stationary</em> mode) or by the patient independently (<em>home</em> mode). Game parameters, difficulty, and visual effects are dynamically controlled from a cloud dashboard.</p>
+
+<div class="card">
+    <div class="card-title">At a Glance</div>
+    <table>
+        <tbody>
+            <tr><td><strong>Company</strong></td><td>NeuraSim (formerly Remmed &mdash; legacy names persist in codebase)</td></tr>
+            <tr><td><strong>Platform</strong></td><td>Android VR &mdash; Pico Neo 3/4, Goblin 2, DPVR P1</td></tr>
+            <tr><td><strong>Engine</strong></td><td>Unity 2020.3.15f2 LTS &mdash; URP 10.5.1</td></tr>
+            <tr><td><strong>Backend</strong></td><td><code>https://remmedvr-dashboard.neurasim.health/</code></td></tr>
+            <tr><td><strong>Comm Protocol</strong></td><td>REST API (device ↔ server) + TCP sockets (headset ↔ tablet)</td></tr>
+            <tr><td><strong>Therapy Games</strong></td><td>10 therapy modules (saccades, pursuit, convergence, amblyopia, etc.)</td></tr>
+            <tr><td><strong>Auth Model</strong></td><td>Device-centric (headset serial number), no user credentials</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<h3 id="tech-stack">1.1 Technology Stack</h3>
+
+<div class="grid3">
+    <div class="gcard"><strong>Unity 2020.3 LTS</strong><p>Game engine, scene management, rendering</p></div>
+    <div class="gcard"><strong>URP 10.5.1</strong><p>Universal Render Pipeline for VR stereo rendering</p></div>
+    <div class="gcard"><strong>C# / .NET 4.x</strong><p>Application logic, async patterns</p></div>
+    <div class="gcard"><strong>UniTask 2.2.5</strong><p>Async/await framework replacing coroutines</p></div>
+    <div class="gcard"><strong>Pico VR SDK</strong><p>Primary headset SDK (3DoF/6DoF controllers)</p></div>
+    <div class="gcard"><strong>DPVR SDK</strong><p>Secondary headset support</p></div>
+    <div class="gcard"><strong>LitJson</strong><p>JSON serialization (API, TCP, config files)</p></div>
+    <div class="gcard"><strong>Odin Inspector</strong><p>Editor tooling, serialized MonoBehaviours</p></div>
+    <div class="gcard"><strong>DOTween</strong><p>Animation/tweening system</p></div>
+    <div class="gcard"><strong>TextMeshPro 3.0.9</strong><p>UI text rendering</p></div>
+    <div class="gcard"><strong>Azure.Identity</strong><p>Key Vault secrets management</p></div>
+    <div class="gcard"><strong>BetterStreamingAssets</strong><p>Reliable Android asset loading</p></div>
+</div>
+
+<h3 id="system-map">1.2 System Map</h3>
+<p>Every major system in the application at a glance. Click the sidebar links to jump to detailed sections.</p>
+
+<div class="sys-map">
+    <div class="sys-box" style="border-left: 3px solid var(--accent);"><strong>Scene Management</strong><span>Loader → Hub → Games</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--info);"><strong>Authentication</strong><span>Device login, TOTP, tokens</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--accent2);"><strong>Therapy Session</strong><span>Start → Play → Save → End</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--teal);"><strong>UGC Game Framework</strong><span>Controller, Levels, Playables</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--warning);"><strong>Parameter System</strong><span>2-tier: static + scriptable</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--pink);"><strong>Therapeutic VFX</strong><span>Blur, IPD, eye patching, etc.</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--orange);"><strong>Difficulty / Combo</strong><span>Adaptive difficulty progression</span></div>
+    <div class="sys-box" style="border-left: 3px solid #7c3aed;"><strong>Event Systems</strong><span>Messenger + Broker + Therapy</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--error);"><strong>Tablet TCP</strong><span>Bidirectional TCP on 8502/8503</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--success);"><strong>Localization</strong><span>EN/PL, OTA updates, JSON</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--accent3);"><strong>OTA Updater</strong><span>Silent APK install/update</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--text-muted);"><strong>VR Hardware</strong><span>Controllers, IPD, angular sizing</span></div>
+    <div class="sys-box" style="border-left: 3px solid var(--warning);"><strong>Battery Watchdog</strong><span>Level monitoring, Hub gate</span></div>
+    <div class="sys-box" style="border-left: 3px solid #0ea5e9;"><strong>Android Helper</strong><span>WiFi, installs, device ops</span></div>
+</div>
+
+<!-- ═══════════ 2. SCENE FLOW ═══════════ -->
+<h2 id="scene-flow">2. Scene Flow</h2>
+
+<div class="flow-legend">
+    <span><span class="dot" style="background:var(--accent)"></span>Phase / heading</span>
+    <span><span class="dot" style="background:var(--info)"></span>Scene / API call</span>
+    <span><span class="dot" style="background:var(--teal)"></span>Key component</span>
+    <span><span class="dot" style="background:var(--success)"></span>Success / completion</span>
+    <span><span class="dot" style="background:var(--warning)"></span>Stationary mode</span>
+    <span><span class="dot" style="background:var(--pink)"></span>Home mode</span>
+    <span><span class="dot" style="background:var(--orange)"></span>Adaptive systems</span>
+</div>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-bl">Loader Scene<br><small>WiFi · auth · tablet pairing · first-time setup</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Hub Scene (3D Lobby)<br><small>game portals displayed</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">game selected (tablet cmd or portal click)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">Game Scene (therapy module)<br><small>params applied · levels play · difficulty adapts · results collected</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">more games remaining in session?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">Yes — ModuleFinished</div>
+                <div class="fc-box fc-tl">Return to Hub<br><small>loop for next game</small></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-rd">No — Session ends</div>
+                <div class="fc-box fc-bl">Loader Scene<br><small>therapy complete</small></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 id="scene-list">2.1 Scene Inventory</h3>
+
+<table>
+    <thead><tr><th>Scene</th><th>ProjectScene ID</th><th>Location</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><span class="b b-blue">Loader</span></td><td>-1</td><td><code>Assets/InitialScreen/Loader.unity</code></td><td>Main menu, auth, WiFi, tablet pairing</td></tr>
+        <tr><td><span class="b b-teal">Hub</span></td><td>-2</td><td><code>Assets/LOADER/NewLoaderGraphics/Hub.unity</code></td><td>3D lobby with game portals</td></tr>
+        <tr><td><span class="b b-green">Gem Collection</span></td><td>7</td><td><code>Assets/THERAPY MODULES/Antysupresja/</code></td><td>Anti-suppression therapy</td></tr>
+        <tr><td><span class="b b-green">Surprise Egg</span></td><td>8</td><td><code>Assets/THERAPY MODULES/Niedowidzenia_oko_reka/</code></td><td>Hand-eye coordination</td></tr>
+        <tr><td><span class="b b-green">Hungry Fish</span></td><td>9</td><td><code>Assets/THERAPY MODULES/ZakresyMice/</code></td><td>Visual field / mice game</td></tr>
+        <tr><td><span class="b b-green">Underwater Treasures</span></td><td>10</td><td><code>Assets/THERAPY MODULES/Wodzenie/</code></td><td>Fixation &amp; smooth pursuit</td></tr>
+        <tr><td><span class="b b-green">Space Drawings</span></td><td>14</td><td><code>Assets/THERAPY MODULES/SakkadyInSpace/</code></td><td>Saccadic eye movements</td></tr>
+        <tr><td><span class="b b-green">Magic Hut</span></td><td>17</td><td><code>Assets/THERAPY MODULES/Magic_Hut/</code></td><td>Accommodative training</td></tr>
+        <tr><td><span class="b b-green">Sea Race</span></td><td>18</td><td><code>Assets/THERAPY MODULES/FollowObject/</code></td><td>Smooth pursuit / tracking</td></tr>
+        <tr><td><span class="b b-green">Snowball Fight</span></td><td>19</td><td><code>Assets/THERAPY MODULES/Snowman/</code></td><td>Visual-motor coordination</td></tr>
+        <tr><td><span class="b b-green">Two Or One</span></td><td>21</td><td><code>Assets/THERAPY MODULES/Stereopsja/</code></td><td>Binocular vision (stereo/fusion/convergence)</td></tr>
+        <tr><td><span class="b b-green">CSaber</span></td><td>22</td><td><code>Assets/THERAPY MODULES/CSaber/</code></td><td>Saccadic training</td></tr>
+    </tbody>
+</table>
+
+<h3 id="scene-transitions">2.2 Scene Transition Logic</h3>
+<p class="f">Assets/LOADER/Scripts/LoaderController.cs</p>
+
+<p>All scene transitions go through <code>LoaderController.AsyncLoadScene()</code>. The method accepts a scene name, optional callback, and <code>SceneParameters</code> (which carry <code>LoaderMode</code> and <code>waitForParamsToStartTheGame</code>).</p>
+
+<table>
+    <thead><tr><th>Trigger</th><th>From</th><th>To</th><th>Method</th></tr></thead>
+    <tbody>
+        <tr><td>Login complete, enter therapy</td><td>Loader</td><td>Hub</td><td><code>LoaderController.StartHub()</code></td></tr>
+        <tr><td>Tablet sends <code>start_game</code></td><td>Hub</td><td>Game</td><td><code>AsyncLoadScene(ProjectScene)</code></td></tr>
+        <tr><td>Home patient selects portal</td><td>Hub</td><td>Game</td><td><code>AsyncLoadScene(ProjectScene)</code></td></tr>
+        <tr><td>Game completes / <code>stop_game</code></td><td>Game</td><td>Hub</td><td><code>LoaderController.StartHub()</code></td></tr>
+        <tr><td>Therapy session ends / <code>exit</code></td><td>Hub/Game</td><td>Loader</td><td><code>LoaderController.StartLoader()</code></td></tr>
+        <tr><td><code>force_stop</code> from tablet</td><td>Any</td><td>Loader</td><td><code>LoaderController.StartLoader()</code></td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 3. AUTHENTICATION ═══════════ -->
+<h2 id="auth">3. Authentication</h2>
+
+<div class="alert alert-info">
+    <b>Detailed documentation available</b>
+    The login/authentication flow has its own dedicated document: <strong><a href="01_Login_Flow.html" style="color:var(--info)">01_Login_Flow.html</a></strong>. Below is a summary.
+</div>
+
+<div class="card" id="auth-summary">
+    <div class="card-title">Authentication Model</div>
+    <p>NeuraSim uses <strong>device-centric authentication</strong>. The VR headset's serial number is pre-registered in the backend by a clinic administrator. No username or password is needed from the patient.</p>
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-bl">POST /web/login</div>
+            <div class="fc-note">api: static key · rkey: TOTP (SHA-256, 60s) · uuid: device serial (Pico SDK)</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">response OK?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gn">Success</div>
+                    <div class="fc-box fc-gn">modeTherapy · device_pairing<br>token_session · clinic · patient info</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-rd">Error</div>
+                    <div class="fc-box fc-rd">num_error (1–11) · error message<br><small>→ ServerErrorMessageBox with Retry</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p><strong>Post-login credentials</strong>: The <code>token_session.token</code> (JWT-like) is stored in <code>WebApiPass</code> and used for all subsequent API calls (<code>/therapy/get</code>, <code>/therapy/start</code>, <code>/therapy/end</code>, <code>/therapy/save</code>).</p>
+</div>
+
+<!-- ═══════════ 4. THERAPY SESSION ═══════════ -->
+<h2 id="therapy">4. Therapy Session Lifecycle</h2>
+
+<h3 id="session-lifecycle">4.1 Full Session Lifecycle</h3>
+
+<div class="flow-legend">
+    <span><span class="dot" style="background:var(--accent)"></span>Lifecycle stage</span>
+    <span><span class="dot" style="background:var(--info)"></span>API call</span>
+    <span><span class="dot" style="background:var(--teal)"></span>Key component</span>
+    <span><span class="dot" style="background:var(--warning)"></span>Stationary mode</span>
+    <span><span class="dot" style="background:var(--pink)"></span>Home mode</span>
+    <span><span class="dot" style="background:var(--orange)"></span>Adaptive system</span>
+    <span><span class="dot" style="background:var(--success)"></span>Completion</span>
+</div>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-divider">Login</div>
+        <div class="fc-box fc-bl">Device Auth — POST /web/login<br><small>determine mode: stationary or home · store credentials in WebApiPass</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+        <div class="fc-divider">Enter Therapy</div>
+        <div class="fc-decision">therapy mode?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-yw">Stationary</div>
+                <div class="fc-box fc-yw">Tablet sends enter=true event</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-pu">Home</div>
+                <div class="fc-box fc-pu">Patient taps "Enter VT Office"<br><small>battery + network check first</small></div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">POST /therapy/start → creates TherapySession</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Load Hub Scene</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+        <div class="fc-divider">Game Loop (repeats per game)</div>
+        <div class="fc-box fc-gy">Game selected (tablet cmd or portal click)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">POST /therapy/getgame → fetch params + config</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">UGCGameController initializes<br><small>params applied · game starts</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-yw">Polling loop (~1.5s): Messenger("paramsUpdated") → VFX applied</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">Levels progress: LevelManager → LevelContainer → UGCLevel<br><small>correctAnswer/wrongAnswer → ComboManager → difficulty adapts</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">Game Complete<br><small>collect results → CompletedGame { game_identity, simple_result }</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">POST /therapy/save · Send results to tablet (TCP port 8502)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">more games?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">Yes</div>
+                <div class="fc-box fc-tl">Return to Hub → next game</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-rd">No</div>
+                <div class="fc-seq">
+                    <div class="fc-divider">End Therapy</div>
+                    <div class="fc-box fc-bl">POST /therapy/end · Send CompletedTherapy to tablet</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-bl">Return to Loader Scene</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 id="therapy-modes">4.2 Therapy Modes</h3>
+
+<div class="grid2">
+    <div class="gcard" style="border-top: 3px solid var(--warning);">
+        <strong>Stationary Mode</strong>
+        <p style="margin-top:6px;">Therapist-controlled clinic sessions. Tablet directs all game selection, parameter changes, pause/resume. TCP servers active on ports 8502/8503. Communication mode: <code>Tablet</code>.</p>
+        <p style="margin-top:8px;"><span class="b b-yellow">Tablet → VR</span> therapy commands, params, init_data</p>
+        <p><span class="b b-yellow">VR → Tablet</span> telemetry, game results, session status</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--pink);">
+        <strong>Home Mode</strong>
+        <p style="margin-top:6px;">Patient self-directed sessions. No tablet needed. App fetches therapy plan from server on login, patient plays games independently. Communication mode: <code>Standalone</code>. TCP servers stopped.</p>
+        <p style="margin-top:8px;"><span class="b b-pink">Daily limit</span> <code>therapy.sessionsperday</code> enforced</p>
+        <p><span class="b b-pink">Unsent data</span> resent on next login via <code>CheckAndResendPreviousTherapy()</code></p>
+    </div>
+</div>
+
+<h3 id="param-polling">4.3 Real-Time Parameter Polling</h3>
+<p class="f">Assets/LOADER/Scripts/LoaderController.cs — PollTherapyParams()</p>
+
+<p>During active gameplay, <code>LoaderController</code> polls the server for parameter updates every ~1.5 seconds. When new parameters arrive, they are broadcast to all game components:</p>
+
+<pre><code><span class="cm">// Polling loop (simplified)</span>
+<span class="kw">while</span> (gameIsRunning)
+{
+    <span class="kw">var</span> response = <span class="kw">await</span> <span class="ty">RestApiCall</span>.<span class="fn">PostRequest</span>(<span class="st">"/therapy/getgame"</span>, callBody);
+    <span class="ty">Messenger</span>.<span class="fn">Broadcast</span>(<span class="st">"paramsUpdated"</span>, response.game.parameters);
+    <span class="kw">await</span> <span class="ty">UniTask</span>.<span class="fn">Delay</span>(<span class="nu">1500</span>);
+}</code></pre>
+
+<!-- ═══════════ 5. GAME FRAMEWORK ═══════════ -->
+<h2 id="game-framework">5. Game Framework (UGC)</h2>
+<p class="f">Assets/UGC-Protype/</p>
+
+<p>The <code>UGC</code> namespace provides the base framework every therapy game is built upon. Each game scene must contain three core components working together:</p>
+
+<div class="grid3">
+    <div class="gcard" style="border-top: 3px solid var(--accent);">
+        <strong>UGCGameController</strong>
+        <p>Singleton managing game lifecycle: start, pause, resume, timer. Holds references to cameras, parameters, levels, and therapeutic events controllers.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--warning);">
+        <strong>UGCParametersController</strong>
+        <p>Receives therapy parameters via Messenger. Maintains shared static params + game-specific ScriptableParameter[] from Inspector.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--pink);">
+        <strong>UGCTherapeuticEventsController</strong>
+        <p>Subscribes to all parameter OnUpdate callbacks. Applies visual effects: IPD, blur, brightness, contrast, eye patching, transparency, scaling.</p>
+    </div>
+</div>
+
+<h3 id="ugc-game-ctrl">5.1 UGCGameController Lifecycle</h3>
+<p class="f">Assets/UGC-Protype/UGCGameController.cs</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-tl">Awake()<br><small>Instance = this · Subscribe TherapyEventBroker · ResetCombo()</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Start() → Ready()</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">Set controller state → EnabledWithPointers</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">timer mode?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-pu">Demo</div>
+                <div class="fc-box fc-pu">demo_max_time seconds</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">Home</div>
+                <div class="fc-box fc-gn">gameTimeParam value</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-yw">Stationary</div>
+                <div class="fc-box fc-yw">Unlimited<br><small>therapist controls stop</small></div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">StartGame()<br><small>levelManager.Play(null) · StartTimerIfDemoOrHomeTherapy()</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">During Gameplay<br><small>Levels progress · params polled ~1.5s · Pause/Resume via broker · difficulty adapts</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">Game Complete<br><small>collect results · send CompletedGame to tablet · VFX reset · return to Hub</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-rd">OnDestroy()<br><small>singleton cleanup · unsubscribe TherapyEventBroker · cancel timers</small></div>
+    </div>
+</div>
+
+<h3 id="ugc-level-mgr">5.2 Level Manager</h3>
+<p class="f">Assets/UGC-Protype/UGCLevelManager.cs</p>
+
+<pre><code><span class="ty">UGCLevelManager</span>                  <span class="cm">// Top-level organizer</span>
+  ├── firstContainer = <span class="st">"Default"</span>  <span class="cm">// Starting container name</span>
+  ├── containers: <span class="ty">UGCLevelContainer</span>[]
+  │
+  ├── <span class="fn">BeginPlay</span>()
+  │   └── <span class="fn">PlayContainer</span>(firstContainer)
+  │
+  └── <span class="fn">OnFinishContainer</span>()
+      └── <span class="fn">Finish</span>()  <span class="cm">// → game complete</span></code></pre>
+
+<h3 id="playable">5.3 Playable Hierarchy</h3>
+<p class="f">Assets/UGC-Protype/Playable.cs</p>
+
+<p><code>Playable</code> is the abstract base class for all level elements. Uses Odin's <code>SerializedMonoBehaviour</code>.</p>
+
+<div class="fc">
+    <div class="fc-fork" style="align-items:flex-start; gap:40px">
+        <div class="fc-branch">
+            <div class="fc-branch-lbl">Hierarchy</div>
+            <div class="fc-seq">
+                <div class="fc-box fc-tl">UGCLevelManager (Playable)</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-bl">UGCLevelContainer[] (Playable)<br><small>Sequential or Random · loop mode</small></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-gn">UGCLevel[] (Playable)<br><small>game-specific content</small></div>
+            </div>
+        </div>
+        <div class="fc-branch">
+            <div class="fc-branch-lbl">Lifecycle</div>
+            <div class="fc-seq">
+                <div class="fc-box fc-tl">Play(callback) → BeginPlay()<br><small>virtual — game logic starts</small></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-gy">game interaction…</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-tl">Finish() → BeginFinish()<br><small>virtual — cleanup</small></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-gn">OnFinishAuto event<br><small>parent notified → next level starts</small></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 6. PARAMETER SYSTEM ═══════════ -->
+<h2 id="params">6. Parameter System</h2>
+<p class="f">Assets/UGC-Protype/UGCParametersController.cs</p>
+
+<p>Two-tier architecture allows shared therapeutic parameters to work across all games while allowing game-specific customization.</p>
+
+<h3 id="params-tier1">6.1 Tier 1 &mdash; Static IParam Fields (Shared)</h3>
+
+<p>These parameters exist in every game scene via <code>UGCParametersController</code>:</p>
+
+<table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><code>currentIPDParam</code></td><td>IntParam</td><td>65mm</td><td>Interpupillary distance for stereo camera offset</td></tr>
+        <tr><td><code>gameTimeParam</code></td><td>FloatParam</td><td>0</td><td>Session duration (seconds). 0 = unlimited</td></tr>
+        <tr><td><code>dominantEyeParam</code></td><td>CustomParam&lt;EyeVR&gt;</td><td>Left</td><td>Which eye receives therapeutic VFX</td></tr>
+        <tr><td><code>objectSizeParam</code></td><td>CustomParam&lt;ObjectSize, float&gt;</td><td>Medium / 1.0</td><td>Base object scale (Small/Medium/Big + multiplier)</td></tr>
+        <tr><td><code>blurParam</code></td><td>IntParam</td><td>0</td><td>Gaussian blur on non-dominant eye (0-100)</td></tr>
+        <tr><td><code>brightnessParam</code></td><td>FloatParam</td><td>0</td><td>Brightness boost on non-dominant eye (0-100)</td></tr>
+        <tr><td><code>darknessParam</code></td><td>FloatParam</td><td>0</td><td>Gamma reduction on dominant eye (-100-0)</td></tr>
+        <tr><td><code>contrastParam</code></td><td>FloatParam</td><td>0</td><td>Contrast adjustment (0-100)</td></tr>
+        <tr><td><code>transparencyInteractableParam</code></td><td>CustomParam&lt;float&gt;</td><td>1.0</td><td>Opacity of interactive game objects</td></tr>
+        <tr><td><code>speedParam</code></td><td>FloatParam</td><td>1.0</td><td>Game speed multiplier (tempo)</td></tr>
+        <tr><td><code>objectDistanceParam</code></td><td>CustomParam&lt;DistanceMode, float&gt;</td><td>Static / 2m</td><td>Z-depth of game objects (Static or Dynamic)</td></tr>
+        <tr><td><code>aimingCamParam</code></td><td>EyeLayerParam</td><td>Both</td><td>Eye patching: aiming reticle</td></tr>
+        <tr><td><code>interactableObjectCameraParam</code></td><td>EyeLayerParam</td><td>Both</td><td>Eye patching: interactive objects</td></tr>
+        <tr><td><code>deployerObjectCameraParam</code></td><td>EyeLayerParam</td><td>Both</td><td>Eye patching: object spawners</td></tr>
+        <tr><td><code>snapToHeadParam</code></td><td>BoolParam</td><td>false</td><td>Lock objects to head position</td></tr>
+        <tr><td><code>difficulty</code></td><td>int</td><td>0</td><td>Current difficulty level (0-10), drives object scaling</td></tr>
+    </tbody>
+</table>
+
+<h3 id="params-tier2">6.2 Tier 2 &mdash; ScriptableParameter Assets (Game-Specific)</h3>
+<p class="f">Assets/Shared/Scripts/GameParameters/</p>
+
+<p>Game-specific parameters are <code>ScriptableObject</code> assets assigned to the scene's <code>UGCParametersController.scriptableParameter[]</code> array in the Inspector. Types: <code>BoolParameter</code>, <code>IntParameter</code>, <code>BackgroundModeParameter</code>. Created via Unity menu: <em>Parameters/Bool</em>, <em>Parameters/Int</em>.</p>
+
+<p><strong>Overriding shared parameters per-game:</strong> Create a new ScriptableParameter instance in <code>Assets/THERAPY MODULES/{game}/Parameters/</code> and assign it in the game scene's parameter controller, replacing the shared default.</p>
+
+<h3 id="params-flow">6.3 Complete Data Flow Pipeline</h3>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-bl">Dashboard (browser)<br><small>therapist configures parameters per game instance</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">REST API — POST /therapy/getgame<br><small>LoaderController.PollTherapyParams() every ~1.5s</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-yw">Messenger.Broadcast("paramsUpdated", List&lt;Param&gt;)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">UGCParametersController.OnParametersUpdated()<br><small>matches param name → IParam · calls UpdateParameter()</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-pu">IParam.OnUpdate callbacks fire</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">UGCTherapeuticEventsController applies VFX</div>
+        <div class="fc-note">SetIPD → camera X-offset</div>
+        <div class="fc-note">ApplyBlurDominant → post-processing blur</div>
+        <div class="fc-note">ApplyBrightness / ApplyDarkness / ApplyContrast → screen effects</div>
+        <div class="fc-note">SetLayers → eye patching via layer masks</div>
+        <div class="fc-note">SetTransparency → object opacity</div>
+        <div class="fc-note">OnDifficultyChange → Scalable components adjust object scale</div>
+    </div>
+</div>
+
+<!-- ═══════════ 7. THERAPEUTIC VFX ═══════════ -->
+<h2 id="vfx">7. Therapeutic Visual Effects</h2>
+<p class="f">Assets/UGC-Protype/UGCTherapeuticEventsController.cs</p>
+
+<p>The therapeutic VFX system applies per-eye visual modifications driven by parameters from the dashboard. This is the core of the vision therapy &mdash; controlled visual stress to train the patient's eyes.</p>
+
+<h3 id="eye-patching">7.1 Eye Patching (Layer-Based)</h3>
+<p class="f">Assets/UGC-Protype/EyePatchable.cs</p>
+
+<p>Objects with <code>EyePatchable</code> component can be shown to one eye or both, using Unity's layer system. The left and right eye cameras render different layer masks.</p>
+
+<table>
+    <thead><tr><th>EyeLayer</th><th>Effect</th></tr></thead>
+    <tbody>
+        <tr><td><code>Both</code></td><td>Object visible to both eyes (normal)</td></tr>
+        <tr><td><code>LeftEye</code></td><td>Object only rendered by left eye camera</td></tr>
+        <tr><td><code>RightEye</code></td><td>Object only rendered by right eye camera</td></tr>
+    </tbody>
+</table>
+
+<p>Three separate patching channels control different object groups independently:</p>
+<ul>
+    <li><strong>aimingCamParam</strong> &mdash; Crosshair / pointer reticle</li>
+    <li><strong>interactableObjectCameraParam</strong> &mdash; Game objects the patient interacts with</li>
+    <li><strong>deployerObjectCameraParam</strong> &mdash; Spawners / sources of game objects</li>
+</ul>
+
+<h3 id="ipd">7.2 IPD (Interpupillary Distance)</h3>
+<p>Software-controlled stereo camera separation. Default 65mm, adjustable by therapist. Applied by offsetting left/right camera X positions: <code>leftCam.localPosition.x = -(ipd/2)/1000</code>, <code>rightCam.localPosition.x = +(ipd/2)/1000</code>.</p>
+
+<h3 id="blur-bright">7.3 Blur, Brightness, Darkness, Contrast</h3>
+<p>Post-processing effects applied independently per-eye to create controlled visual imbalance:</p>
+
+<table>
+    <thead><tr><th>Effect</th><th>Applied To</th><th>Range</th><th>Therapy Goal</th></tr></thead>
+    <tbody>
+        <tr><td>Blur</td><td>Non-dominant eye</td><td>0-100</td><td>Force dominant eye reliance → amblyopia training</td></tr>
+        <tr><td>Brightness</td><td>Non-dominant eye</td><td>0-100</td><td>Increase visibility of weaker eye</td></tr>
+        <tr><td>Darkness</td><td>Dominant eye</td><td>-100 to 0</td><td>Reduce dominant eye advantage</td></tr>
+        <tr><td>Contrast</td><td>Per-eye configurable</td><td>0-100</td><td>Fine-tune visual balance</td></tr>
+        <tr><td>Transparency</td><td>Objects</td><td>0-100 → 0.1-0.8</td><td>Reduce object salience for specific eye</td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 8. DIFFICULTY ═══════════ -->
+<h2 id="difficulty">8. Difficulty &amp; Combo System</h2>
+<p class="f">Assets/Combos/ComboManager.cs</p>
+
+<p><code>ComboManager</code> is the abstract base for adaptive difficulty. It listens to legacy Messenger events for player performance and adjusts difficulty accordingly.</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-decision">player interaction result?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">Correct</div>
+                <div class="fc-box fc-gn">Messenger("correctAnswer")<br><small>+2 progress</small></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-rd">Wrong</div>
+                <div class="fc-box fc-rd">Messenger("wrongAnswer")<br><small>−1 progress</small></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-yw">Timeout</div>
+                <div class="fc-box fc-yw">Messenger("timeout")<br><small>game-specific handler</small></div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">difficultyProgress accumulator (0–5)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">threshold crossed?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">progress &gt; 5</div>
+                <div class="fc-box fc-gn">difficulty++ (max 10)<br><small>reset progress to 1</small></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-rd">progress &lt; 0</div>
+                <div class="fc-box fc-rd">difficulty-- (min 0)<br><small>reset progress to 4</small></div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-yw">Messenger("onDifficultyChange", newDifficulty)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">UGCTherapeuticEventsController.OnDifficultyChange()<br><small>scales all Scalable components</small></div>
+        <div class="fc-note">Small:  0.70 − difficulty × 0.03</div>
+        <div class="fc-note">Medium: 1.00 − difficulty × 0.03</div>
+        <div class="fc-note">Big:    1.30 − difficulty × 0.03</div>
+    </div>
+</div>
+
+<p><strong>Game-specific implementations:</strong> AntysupresjaComboManager, SakadyComboManager, MiceGameComboManager, SnowmanComboManager, FollowGameComboManager, NiedowidzenieComboManager, ConstellationGameComboManager, TimeoutableIncrementalComboManager.</p>
+
+<!-- ═══════════ 9. EVENT SYSTEMS ═══════════ -->
+<h2 id="events">9. Event Systems</h2>
+
+<p>Three event systems coexist in the codebase. New code should prefer <code>Broker&lt;T&gt;</code> for system-wide events and <code>TherapyEventBroker</code> for therapy commands.</p>
+
+<h3 id="messenger">9.1 Messenger (Legacy &mdash; <code>[Obsolete]</code>)</h3>
+<p class="f">Assets/Shared/Scripts/Helpers/Messenger/Messenger.cs</p>
+
+<p>String-keyed global event bus. Still widely used in ComboManagers, parameter broadcasting, and game events.</p>
+
+<table>
+    <thead><tr><th>Key</th><th>Payload</th><th>Used By</th></tr></thead>
+    <tbody>
+        <tr><td><code>"correctAnswer"</code></td><td>object</td><td>Game → ComboManager</td></tr>
+        <tr><td><code>"wrongAnswer"</code></td><td>object</td><td>Game → ComboManager</td></tr>
+        <tr><td><code>"timeout"</code></td><td>object</td><td>Game → ComboManager</td></tr>
+        <tr><td><code>"onDifficultyChange"</code></td><td>int</td><td>ComboManager → VFX</td></tr>
+        <tr><td><code>"paramsUpdated"</code></td><td>List&lt;Param&gt;</td><td>Loader → UGCParametersController</td></tr>
+        <tr><td><code>"therapyGameStop"</code></td><td>&mdash;</td><td>LoaderController</td></tr>
+        <tr><td><code>"levelCompleted"</code></td><td>object</td><td>Levels → Results</td></tr>
+    </tbody>
+</table>
+
+<h3 id="broker">9.2 HierarchicalBroker (Preferred)</h3>
+<p class="f">Assets/Shared/Scripts/HierachicalBroker/</p>
+
+<p>Type-safe generic event system. Engine-independent (<code>noEngineReferences: true</code>). Supports Before/After hooks and cancellation.</p>
+
+<pre><code><span class="cm">// Subscribe (returns IDisposable for auto-cleanup)</span>
+<span class="kw">var</span> sub = <span class="ty">Broker</span>&lt;<span class="ty">ObjectSizeChanged</span>&gt;.<span class="fn">Subscribe</span>((sender, args) => {
+    Debug.Log($<span class="st">"Size: {args.Size}"</span>);
+});
+
+<span class="cm">// Invoke</span>
+<span class="ty">Broker</span>&lt;<span class="ty">ObjectSizeChanged</span>&gt;.<span class="fn">Invoke</span>(<span class="kw">this</span>, <span class="kw">new</span> <span class="ty">ObjectSizeChanged</span>(size));
+
+<span class="cm">// Before hook (can cancel event)</span>
+<span class="ty">Broker</span>&lt;<span class="ty">ObjectSizeChanged</span>&gt;.Before.<span class="fn">Subscribe</span>((sender, args) => { <span class="cm">/* validate */</span> });</code></pre>
+
+<p><strong>Event types used:</strong> <code>TabletStateChanged</code>, <code>ObjectSizeChanged</code>, <code>ObjectDistanceChanged</code>, <code>NewTranslation</code>, <code>UpdatingStateChanged</code>, <code>BatteryLevelChanged</code>, <code>ControllerStateChanged</code>, <code>InteractablesStateChange</code>.</p>
+
+<h3 id="therapy-events">9.3 TherapyEventBroker</h3>
+<p class="f">Assets/Shared/Scripts/TherapyEvents/</p>
+
+<p>Priority-sorted event dispatcher for therapy commands. Subscribers implement <code>ITherapyEventReceiver</code> and can halt event propagation by returning <code>false</code>.</p>
+
+<table>
+    <thead><tr><th>TherapyEventFlag (bitmask)</th><th>Trigger</th></tr></thead>
+    <tbody>
+        <tr><td><code>Enter</code></td><td>Therapy session starts</td></tr>
+        <tr><td><code>Exit</code></td><td>Therapy session ends</td></tr>
+        <tr><td><code>StartGame</code></td><td>Load a game scene</td></tr>
+        <tr><td><code>StopGame</code></td><td>Stop current game</td></tr>
+        <tr><td><code>ForceStop</code></td><td>Emergency stop entire therapy</td></tr>
+        <tr><td><code>Pause</code></td><td>Pause active game</td></tr>
+        <tr><td><code>ResumeGame</code></td><td>Resume paused game</td></tr>
+        <tr><td><code>ParamChanged</code></td><td>Parameters updated mid-game</td></tr>
+        <tr><td><code>Demo</code></td><td>Demo/preview mode activated</td></tr>
+        <tr><td><code>ModuleFinished</code></td><td>Game module completed</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Key subscribers:</strong> LoaderController (priority orchestrator), UGCGameController (pause/resume), NetworkStatusWatchdog (blocks home therapy if offline), BatteryLevelWatchdog (blocks Hub entry on low battery).</p>
+
+<!-- ═══════════ 10. TABLET ═══════════ -->
+<h2 id="tablet">10. Tablet Communication</h2>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TabletCommunication.cs</p>
+
+<p>Bidirectional TCP communication between VR headset and therapist's companion tablet. Active only in <strong>stationary</strong> mode.</p>
+
+<h3 id="tcp-protocol">10.1 TCP Protocol</h3>
+
+<table>
+    <thead><tr><th>Server</th><th>Port</th><th>Direction</th><th>Queued</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td>Listener</td><td>8503</td><td>Tablet → VR</td><td>No (real-time)</td><td>Commands, init_data, connection pings</td></tr>
+        <tr><td>Sender</td><td>8502</td><td>VR → Tablet</td><td>Yes</td><td>Telemetry, game results, therapy status</td></tr>
+    </tbody>
+</table>
+
+<p><strong>Frame format:</strong> <code>[2-byte big-endian length][ASCII JSON payload]</code>. Serialization via LitJson.</p>
+
+<h4>Incoming Message Types (Tablet → VR)</h4>
+<table>
+    <thead><tr><th>Field</th><th>Type</th><th>Handler</th></tr></thead>
+    <tbody>
+        <tr><td><code>connection_status</code></td><td>bool</td><td>Ping → wake headset, respond with status</td></tr>
+        <tr><td><code>gogle_status_request</code></td><td>bool</td><td>Request telemetry → send battery, FPS, controller state</td></tr>
+        <tr><td><code>therapy</code></td><td>TherapyController</td><td>Therapy commands → <code>LoaderController.TherapyEvent()</code> on main thread</td></tr>
+        <tr><td><code>init_data</code></td><td>InitData</td><td>Credentials → <code>LoaderController.InitWebAPIData()</code></td></tr>
+        <tr><td><code>lang</code></td><td>string</td><td>Language code → <code>LocalizationManager.LoadLocalizedText()</code></td></tr>
+        <tr><td><code>service_mode</code></td><td>bool</td><td>Toggle service/maintenance mode</td></tr>
+    </tbody>
+</table>
+
+<h4>Outgoing Message Types (VR → Tablet)</h4>
+<table>
+    <thead><tr><th>Field</th><th>Content</th></tr></thead>
+    <tbody>
+        <tr><td><code>connection_status</code></td><td>{ connected: bool, gogleSleep: bool }</td></tr>
+        <tr><td><code>telemetry</code></td><td>Battery levels, controller states, FPS, mounting status, safe zone</td></tr>
+        <tr><td><code>completed_game</code></td><td>{ game_identity: {game_id, instance_id}, simple_result: string }</td></tr>
+        <tr><td><code>completed_therapy</code></td><td>Full therapy session data for server sync</td></tr>
+    </tbody>
+</table>
+
+<h3 id="discovery">10.2 Device Discovery</h3>
+<p>The VR headset broadcasts its presence for the tablet to find it on the network:</p>
+<ul>
+    <li><strong>UDP broadcast</strong> on port <code>8505</code> every 3 seconds: <code>"NEURASIM_VR|{IP}|{PORT}|{deviceName}|{deviceId}"</code></li>
+    <li><strong>Multicast</strong> to <code>224.0.0.1</code> every 5 seconds (Android 8.1+ compatibility)</li>
+</ul>
+
+<!-- ═══════════ 11. THERAPY MODULES ═══════════ -->
+<h2 id="games">11. Therapy Modules (Games)</h2>
+
+<p>Each therapy module targets specific visual functions. All follow the UGC framework pattern with game-specific controllers, combo managers, and parameter overrides.</p>
+
+<div class="game-grid">
+    <div class="game-card">
+        <div class="gid">ID: 7 &mdash; <span class="b b-purple">Amblyopia</span></div>
+        <div class="gname">Gem Collection</div>
+        <div class="gdesc">Anti-suppression therapy. Patient collects gems with the suppressed eye, training binocular vision.</div>
+        <div class="gfolder">Antysupresja/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 8 &mdash; <span class="b b-teal">Coordination</span></div>
+        <div class="gname">Surprise Egg</div>
+        <div class="gdesc">Hand-eye coordination. Patient interacts with surprise eggs, training oculomotor control.</div>
+        <div class="gfolder">Niedowidzenia_oko_reka/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 9 &mdash; <span class="b b-green">Visual Field</span></div>
+        <div class="gname">Hungry Fish</div>
+        <div class="gdesc">Visual field and acuity training. Patient catches targets in expanding visual field areas.</div>
+        <div class="gfolder">ZakresyMice/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 10 &mdash; <span class="b b-blue">Fixation</span></div>
+        <div class="gname">Underwater Treasures</div>
+        <div class="gdesc">Fixation and smooth pursuit. Patient follows underwater objects with gaze stability.</div>
+        <div class="gfolder">Wodzenie/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 14 &mdash; <span class="b b-orange">Saccades</span></div>
+        <div class="gname">Space Drawings</div>
+        <div class="gdesc">Saccadic eye movement training. Quick, accurate eye jumps between space-themed targets.</div>
+        <div class="gfolder">SakkadyInSpace/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 17 &mdash; <span class="b b-pink">Accommodation</span></div>
+        <div class="gname">Magic Hut</div>
+        <div class="gdesc">Accommodative training. Focus shifting exercises in a magical environment.</div>
+        <div class="gfolder">Magic_Hut/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 18 &mdash; <span class="b b-blue">Pursuit</span></div>
+        <div class="gname">Sea Race</div>
+        <div class="gdesc">Smooth pursuit / object tracking. Follow a moving target along ocean race paths.</div>
+        <div class="gfolder">FollowObject/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 19 &mdash; <span class="b b-teal">Motor</span></div>
+        <div class="gname">Snowball Fight</div>
+        <div class="gdesc">Visual-motor coordination. Throwing snowballs at targets with hand tracking.</div>
+        <div class="gfolder">Snowman/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 21 &mdash; <span class="b b-purple">Binocular</span></div>
+        <div class="gname">Two Or One</div>
+        <div class="gdesc">Binocular vision training: stereopsis, fusion, and convergence exercises in one module.</div>
+        <div class="gfolder">Stereopsja/ Fuzja/ Konwergencja/</div>
+    </div>
+    <div class="game-card">
+        <div class="gid">ID: 22 &mdash; <span class="b b-orange">Saccades</span></div>
+        <div class="gname">CSaber</div>
+        <div class="gdesc">Saccadic training using saber-style interactions with rapidly appearing targets.</div>
+        <div class="gfolder">CSaber/</div>
+    </div>
+</div>
+
+<h4>Standard Game Architecture Pattern</h4>
+<pre><code><span class="cm">// Every game scene contains:</span>
+<span class="ty">UGCGameController</span> (or subclass)          <span class="cm">// Game lifecycle</span>
+<span class="ty">UGCParametersController</span> (or subclass)    <span class="cm">// Parameter reception</span>
+<span class="ty">UGCTherapeuticEventsController</span>            <span class="cm">// VFX application</span>
+<span class="ty">UGCLevelManager</span>                           <span class="cm">// Level sequencing</span>
+  └── <span class="ty">UGCLevelContainer</span>[]                 <span class="cm">// Level groups</span>
+      └── <span class="ty">UGCLevel</span>[] / Prefabs             <span class="cm">// Individual levels</span>
+<span class="ty">ComboManager</span> subclass                      <span class="cm">// Difficulty progression</span>
+Game-specific result collector               <span class="cm">// Data for /therapy/save</span></code></pre>
+
+<!-- ═══════════ 12. LOCALIZATION ═══════════ -->
+<h2 id="localization">12. Localization</h2>
+<p class="f">Assets/Shared/Scripts/LangLocalization/LocalizationManager.cs</p>
+
+<p><code>LocalizationManager</code> is a persistent singleton. Language JSON files live in <code>StreamingAssets/Localization/</code> and are copied to <code>persistentDataPath/Localization/</code>.</p>
+
+<div class="grid2">
+    <div class="gcard">
+        <strong>Language Mapping</strong>
+        <p>USA region → English ("En")<br>POLAND region → Polish ("Pl")<br>Also driven by tablet via <code>data.lang</code> field</p>
+    </div>
+    <div class="gcard">
+        <strong>OTA Language Updates</strong>
+        <p>Checks remote <code>lang_meta.json</code> for newer versions. Downloads updated language files from server. Fires <code>Broker&lt;NewTranslation&gt;</code> on change.</p>
+    </div>
+</div>
+
+<p><strong>In-scene components:</strong> <code>LocalizedText</code> (auto-updates TextMeshPro), <code>LocalizedGameObject</code> (activates/deactivates by language), <code>LocalizedMaterial</code> (switches material by language).</p>
+
+<p><strong>Usage:</strong> <code>LocalizationManager.Instance.GetValue("key", "fallback")</code></p>
+
+<!-- ═══════════ 13. OTA UPDATES ═══════════ -->
+<h2 id="ota">13. OTA Update System</h2>
+<p class="f">Assets/Shared/Scripts/Updater/Updater.cs</p>
+
+<p>Supports silent over-the-air APK updates for three app types:</p>
+
+<table>
+    <thead><tr><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><code>MAIN_APP</code></td><td>The VR therapy application itself</td></tr>
+        <tr><td><code>STREAM_APP</code></td><td>Companion streaming service</td></tr>
+        <tr><td><code>SERVICE_APP</code></td><td>Background system service</td></tr>
+    </tbody>
+</table>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-gy">Update Check Loop — every 5 seconds</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">Fetch update_meta from server<br><small>compare remote version vs installed · filter by device type</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">update available?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">Yes</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-yw">Broker&lt;UpdatingStateChanged&gt; (IsUpdating=true)<br><small>Stop tablet TCP servers</small></div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-bl">Download APK → persistentDataPath/RemoteUpdate/<br><small>show progress bar + toast</small></div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-tl">AndroidHelper.remmedService.SilentInstallApp()</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-gn">If MAIN_APP: trigger app restart<br><small>Broker&lt;UpdatingStateChanged&gt; (IsUpdating=false)</small></div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gy">No update</div>
+                <div class="fc-box fc-gy">wait 4s → check again</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 14. VR SYSTEMS ═══════════ -->
+<h2 id="vr">14. VR-Specific Systems</h2>
+
+<div class="grid2">
+    <div class="gcard" style="border-top: 3px solid var(--accent);">
+        <strong>Stereo Rendering</strong>
+        <p>URP with separate left/right eye cameras. Layer-based eye patching controls which objects each eye sees. VFX applied per-eye via post-processing.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--accent2);">
+        <strong>Angular Sizing</strong>
+        <p><code>AngularSizeable</code> system maintains consistent visual angles regardless of depth. <code>VisusController</code> manages visual acuity levels.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--teal);">
+        <strong>Controller Abstraction</strong>
+        <p><code>UGCInput</code>, <code>RemmedControllers</code> abstract across Pico 3DoF/6DoF and DPVR. States: <code>Enabled</code>, <code>EnabledWithPointers</code>, <code>Disabled</code>. State changes on pause, UI mode, and during OTA update installs.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--warning);">
+        <strong>Thread Marshalling</strong>
+        <p><code>UnityThread.executeInUpdate()</code> dispatches TCP background thread callbacks to Unity main thread. Critical for tablet communication handlers.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--warning);">
+        <strong>BatteryLevelWatchdog</strong>
+        <p>Persistent singleton. Monitors headset + controller battery levels continuously. Fires <code>Broker&lt;BatteryLevelChanged&gt;</code>. Blocks Hub entry if battery below minimum. Shows blocking dialog to the patient if levels are too low.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--success);">
+        <strong>AndroidHelper</strong>
+        <p>Static utility class wrapping Android-specific operations: WiFi connection state, silent APK installs via <code>remmedService</code>, device wake-up, screen brightness control, and environment setup on first launch.</p>
+    </div>
+</div>
+
+<!-- ═══════════ 15. PERSISTENCE ═══════════ -->
+<h2 id="persistence">15. Data Persistence</h2>
+
+<table>
+    <thead><tr><th>Storage</th><th>Location</th><th>Contents</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><span class="b b-blue">PlayerPrefs</span></td>
+            <td>Android system</td>
+            <td><code>COMM_MODE</code>, <code>BUILD_GUID_VERSION</code>, <code>FIRST_USER_LOGIN</code>, <code>TARGET_DEVICE_APP_KEY</code>, <code>HANDNESS</code></td>
+        </tr>
+        <tr>
+            <td><span class="b b-green">persistentDataPath</span></td>
+            <td>App private storage</td>
+            <td><code>serverConfig.json</code>, <code>Localization/*.json</code>, <code>RemoteUpdate/*.apk</code>, unsent therapy data, error logs</td>
+        </tr>
+        <tr>
+            <td><span class="b b-purple">StreamingAssets</span></td>
+            <td>Read-only in APK</td>
+            <td>Default <code>serverConfig.json</code>, default language files, game assets</td>
+        </tr>
+        <tr>
+            <td><span class="b b-orange">In-Memory</span></td>
+            <td><code>WebApiPass</code> static</td>
+            <td>Session token, device credentials, API key (lost on app restart)</td>
+        </tr>
+        <tr>
+            <td><span class="b b-teal">Server</span></td>
+            <td>NeuraSim backend</td>
+            <td>Therapy plans, game results, session history, device registry, patient data</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 16. EDITOR & BUILD ═══════════ -->
+<h2 id="editor">16. Editor &amp; Build Tools</h2>
+
+<div class="grid2">
+    <div class="gcard">
+        <strong>CI Build</strong>
+        <p class="f">Assets/Editor/CLITools/EntryPoint.cs</p>
+        <p>Command: <code>Unity -batchmode -executeMethod CLITools.EntryPoint.Build -custom-parameters-file &lt;json&gt;</code></p>
+        <p>Produces signed Android APK. Configures server region, quality presets, version string.</p>
+    </div>
+    <div class="gcard">
+        <strong>Editor Build Window</strong>
+        <p class="f">Assets/Editor/RemmedTools/RemmedBuildWindow.cs</p>
+        <p>Odin Inspector-based GUI for visual build configuration. Region, instance, quality, signing options.</p>
+    </div>
+    <div class="gcard">
+        <strong>Mock System</strong>
+        <p class="f">Assets/Shared/Scripts/RemmedMock.cs</p>
+        <p>Editor-only. Simulates device hardware (serial, battery, controller, IPD, language) for testing without a headset. Config in <code>RemmedDeviceMock.json</code>.</p>
+    </div>
+    <div class="gcard">
+        <strong>Test Runner</strong>
+        <p class="f">Assets/Tests/</p>
+        <p>EditMode tests via Unity Test Runner. Covers: MovingMode, MinimumEnclosingCircle, MonoBehaviourExtensions, DebugRemmed, WebClient (with mock factories).</p>
+    </div>
+</div>
+
+<!-- ═══════════ 17. DEPENDENCIES ═══════════ -->
+<h2 id="deps">17. Key Dependencies</h2>
+
+<table>
+    <thead><tr><th>Package</th><th>Version</th><th>Purpose</th><th>Source</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Unity</strong></td><td>2020.3.15f2 LTS</td><td>Game engine</td><td>&mdash;</td></tr>
+        <tr><td><strong>URP</strong></td><td>10.5.1</td><td>Render pipeline (VR stereo)</td><td>Unity Registry</td></tr>
+        <tr><td><strong>Cysharp.UniTask</strong></td><td>2.2.5</td><td>Async/await for Unity</td><td>OpenUPM</td></tr>
+        <tr><td><strong>Sirenix Odin Inspector</strong></td><td>&mdash;</td><td>Editor extensions, SerializedMonoBehaviour</td><td>Asset Store</td></tr>
+        <tr><td><strong>DOTween</strong></td><td>&mdash;</td><td>Animation tweening</td><td>Asset Store</td></tr>
+        <tr><td><strong>LitJson</strong></td><td>&mdash;</td><td>JSON serialization</td><td>Embedded</td></tr>
+        <tr><td><strong>TextMeshPro</strong></td><td>3.0.9</td><td>UI text rendering</td><td>Unity Registry</td></tr>
+        <tr><td><strong>Pico VR SDK</strong></td><td>&mdash;</td><td>Primary headset SDK</td><td>Pico Developer</td></tr>
+        <tr><td><strong>DPVR SDK</strong></td><td>&mdash;</td><td>Secondary headset support</td><td>DPVR Developer</td></tr>
+        <tr><td><strong>Azure.Identity</strong></td><td>&mdash;</td><td>Key Vault secrets management</td><td>NuGet</td></tr>
+        <tr><td><strong>BetterStreamingAssets</strong></td><td>&mdash;</td><td>Reliable Android asset access</td><td>GitHub</td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 18. DOC INDEX ═══════════ -->
+<h2 id="doc-index">18. Documentation Index</h2>
+
+<p>This is the master overview document. Detailed per-system documentation lives in separate files:</p>
+
+<table>
+    <thead><tr><th>Document</th><th>File</th><th>Status</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Application Overview</strong> (this document)</td><td><code>Docs/00_Application_Overview.html</code></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td><strong>Login Flow</strong></td><td><a href="01_Login_Flow.html" style="color:var(--teal)"><code>Docs/01_Login_Flow.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Hub &amp; Game Selection</td><td><a href="02_Hub_Game_Selection.html" style="color:var(--teal)"><code>Docs/02_Hub_Game_Selection.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Game Framework (UGC)</td><td><a href="03_Game_Framework.html" style="color:var(--teal)"><code>Docs/03_Game_Framework.html</code></a></td></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Tablet Communication</td><td><a href="04_Tablet_Communication.html" style="color:var(--teal)"><code>Docs/04_Tablet_Communication.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Event Systems</td><td><a href="05_Event_Systems.html" style="color:var(--teal)"><code>Docs/05_Event_Systems.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Therapeutic VFX &amp; Difficulty</td><td><a href="06_VFX_and_Difficulty.html" style="color:var(--teal)"><code>Docs/06_VFX_and_Difficulty.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Parameter System</td><td><a href="07_Parameter_System.html" style="color:var(--teal)"><code>Docs/07_Parameter_System.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Localization &amp; OTA</td><td><a href="08_Localization_OTA.html" style="color:var(--teal)"><code>Docs/08_Localization_OTA.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+        <tr><td>Per-Game Module Docs</td><td><a href="09_Game_Modules.html" style="color:var(--teal)"><code>Docs/09_Game_Modules.html</code></a></td><td><span class="b b-green">Complete</span></td></tr>
+    </tbody>
+</table>
+
+<hr>
+<p style="color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 36px;">
+    NeuraSim VR &mdash; Application Overview &mdash; Generated 2026-02-25
+</p>
+
+</div>
+
+<script>
+    // ── Back-to-top visibility ──
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+
+    // ── Active sidebar link on scroll ──
+    const sections = Array.from(document.querySelectorAll('h2[id], h3[id], div[id]'));
+    const sideLinks = Array.from(document.querySelectorAll('.sidebar a[href^="#"]'));
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                sideLinks.forEach(a => {
+                    const isActive = a.getAttribute('href') === '#' + id;
+                    a.classList.toggle('active', isActive);
+                });
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // ── Code language labels ──
+    document.querySelectorAll('pre').forEach(pre => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+        const lang = code.className.match(/language-(\w+)/)?.[1];
+        const label = lang || (pre.textContent.includes('public class') || pre.textContent.includes('void ') ? 'C#' :
+                     pre.textContent.trim().startsWith('{') ? 'JSON' :
+                     pre.textContent.includes('//') ? 'C#' : null);
+        if (label) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+            const lbl = document.createElement('span');
+            lbl.className = 'code-lang';
+            lbl.textContent = label.toUpperCase();
+            wrapper.appendChild(lbl);
+        }
+    });
+</script>
+</body>
+</html>

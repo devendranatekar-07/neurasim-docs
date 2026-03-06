@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Tablet TCP Communication</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232633;
+            --surface3: #2a2e3f;
+            --border: #2e3248;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa7;
+            --accent: #6c8aff;
+            --accent2: #a78bfa;
+            --accent3: #c084fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #38bdf8;
+            --teal: #2dd4bf;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 300px; height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 20px 0; overflow-y: auto; z-index: 100;
+        }
+        .sidebar-brand {
+            padding: 0 20px 16px;
+            font-size: 13px; font-weight: 800;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a {
+            display: block; padding: 6px 20px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: 12.5px; transition: all 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        /* ── Top Nav ── */
+        @media (max-width: 900px) { .topnav { left: 0; } }
+        .topnav {
+            position: fixed; top: 0; left: 300px; right: 0; z-index: 200;
+            height: 40px; background: rgba(26,29,39,0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; padding: 0 24px;
+            font-size: 12px;
+        }
+        .topnav span { color: var(--text-muted); font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 5px; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; cursor: default; }
+
+        /* ── Back to top ── */
+        #btt {
+            position: fixed; bottom: 28px; right: 28px; z-index: 300;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--teal); color: #000; border: none;
+            font-size: 17px; font-weight: 700; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3);
+        }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        /* ── Main ── */
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+
+        h1 { font-size: 38px; font-weight: 900;
+            background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .hero-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 36px; }
+        h2 {
+            font-size: 23px; font-weight: 700;
+            margin: 52px 0 16px; padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        h3 { font-size: 17px; font-weight: 600; margin: 28px 0 10px; color: var(--teal); }
+        h4 { font-size: 14px; font-weight: 600; margin: 18px 0 6px; color: var(--accent2); }
+
+        p { margin-bottom: 12px; }
+        ul, ol { margin: 0 0 12px 24px; }
+        li { margin-bottom: 4px; }
+
+        /* ── Code ── */
+        pre {
+            background: var(--code-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 18px 20px; overflow-x: auto;
+            font-size: 12.5px; line-height: 1.65; margin: 14px 0;
+            position: relative;
+        }
+        code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+        p code, li code, td code {
+            background: var(--surface3); border: 1px solid var(--border);
+            border-radius: 4px; padding: 1px 6px; font-size: 12px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        }
+        .kw { color: #c678dd; }
+        .ty { color: #e5c07b; }
+        .fn { color: #61afef; }
+        .st { color: #98c379; }
+        .cm { color: #5c6370; font-style: italic; }
+        .nu { color: #d19a66; }
+        .in { color: var(--info); font-weight: 700; }
+        .tl { color: var(--teal); font-weight: 700; }
+        .wa { color: var(--warning); font-weight: 700; }
+        .pk { color: var(--pink); font-weight: 700; }
+        .er { color: var(--error); font-weight: 700; }
+        .hl { color: var(--accent); }
+        .gr { color: var(--success); }
+        .dim { color: var(--text-muted); }
+
+        /* ── Tables ── */
+        table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+        thead tr { background: var(--surface2); }
+        th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700;
+             text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted);
+             border-bottom: 2px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:hover { background: var(--surface2); }
+        tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+        /* ── Badges ── */
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .b-blue  { background: rgba(108,138,255,0.18); color: var(--accent); }
+        .b-green { background: rgba(74,222,128,0.18); color: var(--success); }
+        .b-yellow{ background: rgba(251,191,36,0.18);  color: var(--warning); }
+        .b-red   { background: rgba(248,113,113,0.18); color: var(--error); }
+        .b-teal  { background: rgba(45,212,191,0.18);  color: var(--teal); }
+        .b-purple{ background: rgba(167,139,250,0.18); color: var(--accent2); }
+        .b-orange{ background: rgba(251,146,60,0.18);  color: var(--orange); }
+        .b-grey  { background: rgba(139,143,167,0.18); color: var(--text-muted); }
+
+        /* ── Alerts ── */
+        .alert { border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13.5px; border-left: 4px solid; }
+        .alert-title { font-weight: 700; margin-bottom: 6px; }
+        .alert-warn  { background: rgba(251,191,36,0.08);  border-color: var(--warning);  color: var(--text); }
+        .alert-info  { background: rgba(56,189,248,0.08);  border-color: var(--info);     color: var(--text); }
+        .alert-error { background: rgba(248,113,113,0.08); border-color: var(--error);    color: var(--text); }
+        .alert-teal  { background: rgba(45,212,191,0.08);  border-color: var(--teal);     color: var(--text); }
+
+        /* ── Flow diagrams ── */
+        .flow {
+            background: var(--code-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 18px 20px; overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px; line-height: 1.8; margin: 14px 0;
+            white-space: pre;
+        }
+        .flow-legend {
+            display: flex; flex-wrap: wrap; gap: 14px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 16px; margin: 12px 0 4px;
+            font-size: 12px;
+        }
+        .flow-legend span { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+        .flow-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── Port cards ── */
+        .port-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+        .port-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 18px; position: relative;
+            overflow: hidden;
+        }
+        .port-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        }
+        .port-card.tcp-out::before { background: var(--accent); }
+        .port-card.tcp-in::before  { background: var(--teal); }
+        .port-card.udp::before     { background: var(--warning); }
+        .port-num { font-size: 28px; font-weight: 900; color: var(--text); margin-bottom: 4px; font-family: monospace; }
+        .port-proto { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .port-card.tcp-out .port-proto { color: var(--accent); }
+        .port-card.tcp-in  .port-proto { color: var(--teal); }
+        .port-card.udp     .port-proto { color: var(--warning); }
+        .port-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 6px; }
+        .port-detail strong { color: var(--text); }
+
+        /* ── Message type rows ── */
+        .msg-type { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace; }
+        .msg-in  { background: rgba(45,212,191,0.15); color: var(--teal); }
+        .msg-out { background: rgba(108,138,255,0.15); color: var(--accent); }
+
+        /* ── Grid cards ── */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .gcard {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 18px;
+        }
+        .gcard strong { display: block; margin-bottom: 8px; font-size: 14px; }
+        .gcard p { font-size: 13px; color: var(--text-muted); margin-bottom: 0; }
+        .gcard p code { background: var(--surface3); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 11.5px; }
+
+        /* ── File ref ── */
+        p.f {
+            display: flex; width: fit-content; align-items: center; gap: 8px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-left: 3px solid var(--teal);
+            border-radius: 5px; padding: 4px 12px 4px 10px;
+            font-size: 12px; color: var(--text-muted); font-family: monospace;
+            margin-bottom: 12px;
+        }
+        p.f::before { content: "📄"; font-size: 11px; }
+
+        /* ── Separator ── */
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+        /* ── Inline struct def ── */
+        .struct-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 14px 18px; margin: 12px 0;
+        }
+        .struct-box h4 { margin-top: 0; }
+        .struct-field { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .struct-field:last-child { border-bottom: none; }
+        .sf-type { color: var(--accent2); font-family: monospace; font-size: 12px; min-width: 140px; }
+        .sf-name { color: var(--teal); font-family: monospace; font-size: 12px; min-width: 200px; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; }
+
+        /* ── Visual Flowchart ── */
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-decision { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; border: 1.5px dashed var(--warning); color: var(--warning); background: rgba(251,191,36,0.08); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+        .fc-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-divider::before, .fc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Tablet TCP Communication — Doc 04</small>
+    </div>
+
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#ports">Port Configuration</a>
+
+    <a href="#discovery" class="sh">Network Discovery</a>
+    <a href="#broadcast">UDP Broadcast</a>
+    <a href="#multicast">UDP Multicast</a>
+    <a href="#scan" class="sub">Network Scan</a>
+
+    <a href="#lifecycle" class="sh">Connection Lifecycle</a>
+    <a href="#startup">Server Startup</a>
+    <a href="#connect">Client Connection</a>
+    <a href="#disconnect">Graceful Shutdown</a>
+    <a href="#timeout">Ping &amp; Auto-Restart</a>
+
+    <a href="#framing" class="sh">Wire Protocol</a>
+    <a href="#frame-format">Frame Format</a>
+    <a href="#queue">Outgoing Queue</a>
+
+    <a href="#messages" class="sh">Message Types</a>
+    <a href="#incoming">Incoming (Tablet → VR)</a>
+    <a href="#outgoing">Outgoing (VR → Tablet)</a>
+    <a href="#therapy-ctrl">TherapyController</a>
+    <a href="#telemetry">Telemetry</a>
+    <a href="#init-data">InitData</a>
+
+    <a href="#routing" class="sh">Message Routing</a>
+    <a href="#routing-flow">Routing Flow</a>
+    <a href="#therapy-mapping">Therapy Flag Mapping</a>
+
+    <a href="#threading" class="sh">Threading</a>
+    <a href="#thread-model">Thread Model</a>
+    <a href="#unity-thread">UnityThread</a>
+
+    <a href="#integration" class="sh">Integration</a>
+    <a href="#loadercontroller">LoaderController</a>
+    <a href="#ota-pause">OTA Pause / Resume</a>
+    <a href="#broker-events">Broker Events</a>
+
+    <a href="#classes" class="sh">Classes</a>
+    <a href="#tabletcomm">TabletCommunication</a>
+    <a href="#tcpserver">TCPServer</a>
+    <a href="#tabletdata">Data Structures</a>
+
+    <a href="#known-issues" class="sh">Known Issues</a>
+    <a href="#constants" class="sh">Constants</a>
+    <a href="#component-ref" class="sh">Component Reference</a>
+
+</nav>
+
+<!-- ── Top Nav ── -->
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <span class="current">Tablet TCP</span>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<!-- ── Back to top ── -->
+<button id="btt" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="main">
+
+<h1>Tablet TCP Communication</h1>
+<p class="hero-sub">Complete reference for the bidirectional TCP protocol between VR headset and therapist tablet — discovery, connection lifecycle, wire framing, message routing, and threading model.</p>
+
+<!-- ═══════════ 1. OVERVIEW ═══════════ -->
+<h2 id="overview">1. Overview</h2>
+
+<p><code>TabletCommunication</code> is a persistent singleton that manages all real-time communication between the VR headset and the therapist's companion tablet. It runs two TCP servers and uses UDP for network discovery.</p>
+
+<div class="alert alert-teal">
+    <div class="alert-title">Active only in Stationary (Tablet) Mode</div>
+    When the device is configured for <strong>home</strong> therapy, both TCP servers are stopped and the app communicates directly with the backend REST API. The TCP layer is exclusively for the stationary clinic workflow where a therapist drives therapy from a tablet.
+</div>
+
+<div class="grid2">
+    <div class="gcard" style="border-top: 3px solid var(--teal);">
+        <strong>Primary Responsibility</strong>
+        <p>Bidirectional session between headset and tablet. Tablet sends therapy commands, game configs, and credentials. Headset sends telemetry, game results, and session completion.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--accent);">
+        <strong>Architecture Pattern</strong>
+        <p>Two separate TCP server instances on different ports (one queued outgoing, one real-time incoming) plus async UDP discovery broadcasting every 3–5 seconds.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--warning);">
+        <strong>Persistence</strong>
+        <p>Survives all scene transitions. <code>DestroyedOnSceneChange()</code> returns <code>false</code>. Created at app startup, destroyed only when the application exits.</p>
+    </div>
+    <div class="gcard" style="border-top: 3px solid var(--accent2);">
+        <strong>Threading</strong>
+        <p>All TCP I/O runs on background threads. Callbacks are marshalled to the Unity main thread via <code>UnityThread.executeInUpdate()</code> before touching Unity APIs.</p>
+    </div>
+</div>
+
+<!-- ═══════════ 2. PORT CONFIGURATION ═══════════ -->
+<h2 id="ports">2. Port Configuration</h2>
+
+<div class="port-grid">
+    <div class="port-card tcp-out">
+        <div class="port-num">8502</div>
+        <div class="port-proto">TCP — Outgoing</div>
+        <div class="port-detail"><strong>Direction:</strong> VR Headset → Tablet</div>
+        <div class="port-detail"><strong>Queue:</strong> Enabled (max 30 msgs)</div>
+        <div class="port-detail"><strong>Ping timeout:</strong> 5 seconds</div>
+        <div class="port-detail"><strong>Payload:</strong> Telemetry, completed_game, completed_therapy</div>
+    </div>
+    <div class="port-card tcp-in">
+        <div class="port-num">8503</div>
+        <div class="port-proto">TCP — Incoming</div>
+        <div class="port-detail"><strong>Direction:</strong> Tablet → VR Headset</div>
+        <div class="port-detail"><strong>Queue:</strong> Disabled (real-time)</div>
+        <div class="port-detail"><strong>Ping timeout:</strong> 5 seconds</div>
+        <div class="port-detail"><strong>Payload:</strong> Therapy commands, init_data, lang, connection_status</div>
+    </div>
+    <div class="port-card udp">
+        <div class="port-num">8505</div>
+        <div class="port-proto">UDP — Discovery</div>
+        <div class="port-detail"><strong>Direction:</strong> VR Headset → Network (broadcast + multicast)</div>
+        <div class="port-detail"><strong>Broadcast:</strong> Every 3 seconds to 255.255.255.255</div>
+        <div class="port-detail"><strong>Multicast:</strong> Every 5 seconds to 224.0.0.1</div>
+        <div class="port-detail"><strong>Android only</strong></div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <div class="alert-title">Why Two Separate TCP Servers?</div>
+    The split design enforces unidirectional ownership. The <strong>listener (8503)</strong> accepts one tablet connection and never sends from it. The <strong>sender (8502)</strong> has an outgoing queue to decouple game completion events from network timing. This prevents game completion callbacks from blocking if the tablet is momentarily slow.
+</div>
+
+<!-- ═══════════ 3. NETWORK DISCOVERY ═══════════ -->
+<h2 id="discovery">3. Network Discovery</h2>
+
+<p>The tablet needs to find the headset's IP address on the local network. The headset announces itself continuously via two parallel UDP strategies.</p>
+
+<h3 id="broadcast">3.1 UDP Broadcast (Every 3 seconds)</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TCPServer.cs → StartNetworkDiscovery()</p>
+
+<div class="flow-legend">
+    <span><span class="dot" style="background:var(--warning)"></span>UDP Packet</span>
+    <span><span class="dot" style="background:var(--teal)"></span>Destination</span>
+    <span><span class="dot" style="background:var(--accent)"></span>Message fields</span>
+</div>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-yw">UDP Broadcast Discovery (Android only)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">Create UdpClient<br><small>ReuseAddress=true · Broadcast=true</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Resolve local IPv4 via GetLocalIPAddress()<br><small>Dns.GetHostEntry(hostname) → InterNetwork · fallback 127.0.0.1</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">Every 3 seconds: send UDP broadcast<br><small>"NEURASIM_VR|{IP}|{Port}|{DeviceName}|{DeviceId}"<br>→ 255.255.255.255 : 8505</small></div>
+        <div class="fc-note">On error: wait 5s, retry</div>
+    </div>
+</div>
+
+<h3 id="multicast">3.2 UDP Multicast (Every 5 seconds)</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TCPServer.cs → StartMulticastDiscovery()</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-yw">UDP Multicast Discovery (Android only)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">Create UdpClient<br><small>ReuseAddress=true · join multicast group 224.0.0.1</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">Every 5 seconds: send UDP multicast<br><small>"NEURASIM_VR_MULTICAST|{IP}|{Port}|{DeviceName}|{DeviceId}"<br>→ 224.0.0.1 : 8505</small></div>
+        <div class="fc-note">On error: wait 10s, retry</div>
+    </div>
+</div>
+
+<table>
+    <thead><tr><th>Field</th><th>Broadcast example</th><th>Multicast example</th></tr></thead>
+    <tbody>
+        <tr><td>Prefix</td><td><code>NEURASIM_VR</code></td><td><code>NEURASIM_VR_MULTICAST</code></td></tr>
+        <tr><td>Local IP</td><td><code>192.168.1.42</code></td><td><code>192.168.1.42</code></td></tr>
+        <tr><td>Port</td><td><code>8503</code> (listener port)</td><td><code>8503</code></td></tr>
+        <tr><td>Device Name</td><td>SystemInfo.deviceModel</td><td>SystemInfo.deviceModel</td></tr>
+        <tr><td>Device ID</td><td>HardwareInfo.DeviceUniqueIdentifier()</td><td>HardwareInfo.DeviceUniqueIdentifier()</td></tr>
+        <tr><td>Delimiter</td><td><code>|</code> (pipe)</td><td><code>|</code> (pipe)</td></tr>
+    </tbody>
+</table>
+
+<h3 id="scan">3.3 Client-Side Discovery (Tablet)</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/NetworkDiscovery.cs</p>
+
+<p>The tablet app uses <code>NetworkDiscovery</code> to find headsets. Three methods run in parallel via <code>DiscoverServersEnhanced()</code>:</p>
+
+<table>
+    <thead><tr><th>Method</th><th>Mechanism</th><th>Timeout</th></tr></thead>
+    <tbody>
+        <tr><td><code>DiscoverViaBroadcast()</code></td><td>Listens on port 8505 for <code>NEURASIM_VR|…</code> prefix</td><td>10s default</td></tr>
+        <tr><td><code>DiscoverViaMulticast()</code></td><td>Joins 224.0.0.1, listens on port 8505 for <code>NEURASIM_VR_MULTICAST|…</code></td><td>10s default</td></tr>
+        <tr><td><code>DiscoverViaNetworkScan()</code></td><td>TCP connection probe on local subnet (Android only)</td><td>10s default</td></tr>
+    </tbody>
+</table>
+
+<p>Results are deduplicated and returned as <code>List&lt;ServerInfo&gt;</code> with fields: <code>IPAddress</code>, <code>Port</code>, <code>DeviceName</code>, <code>DeviceId</code>, <code>DiscoveryTime</code>.</p>
+
+<!-- ═══════════ 4. CONNECTION LIFECYCLE ═══════════ -->
+<h2 id="lifecycle">4. Connection Lifecycle</h2>
+
+<h3 id="startup">4.1 Server Startup</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TabletCommunication.cs → RunTabletTcpServ()</p>
+
+<div class="flow-legend">
+    <span><span class="dot" style="background:var(--teal)"></span>TCP/UDP task</span>
+    <span><span class="dot" style="background:var(--accent)"></span>State change</span>
+    <span><span class="dot" style="background:var(--warning)"></span>Android-only path</span>
+    <span><span class="dot" style="background:var(--success)"></span>Ready</span>
+</div>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-tl">RunTabletTcpServ()<br><small>guard: only runs if ServerState == Stopped</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-tl">Listener Server (port 8503)</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-tl">_listenerServer.StartServer()<br><small>creates CancellationTokenSource</small></div>
+                    <div class="fc-note">ListenForIncomingRequests() — UniTask bg</div>
+                    <div class="fc-note">PingTimeout(5s) — UniTask bg</div>
+                    <div class="fc-note">StartNetworkDiscovery() — UniTask bg [Android]</div>
+                    <div class="fc-note">StartMulticastDiscovery() — UniTask bg [Android]</div>
+                    <div class="fc-box fc-gn">UniTask.WhenAll → ServerState = Running</div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-bl">Sender Server (port 8502)</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-bl">_senderServer.StartServer()</div>
+                    <div class="fc-note">ListenForIncomingRequests() — UniTask bg</div>
+                    <div class="fc-note">PingTimeout(5s) — UniTask bg</div>
+                    <div class="fc-note">ProcessOutgoingQueue(40ms) — UniTask bg</div>
+                    <div class="fc-note">StartNetworkDiscovery() — UniTask bg [Android]</div>
+                    <div class="fc-box fc-gn">UniTask.WhenAll → ServerState = Running</div>
+                </div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">TabletCommunication.ServerState = Started</div>
+    </div>
+</div>
+
+<h3 id="connect">4.2 Client Connection</h3>
+<p>Once <code>ListenForIncomingRequests()</code> is running, it blocks on <code>AcceptTcpClientAsync()</code>. When the tablet connects:</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-tl">Tablet initiates TCP connection to headset:8503</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">AcceptTcpClientAsync() returns TcpClient<br><small>KeepAlive=true · NoDelay=true (TCP_NODELAY)</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">ClientStateCallback → ClientState.Connected<br><small>Broker&lt;TabletStateChanged&gt;.Invoke(Connected) · IsConnected=true</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-bl">NetworkStream.ReadAsync() loop (1024 byte buffer)</div>
+        <div class="fc-note">Read [2-byte size header] → payload length</div>
+        <div class="fc-note">Read [payload bytes] up to size</div>
+        <div class="fc-note">Decode ASCII → string</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Route to TabletDataReceived() callback</div>
+    </div>
+</div>
+
+<h3 id="disconnect">4.3 Graceful Shutdown</h3>
+<p class="f">TabletCommunication.cs → StopTabletTcpServ()</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-rd">StopTabletTcpServ()<br><small>guard: only if ServerState == Started</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-yw">ServerState = Stopping</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">await _listenerServer.StopServer()</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-rd">_tcpServerCts.Cancel() → cancels all UniTasks</div>
+                    <div class="fc-note">await _mainServerRunner (wait for tasks to finish)</div>
+                    <div class="fc-note">_discoveryClient?.Close()</div>
+                    <div class="fc-note">_multicastClient?.Close()</div>
+                    <div class="fc-note">unsubscribe _clientState callback</div>
+                    <div class="fc-box fc-gy">CurrentServerState = Stopped</div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">await _senderServer.StopServer()</div>
+                <div class="fc-box fc-gy">same procedure</div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gn">ServerState = Stopped · IsConnected = false</div>
+    </div>
+</div>
+
+<div class="alert alert-warn">
+    <div class="alert-title">Async Shutdown Requirement</div>
+    <code>StopTabletTcpServ()</code> is <code>async UniTask</code> and must be awaited. In <code>ConnectServerWindow</code> it is called as <code>await TabletCommunication.Instance.StopTabletTcpServ()</code>. Calling it with <code>.Forget()</code> is done only from <code>OnDestroy()</code> where no await is possible. If shutdown is not awaited, the next <code>StartServer()</code> may race against incomplete cleanup.
+</div>
+
+<h3 id="timeout">4.4 Ping / Auto-Restart on Timeout</h3>
+<p class="f">TCPServer.cs → PingTimeout()</p>
+
+<p>Both servers have a 5-second idle timeout. If no bytes are received from the connected client within the window, the server automatically restarts.</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-rd">PingTimeout(maxTimeout=5s) — background thread</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">_currentTimeout = maxTimeout (volatile int)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">Loop while client connected</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">_resetTimeout == true?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">Yes (data received)</div>
+                <div class="fc-box fc-gn">Reset _currentTimeout = maxTimeout<br><small>Interlocked.Exchange · _resetTimeout=false</small></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gy">No</div>
+                <div class="fc-box fc-gy">_currentTimeout -= 1</div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">_currentTimeout &lt;= 0?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-rd">Yes — timeout!</div>
+                <div class="fc-box fc-rd">await RestartServer()<br><small>StopServer() → StartServer()</small></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gy">No</div>
+                <div class="fc-box fc-gy">await UniTask.Delay(1000ms)<br><small>loop again</small></div>
+            </div>
+        </div>
+        <div class="fc-note">ListenForIncomingRequests() sets _resetTimeout=true after each successful read</div>
+        <div class="fc-note">"PING" messages: _resetTimeout=true, continue (not forwarded to callback)</div>
+    </div>
+</div>
+
+<!-- ═══════════ 5. WIRE PROTOCOL ═══════════ -->
+<h2 id="framing">5. Wire Protocol</h2>
+
+<h3 id="frame-format">5.1 Frame Format</h3>
+
+<p>All TCP messages — in both directions — use the same simple length-prefix framing. There are no delimiters or packet boundaries beyond the size header.</p>
+
+<pre><code><span class="cm">// ─── Frame Layout ───────────────────────────────────────────
+//
+//  ┌────────────┬─────────────────────────────────────────────┐
+//  │  2 bytes   │           N bytes                           │
+//  │  UInt16    │           ASCII JSON                        │
+//  │  big-endian│           payload                           │
+//  └────────────┴─────────────────────────────────────────────┘
+//
+//  Size is the byte length of the ASCII payload (not chars).
+//  ARM big-endian: byte order is REVERSED before sending.
+// ────────────────────────────────────────────────────────────</span>
+
+<span class="kw">async</span> <span class="ty">UniTaskVoid</span> <span class="fn">SendStringFrame</span>(<span class="kw">string</span> data)
+{
+    <span class="kw">byte</span>[] payloadBytes = <span class="ty">Encoding</span>.ASCII.<span class="fn">GetBytes</span>(data);
+    <span class="ty">UInt16</span> msgByteSize  = (<span class="ty">UInt16</span>) payloadBytes.Length;
+
+    <span class="kw">byte</span>[] sizeBytes = <span class="ty">BitConverter</span>.<span class="fn">GetBytes</span>(msgByteSize);
+    <span class="ty">Array</span>.<span class="fn">Reverse</span>(sizeBytes);   <span class="cm">// big-endian for ARM</span>
+
+    <span class="kw">byte</span>[] frame = sizeBytes.<span class="fn">Concat</span>(payloadBytes).<span class="fn">ToArray</span>();
+    <span class="kw">await</span> networkStream.<span class="fn">WriteAsync</span>(frame, <span class="nu">0</span>, frame.Length);
+}</code></pre>
+
+<div class="alert alert-info">
+    <div class="alert-title">Why ASCII and not UTF-8?</div>
+    All JSON payloads are restricted to ASCII-safe characters. Therapy parameters, game IDs, session tokens, and device identifiers are all numeric or Latin alphanumeric. Using ASCII avoids multi-byte encoding surprises in the size calculation and keeps the framing simple.
+</div>
+
+<h3 id="queue">5.2 Outgoing Message Queue (Port 8502)</h3>
+
+<p>The sender server (port 8502) uses a <code>ConcurrentQueue&lt;byte[]&gt;</code> to decouple caller threads from network writes. This prevents game completion events from blocking if the tablet is slow.</p>
+
+<div class="fc">
+    <div class="fc-fork" style="align-items:flex-start; gap:32px">
+        <div class="fc-branch">
+            <div class="fc-branch-lbl fc-bl">SendStringFrame(data)</div>
+            <div class="fc-seq">
+                <div class="fc-box fc-bl">Serialize → ASCII frame bytes</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-decision">enableQueue?</div>
+                <div class="fc-fork">
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl fc-bl">true (port 8502)</div>
+                        <div class="fc-seq">
+                            <div class="fc-box fc-bl">Enqueue frame bytes</div>
+                            <div class="fc-decision">queue &gt; 30?</div>
+                            <div class="fc-fork">
+                                <div class="fc-branch">
+                                    <div class="fc-branch-lbl fc-rd">Yes</div>
+                                    <div class="fc-box fc-rd">Dequeue oldest<br><small>log dropped</small></div>
+                                </div>
+                                <div class="fc-branch">
+                                    <div class="fc-branch-lbl fc-gn">No</div>
+                                    <div class="fc-box fc-gn">Queued OK</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl fc-tl">false (port 8503)</div>
+                        <div class="fc-box fc-tl">SendByteArray() directly</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="fc-branch">
+            <div class="fc-branch-lbl fc-gy">ProcessOutgoingQueue (bg thread)</div>
+            <div class="fc-seq">
+                <div class="fc-box fc-gy">Loop while not cancelled</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-gy">await UniTask.Delay(40ms)</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-decision">queue not empty AND connected?</div>
+                <div class="fc-fork">
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl fc-gn">Yes</div>
+                        <div class="fc-seq">
+                            <div class="fc-box fc-bl">TryPeek → SendByteArray(bytes)</div>
+                            <div class="fc-decision">success?</div>
+                            <div class="fc-fork">
+                                <div class="fc-branch">
+                                    <div class="fc-branch-lbl fc-gn">OK</div>
+                                    <div class="fc-box fc-gn">TryDequeue → remove</div>
+                                </div>
+                                <div class="fc-branch">
+                                    <div class="fc-branch-lbl fc-rd">Fail</div>
+                                    <div class="fc-box fc-rd">Delay 500ms<br><small>retry next loop</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl fc-gy">Disconnected</div>
+                        <div class="fc-box fc-gy">yield — queue persists</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table>
+    <thead><tr><th>Parameter</th><th>Value</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td>Max queue size</td><td>30 messages</td><td>Bounded buffer prevents unbounded memory growth</td></tr>
+        <tr><td>Dispatcher interval</td><td>40 ms</td><td>~25 sends/sec max throughput</td></tr>
+        <tr><td>Retry delay on error</td><td>500 ms</td><td>Back-off on transient write failures</td></tr>
+        <tr><td>Overflow behavior</td><td>Drop oldest</td><td>Always send the newest data to tablet</td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 6. MESSAGE TYPES ═══════════ -->
+<h2 id="messages">6. Message Types</h2>
+
+<h3 id="incoming">6.1 Incoming: Tablet → VR Headset</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TabletData.cs → FromTabletData</p>
+
+<p>Every message from the tablet deserializes into a <code>FromTabletData</code> object. Fields are sparse — only the relevant field for a given message type will be non-null/non-default. The receiver checks which fields are populated to determine message type.</p>
+
+<div class="struct-box">
+    <h4>FromTabletData</h4>
+    <div class="struct-field">
+        <span class="sf-type">bool</span>
+        <span class="sf-name">connection_status</span>
+        <span class="sf-desc">Tablet requesting connection confirmation ping</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">bool</span>
+        <span class="sf-name">gogle_status_request</span>
+        <span class="sf-desc">Tablet requesting full telemetry snapshot</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">TherapyController</span>
+        <span class="sf-name">therapy</span>
+        <span class="sf-desc">Therapy command object (start game, stop, pause, params, etc.)</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">InitData</span>
+        <span class="sf-name">init_data</span>
+        <span class="sf-desc">Device identity + session credentials from therapist login</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">string</span>
+        <span class="sf-name">lang</span>
+        <span class="sf-desc">ISO culture code for localization (e.g. <code>"pl-PL"</code>, <code>"en-US"</code>)</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">bool</span>
+        <span class="sf-name">service_mode</span>
+        <span class="sf-desc">Toggle maintenance / service mode (defined but not actively handled)</span>
+    </div>
+</div>
+
+<table>
+    <thead><tr><th>Field</th><th>Trigger</th><th>Handler (main thread)</th><th>Wake headset?</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><span class="msg-in">connection_status</span></td>
+            <td>Tablet periodic ping</td>
+            <td>Send <code>ToTabletData{ connection_status: { connected, gogleSleep } }</code> directly (no main-thread needed)</td>
+            <td><code>WakeUpHeadset(keepScreenOn: false)</code></td>
+        </tr>
+        <tr>
+            <td><span class="msg-in">gogle_status_request</span></td>
+            <td>Therapist requests headset status</td>
+            <td><code>UnityThread → SendTelemetry()</code></td>
+            <td><code>WakeUpHeadset(keepScreenOn: false)</code></td>
+        </tr>
+        <tr>
+            <td><span class="msg-in">therapy</span></td>
+            <td>Therapy command from therapist</td>
+            <td><code>UnityThread → LoaderController.TherapyEvent(therapy)</code></td>
+            <td><code>WakeUpHeadset(keepScreenOn: true)</code> on Enter flag</td>
+        </tr>
+        <tr>
+            <td><span class="msg-in">init_data</span></td>
+            <td>Session start / credentials push</td>
+            <td><code>UnityThread → LoaderController.InitWebAPIData(initData, Tablet)</code></td>
+            <td>No</td>
+        </tr>
+        <tr>
+            <td><span class="msg-in">lang</span></td>
+            <td>Therapist changes language on tablet</td>
+            <td><code>UnityThread → LocalizationManager.LoadLocalizedText(CultureInfo)</code> (only if changed)</td>
+            <td>No</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="outgoing">6.2 Outgoing: VR Headset → Tablet</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TabletData.cs → ToTabletData</p>
+
+<div class="struct-box">
+    <h4>ToTabletData</h4>
+    <div class="struct-field">
+        <span class="sf-type">ConnectionStatus</span>
+        <span class="sf-name">connection_status</span>
+        <span class="sf-desc"><code>{ connected: bool, gogleSleep: bool }</code> — response to ping</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">Telemetry</span>
+        <span class="sf-name">telemetry</span>
+        <span class="sf-desc">Full headset status snapshot (battery, FPS, controllers, UUID…)</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">CompletedGame</span>
+        <span class="sf-name">completed_game</span>
+        <span class="sf-desc">Game result after a therapy game finishes — game_id, instance_id, simple_result</span>
+    </div>
+    <div class="struct-field">
+        <span class="sf-type">Simple.Therapy</span>
+        <span class="sf-name">completed_therapy</span>
+        <span class="sf-desc">Full session summary after the therapy session ends</span>
+    </div>
+</div>
+
+<table>
+    <thead><tr><th>Field</th><th>Sent when</th><th>Queued?</th></tr></thead>
+    <tbody>
+        <tr><td><span class="msg-out">connection_status</span></td><td>Reply to <code>connection_status</code> or <code>gogle_status_request</code></td><td>No (direct send)</td></tr>
+        <tr><td><span class="msg-out">telemetry</span></td><td>Reply to <code>gogle_status_request</code></td><td>Yes (via port 8502 queue)</td></tr>
+        <tr><td><span class="msg-out">completed_game</span></td><td>Every time a therapy game module finishes</td><td>Yes (via port 8502 queue)</td></tr>
+        <tr><td><span class="msg-out">completed_therapy</span></td><td>End of entire therapy session</td><td>Yes (via port 8502 queue)</td></tr>
+    </tbody>
+</table>
+
+<h3 id="therapy-ctrl">6.3 TherapyController — Therapy Command Object</h3>
+
+<p>When the <code>therapy</code> field is set, the nested <code>TherapyController</code> object carries one or more boolean flags representing a therapy command, plus metadata about the game and mode.</p>
+
+<div class="struct-box">
+    <h4>TherapyController</h4>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">enter</span><span class="sf-desc">Therapy session starting — wake headset, set Enter flag</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">exit</span><span class="sf-desc">Therapy session ending — return to Loader</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">force_stop</span><span class="sf-desc">Emergency stop entire session</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">start_game</span><span class="sf-desc">Load and start the game identified by <code>game_identity</code></span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">stop_game</span><span class="sf-desc">Stop the currently running game</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">force_stop_game</span><span class="sf-desc">Force-quit current game without saving results</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">pause_game</span><span class="sf-desc">Pause the active game</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">resume_game</span><span class="sf-desc">Resume a paused game</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">demo_version</span><span class="sf-desc">Start game in demo/preview mode</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">continue_therapy</span><span class="sf-desc">Continue to next game in therapy plan</span></div>
+    <div class="struct-field"><span class="sf-type">bool</span><span class="sf-name">param_changed</span><span class="sf-desc">Therapy parameters were changed mid-game</span></div>
+    <div class="struct-field"><span class="sf-type">TherapyMode</span><span class="sf-name">mode</span><span class="sf-desc"><code>stationary | home | demo | callibration | none</code></span></div>
+    <div class="struct-field"><span class="sf-type">GameIdentity</span><span class="sf-name">game_identity</span><span class="sf-desc"><code>{ game_id, instance_id }</code> — identifies which game to load</span></div>
+    <div class="struct-field"><span class="sf-type">int</span><span class="sf-name">demo_max_time</span><span class="sf-desc">Maximum duration (seconds) for a demo session</span></div>
+    <div class="struct-field"><span class="sf-type">ChangeParam</span><span class="sf-name">param</span><span class="sf-desc">Changed parameter data when <code>param_changed == true</code></span></div>
+</div>
+
+<h3 id="telemetry">6.4 Telemetry — Headset Status Snapshot</h3>
+
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TabletData.cs → Telemetry</p>
+
+<table>
+    <thead><tr><th>Field</th><th>Type</th><th>Source / Notes</th></tr></thead>
+    <tbody>
+        <tr><td><code>uuid</code></td><td>string</td><td><code>HardwareInfo.DeviceUniqueIdentifier()</code> — headset serial</td></tr>
+        <tr><td><code>gogle_mounted</code></td><td>bool</td><td>Always <code>true</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>gogle_charging</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>gogle_battery_status</code></td><td>int</td><td>Always <code>70</code> <span class="b b-yellow">hardcoded</span> (real: <code>SystemInfo.batteryLevel * 100</code>)</td></tr>
+        <tr><td><code>gogle_low_battery</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>controller_battery_status_0</code></td><td>int</td><td>Always <code>80</code> <span class="b b-yellow">hardcoded</span> (real: <code>HardwareInfo.GetControllerPower(0)*100</code>)</td></tr>
+        <tr><td><code>controller_battery_status_1</code></td><td>int</td><td>Always <code>80</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>controller_low_battery_0</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>controller_low_battery_1</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>pair_controller_0</code></td><td>bool</td><td>Always <code>true</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>pair_controller_1</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>gogle_fps</code></td><td>int</td><td>Live FPS from <code>SharedHelper.FPS.GetFPS</code> updated in <code>Update()</code></td></tr>
+        <tr><td><code>incorrect_head_position</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>outside_safe_zone</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>question_control_images</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+        <tr><td><code>technical_problems</code></td><td>bool</td><td>Always <code>false</code> <span class="b b-yellow">hardcoded</span></td></tr>
+    </tbody>
+</table>
+
+<div class="alert alert-warn">
+    <div class="alert-title">Most Telemetry Fields Are Currently Hardcoded</div>
+    The original implementation collected real battery/controller data. These lines are commented out in the current code. The tablet receives dummy values for everything except <code>uuid</code> and <code>gogle_fps</code>. The real data reads were:<br>
+    <code>int headsetBattery = (int)(SystemInfo.batteryLevel * 100f);</code><br>
+    <code>int controllerBattery_0 = (int)(HardwareInfo.GetControllerPower(0) * 100f);</code>
+</div>
+
+<h3 id="init-data">6.5 InitData — Session Credentials from Tablet</h3>
+
+<p>When a therapist logs in on the tablet and selects a patient, the tablet pushes device identity and session credentials to the headset via <code>init_data</code>.</p>
+
+<div class="struct-box">
+    <h4>InitData</h4>
+    <div class="struct-field"><span class="sf-type">Device</span><span class="sf-name">device</span><span class="sf-desc">Device record from server — <code>id</code>, <code>deviceuuid</code>, <code>idkey</code>, <code>mode</code>, <code>device_descriptive_name</code>…</span></div>
+    <div class="struct-field"><span class="sf-type">Session</span><span class="sf-name">session</span><span class="sf-desc">Session record — <code>id</code>, <code>sessionid</code> (used as API token), <code>datestart</code>, <code>dateend</code></span></div>
+    <div class="struct-field"><span class="sf-type">TokenSession?</span><span class="sf-name">token_session</span><span class="sf-desc">Optional token object — only used in Standalone mode, not Tablet mode</span></div>
+</div>
+
+<p>In Tablet mode, the <code>sessionid</code> from the <code>Session</code> object is wrapped as the API token (<code>TokenSession{ token = session.sessionid }</code>) because the tablet already authenticated with the server and the session ID is the bearer credential.</p>
+
+<!-- ═══════════ 7. MESSAGE ROUTING ═══════════ -->
+<h2 id="routing">7. Message Routing</h2>
+
+<h3 id="routing-flow">7.1 Complete Routing Flow</h3>
+
+<div class="flow-legend">
+    <span><span class="dot" style="background:var(--teal)"></span>Background thread</span>
+    <span><span class="dot" style="background:var(--accent)"></span>Main thread</span>
+    <span><span class="dot" style="background:var(--warning)"></span>Android op</span>
+    <span><span class="dot" style="background:var(--error)"></span>Error / drop</span>
+    <span><span class="dot" style="background:var(--success)"></span>Result</span>
+</div>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-tl">TCPServer (port 8503) — background thread<br><small>NetworkStream.ReadAsync() reads [2-byte size][payload]</small></div>
+        <div class="fc-note">Resets ping timer (_resetTimeout=true) on each read</div>
+        <div class="fc-note">"PING" strings: ignored (keep-alive only, not forwarded)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">TabletDataReceived(asciiString) — background thread<br><small>LitJson.JsonMapper.ToObject&lt;FromTabletData&gt;()</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-decision">parse error?</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-rd">Yes</div>
+                <div class="fc-box fc-rd">LogError + return</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-gn">OK</div>
+                <div class="fc-box fc-gn">route by field</div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+        <div class="fc-fork" style="flex-wrap:wrap; gap:16px">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-bl">connection_status == true</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-yw">WakeUpHeadset(keepScreenOn: false)</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-tl">SendStringFrame(ConnectionStatus)<br><small>direct (not queued)</small></div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-bl">gogle_status_request == true</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-yw">WakeUpHeadset(keepScreenOn: false)</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-tl">UnityThread.executeInUpdate(SendTelemetry)</div>
+                    <div class="fc-note">→ main thread: BuildTelemetry() → send on 8502 (queued)</div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-bl">therapy != null</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-yw">If enter: Thread.Sleep(2s) + WakeUp(keepScreenOn: true)</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-tl">UnityThread.executeInUpdate(TherapyEvent)</div>
+                    <div class="fc-note">→ main thread: LoaderController.TherapyEvent()</div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-bl">init_data != null</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-tl">UnityThread.executeInUpdate(InitWebAPIData)</div>
+                    <div class="fc-note">→ main thread: WebApiPass session/device/token update</div>
+                </div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl fc-bl">lang != null &amp;&amp; changed</div>
+                <div class="fc-seq">
+                    <div class="fc-box fc-gy">_currenLang = data.lang</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-tl">UnityThread.executeInUpdate(LoadLocalizedText)</div>
+                    <div class="fc-note">→ main thread: LocalizationManager reload</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 id="therapy-mapping">7.2 TherapyController → TherapyEventFlags Mapping</h3>
+<p class="f">Assets/LOADER/Scripts/LoaderController.cs → TherapyEvent()</p>
+
+<p>The boolean flags in <code>TherapyController</code> are converted to a bitmask <code>TherapyEventFlags</code> and dispatched via <code>TherapyEventBroker</code>. Each subscriber receives the full bitmask and decides how to react.</p>
+
+<table>
+    <thead><tr><th>TherapyController flag</th><th>TherapyEventFlags bit</th><th>Effect</th></tr></thead>
+    <tbody>
+        <tr><td><code>enter = true</code></td><td><code>Enter</code></td><td>Therapy session begins, load first game or Hub</td></tr>
+        <tr><td><code>exit = true</code></td><td><code>Exit</code></td><td>Return to Loader scene after session</td></tr>
+        <tr><td><code>force_stop = true</code></td><td><code>ForceStop</code></td><td>Abort entire session immediately</td></tr>
+        <tr><td><code>start_game = true</code></td><td><code>StartGame</code></td><td>Load game scene for <code>game_identity.game_id</code></td></tr>
+        <tr><td><code>stop_game = true</code></td><td><code>StopGame</code></td><td>End game, return to Hub</td></tr>
+        <tr><td><code>force_stop_game = true</code></td><td><code>ForceStopGame</code></td><td>Force-quit game without saving</td></tr>
+        <tr><td><code>pause_game = true</code></td><td><code>Pause</code></td><td>Pause active game, show pause UI</td></tr>
+        <tr><td><code>resume_game = true</code></td><td><code>ResumeGame</code></td><td>Resume paused game</td></tr>
+        <tr><td><code>demo_version = true</code></td><td><code>Demo</code></td><td>Load game in demo/preview mode</td></tr>
+        <tr><td><code>continue_therapy = true</code></td><td><code>ContinueTherapy</code></td><td>Proceed to next game in therapy plan</td></tr>
+        <tr><td><code>param_changed = true</code></td><td><code>ParamChanged</code></td><td>Update parameters without reloading game</td></tr>
+    </tbody>
+</table>
+
+<pre><code><span class="cm">// LoaderController.TherapyEvent() — flag conversion logic</span>
+<span class="ty">TherapyEventFlags</span> changes = <span class="ty">TherapyEventFlags</span>.NoEvents;
+<span class="kw">if</span> (therapy.enter)          changes |= <span class="ty">TherapyEventFlags</span>.Enter;
+<span class="kw">if</span> (therapy.exit)           changes |= <span class="ty">TherapyEventFlags</span>.Exit;
+<span class="kw">if</span> (therapy.force_stop)     changes |= <span class="ty">TherapyEventFlags</span>.ForceStop;
+<span class="kw">if</span> (therapy.start_game)     changes |= <span class="ty">TherapyEventFlags</span>.StartGame;
+<span class="kw">if</span> (therapy.stop_game)      changes |= <span class="ty">TherapyEventFlags</span>.StopGame;
+<span class="kw">if</span> (therapy.demo_version)   changes |= <span class="ty">TherapyEventFlags</span>.Demo;
+<span class="kw">if</span> (therapy.force_stop_game)changes |= <span class="ty">TherapyEventFlags</span>.ForceStopGame;
+<span class="kw">if</span> (therapy.pause_game)     changes |= <span class="ty">TherapyEventFlags</span>.Pause;
+<span class="kw">if</span> (therapy.resume_game)    changes |= <span class="ty">TherapyEventFlags</span>.ResumeGame;
+<span class="kw">if</span> (therapy.param_changed)  changes |= <span class="ty">TherapyEventFlags</span>.ParamChanged;
+<span class="kw">if</span> (therapy.continue_therapy) changes |= <span class="ty">TherapyEventFlags</span>.ContinueTherapy;
+
+<span class="kw">if</span> (changes == <span class="ty">TherapyEventFlags</span>.NoEvents) {
+    <span class="ty">Debug</span>.<span class="fn">LogError</span>(<span class="st">"TherapyEvent got no flags set, aborting"</span>);
+    <span class="kw">return</span>;
+}
+
+<span class="kw">bool</span> handled = <span class="ty">TherapyEventBroker</span>.<span class="fn">InformSubscribers</span>(
+    <span class="kw">this</span>, <span class="kw">new</span> <span class="ty">TherapyEventArgs</span>(changes, therapy.mode));
+
+<span class="kw">if</span> (handled) <span class="fn">OldTherapyEvent</span>(therapy); <span class="cm">// legacy fallback</span></code></pre>
+
+<!-- ═══════════ 8. THREADING ═══════════ -->
+<h2 id="threading">8. Threading Model</h2>
+
+<h3 id="thread-model">8.1 Thread Architecture</h3>
+
+<div class="flow-legend">
+    <span><span class="dot" style="background:var(--error)"></span>Background thread (unsafe for Unity APIs)</span>
+    <span><span class="dot" style="background:var(--success)"></span>Unity main thread (safe)</span>
+    <span><span class="dot" style="background:var(--warning)"></span>Thread boundary crossing</span>
+</div>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-rd">Background Threads (TCPServer UniTask runners)<br><small>cannot call Debug.Log, SceneManager, MonoBehaviour, etc.</small></div>
+        <div class="fc-note">ListenForIncomingRequests() — blocking I/O on NetworkStream</div>
+        <div class="fc-note">ProcessOutgoingQueue() — 40ms poll + NetworkStream writes</div>
+        <div class="fc-note">PingTimeout() — countdown timer, triggers restart</div>
+        <div class="fc-note">StartNetworkDiscovery() — UDP sends every 3s</div>
+        <div class="fc-note">StartMulticastDiscovery() — UDP sends every 5s</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+        <div class="fc-divider">Thread Boundary</div>
+        <div class="fc-box fc-yw">UnityThread.executeInUpdate(action)<br><small>enqueues into locked List&lt;Action&gt; — safe from any thread</small></div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-divider">Unity Main Thread</div>
+
+        <div class="fc-box fc-gn">Unity Main Thread (MonoBehaviour Update loop)</div>
+        <div class="fc-note">UnityThread.Update() — drains action queue each frame</div>
+        <div class="fc-note">LoaderController.TherapyEvent()</div>
+        <div class="fc-note">LoaderController.InitWebAPIData()</div>
+        <div class="fc-note">LocalizationManager.LoadLocalizedText()</div>
+        <div class="fc-note">TabletCommunication.SendTelemetry()</div>
+        <div class="fc-note">All Unity API calls (SceneManager, Debug.Log, etc.)</div>
+    </div>
+</div>
+
+<h3 id="unity-thread">8.2 UnityThread</h3>
+<p class="f">Assets/Shared/Scripts/UnityThread.cs</p>
+
+<p>A lightweight main-thread dispatcher that bridges background TCP threads to the Unity main thread.</p>
+
+<pre><code><span class="cm">// Thread-safe enqueue from any thread:</span>
+<span class="kw">public static void</span> <span class="fn">executeInUpdate</span>(<span class="ty">Action</span> action)
+{
+    <span class="kw">lock</span> (actionQueuesUpdateFunc) {
+        actionQueuesUpdateFunc.<span class="fn">Add</span>(action);
+        noActionQueueToExecuteUpdateFunc = <span class="kw">false</span>;
+    }
+}
+
+<span class="cm">// Main thread drain (called every frame in Update()):</span>
+<span class="kw">void</span> <span class="fn">Update</span>()
+{
+    <span class="kw">if</span> (noActionQueueToExecuteUpdateFunc) <span class="kw">return</span>;  <span class="cm">// fast path</span>
+    <span class="kw">lock</span> (actionQueuesUpdateFunc) {
+        actionCopiedQueue.<span class="fn">AddRange</span>(actionQueuesUpdateFunc);
+        actionQueuesUpdateFunc.<span class="fn">Clear</span>();
+        noActionQueueToExecuteUpdateFunc = <span class="kw">true</span>;
+    }
+    <span class="kw">foreach</span> (<span class="kw">var</span> action <span class="kw">in</span> actionCopiedQueue) action.<span class="fn">Invoke</span>();
+    actionCopiedQueue.<span class="fn">Clear</span>();
+}</code></pre>
+
+<p>The volatile <code>noActionQueueToExecuteUpdateFunc</code> boolean acts as a fast-exit guard so the lock is only acquired when there are actions waiting — reducing contention on frames with no TCP activity.</p>
+
+<!-- ═══════════ 9. INTEGRATION ═══════════ -->
+<h2 id="integration">9. Integration</h2>
+
+<h3 id="loadercontroller">9.1 LoaderController Integration</h3>
+<p class="f">Assets/LOADER/Scripts/LoaderController.cs</p>
+
+<table>
+    <thead><tr><th>Call site</th><th>When</th><th>Effect</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>TabletCommunication.Instance.RunTabletTcpServ()</code></td>
+            <td>After login in Stationary mode (<code>ConnectServerWindow</code>)</td>
+            <td>Starts both TCP servers and begins UDP discovery</td>
+        </tr>
+        <tr>
+            <td><code>await TabletCommunication.Instance.StopTabletTcpServ()</code></td>
+            <td>After login in Home mode (<code>ConnectServerWindow</code>)</td>
+            <td>Stops all TCP/UDP cleanly</td>
+        </tr>
+        <tr>
+            <td><code>LoaderController.Instance.TherapyEvent(therapy)</code></td>
+            <td>Tablet sends <code>therapy</code> message</td>
+            <td>Converts to <code>TherapyEventFlags</code>, dispatches via <code>TherapyEventBroker</code></td>
+        </tr>
+        <tr>
+            <td><code>LoaderController.Instance.InitWebAPIData(initData, Tablet)</code></td>
+            <td>Tablet sends <code>init_data</code></td>
+            <td>Stores <code>session</code> + <code>device</code> + derived token in <code>WebApiPass.apiPass</code></td>
+        </tr>
+        <tr>
+            <td><code>TabletCommunication.Instance.SendCompletedGame(completedGame)</code></td>
+            <td>A therapy game finishes in <code>LoaderController</code></td>
+            <td>Queues game result on port 8502 for delivery to tablet</td>
+        </tr>
+        <tr>
+            <td><code>TabletCommunication.Instance.SendCompletedTherapySession(therapy)</code></td>
+            <td>Entire therapy session ends</td>
+            <td>Queues session summary on port 8502</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3 id="ota-pause">9.2 OTA Update Pause / Resume</h3>
+
+<p>During an OTA software update, the TCP servers are stopped to avoid interference. They are automatically restarted after the update completes — but only if the app is currently in Tablet mode.</p>
+
+<pre><code><span class="cm">// Subscribed in Awake() — persists for TabletCommunication lifetime</span>
+_subscription = <span class="ty">Broker</span>&lt;<span class="ty">UpdatingStateChanged</span>&gt;.<span class="fn">Subscribe</span>(
+    (<span class="kw">object</span> sender, <span class="kw">in</span> <span class="ty">UpdatingStateChanged</span> args) =&gt;
+    {
+        <span class="kw">if</span> (args.IsUpdating)
+            <span class="fn">StopTabletTcpServ</span>().<span class="fn">Forget</span>();   <span class="cm">// pause during install</span>
+        <span class="kw">else if</span> (<span class="ty">GlobalConfig</span>.communicationMode == <span class="ty">CommunicationMode</span>.Tablet)
+            <span class="fn">RunTabletTcpServ</span>();              <span class="cm">// resume after install</span>
+    });</code></pre>
+
+<h3 id="broker-events">9.3 Broker Events Published</h3>
+
+<table>
+    <thead><tr><th>Event Type</th><th>When fired</th><th>Payload</th><th>Subscribers</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>TabletStateChanged</code></td>
+            <td>Client connects or disconnects from port 8503</td>
+            <td><code>{ IPEndPoint address, ClientState state }</code></td>
+            <td>UI components showing connection indicator, LoaderController</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 10. CLASS REFERENCE ═══════════ -->
+<h2 id="classes">10. Class Reference</h2>
+
+<h3 id="tabletcomm">10.1 TabletCommunication</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TabletCommunication.cs</p>
+
+<table>
+    <thead><tr><th>Member</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><code>IsConnected</code></td><td>bool (property)</td><td>True when tablet TCP client is actively connected on port 8503</td></tr>
+        <tr><td><code>ServerState</code></td><td>TabletServerState</td><td><code>Started | Stopping | Stopped</code></td></tr>
+        <tr><td><code>RunTabletTcpServ()</code></td><td>void</td><td>Start both TCP servers. Guard: only if <code>ServerState == Stopped</code></td></tr>
+        <tr><td><code>StopTabletTcpServ()</code></td><td>async UniTask</td><td>Gracefully stop both servers. Must be awaited.</td></tr>
+        <tr><td><code>SendCompletedGame(CompletedGame)</code></td><td>void</td><td>Queue game result for tablet. Called by <code>LoaderController</code>.</td></tr>
+        <tr><td><code>SendCompletedTherapySession(Simple.Therapy)</code></td><td>void</td><td>Queue session summary for tablet.</td></tr>
+        <tr><td><code>DestroyedOnSceneChange()</code></td><td>bool</td><td>Returns <code>false</code> — persists across all scenes</td></tr>
+    </tbody>
+</table>
+
+<h3 id="tcpserver">10.2 TCPServer</h3>
+<p class="f">Assets/Shared/Scripts/TabletCommunication/TCPServer.cs</p>
+
+<table>
+    <thead><tr><th>Member</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><code>TCPServer(port, timeoutEnabled, enableQueue, maxQueueSize, logEnabled, receiver, clientState)</code></td><td>Constructor. Port 8503: timeout on, queue off. Port 8502: timeout on, queue on (max 30).</td></tr>
+        <tr><td><code>StartServer(CancellationToken)</code></td><td>Launch all background UniTasks under a linked <code>CancellationTokenSource</code>.</td></tr>
+        <tr><td><code>StopServer()</code></td><td>async — cancel CTS, await all tasks, dispose UDP clients.</td></tr>
+        <tr><td><code>RestartServer()</code></td><td>async — Stop then Start in sequence.</td></tr>
+        <tr><td><code>SendStringFrame(string)</code></td><td>UniTaskVoid — framesend. Queued if <code>enableQueue=true</code>, direct otherwise.</td></tr>
+        <tr><td><code>CurrentClientState</code></td><td><code>Connected | Disconnected</code></td></tr>
+        <tr><td><code>CurrentServerState</code></td><td><code>Running | Stopping | Stopped</code></td></tr>
+    </tbody>
+</table>
+
+<h3 id="tabletdata">10.3 Data Structures Summary</h3>
+
+<table>
+    <thead><tr><th>Class</th><th>Direction</th><th>Key Fields</th></tr></thead>
+    <tbody>
+        <tr><td><code>FromTabletData</code></td><td><span class="b b-teal">Incoming</span></td><td><code>connection_status, gogle_status_request, therapy, init_data, lang, service_mode</code></td></tr>
+        <tr><td><code>ToTabletData</code></td><td><span class="b b-blue">Outgoing</span></td><td><code>connection_status, telemetry, completed_game, completed_therapy</code></td></tr>
+        <tr><td><code>TherapyController</code></td><td><span class="b b-teal">Incoming</span></td><td>11 boolean flags + <code>mode</code>, <code>game_identity</code>, <code>param</code></td></tr>
+        <tr><td><code>Telemetry</code></td><td><span class="b b-blue">Outgoing</span></td><td>Battery, FPS, controller state, UUID (mostly hardcoded — see §6.4)</td></tr>
+        <tr><td><code>InitData</code></td><td><span class="b b-teal">Incoming</span></td><td><code>device</code>, <code>session</code>, <code>token_session</code></td></tr>
+        <tr><td><code>CompletedGame</code></td><td><span class="b b-blue">Outgoing</span></td><td><code>game_identity { game_id, instance_id }</code>, <code>simple_result</code></td></tr>
+        <tr><td><code>ConnectionStatus</code></td><td><span class="b b-blue">Outgoing</span></td><td><code>connected: bool</code>, <code>gogleSleep: bool</code></td></tr>
+        <tr><td><code>GameIdentity</code></td><td>Both</td><td><code>game_id</code> (shared, maps to <code>ProjectScene</code>), <code>instance_id</code> (unique per therapy plan entry)</td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 11. KNOWN ISSUES ═══════════ -->
+<h2 id="known-issues">11. Known Issues</h2>
+
+<div class="alert alert-warn">
+    <div class="alert-title">Hardcoded Telemetry (All Battery / Controller Fields)</div>
+    <code>SendTelemetry()</code> sends hardcoded values (<code>70%</code> headset battery, <code>80%</code> controllers, <code>true</code> for pair_controller_0) to the tablet. The real data reads are commented out. This means the therapist's tablet always shows the same dummy values in the headset status panel. The <code>BatteryLevelWatchdog</code> monitors real battery levels internally, but this data is not reflected in the telemetry sent to the tablet.
+</div>
+
+<div class="alert alert-error">
+    <div class="alert-title">WiFi Hotspot Password in Plaintext</div>
+    <code>ConnectTabletWifi.cs</code> contains a hardcoded WiFi password:<br>
+    <code>private const string wifiPass = "R3mm3D#!";</code><br>
+    This is used to connect to a tablet hotspot. The password is committed in source code and visible to anyone with repository access. Consider moving to a configurable credential or <code>StreamingAssets</code> config file.
+</div>
+
+<div class="alert alert-info">
+    <div class="alert-title">Thread.Sleep(2000) on TCP Receive Thread</div>
+    When a <code>therapy.enter == true</code> command arrives, the code calls <code>Thread.Sleep(2000)</code> on the TCP receive background thread before calling <code>AndroidHelper.WakeUpHeadset()</code>. This blocks the listener thread for 2 seconds. During this time, no other incoming messages on port 8503 can be processed. This is a workaround to ensure the headset is fully awake before handling the Enter command.
+</div>
+
+<div class="alert alert-info">
+    <div class="alert-title">TherapyEvent() Marked [Obsolete]</div>
+    <code>LoaderController.TherapyEvent()</code> is decorated with <code>[Obsolete("Use TherapyEventBroker.InformSubscribers")]</code> but is still the actual entry point called from the TCP receive path. The "legacy" fallback <code>OldTherapyEvent()</code> is still invoked for compatibility with older code paths.
+</div>
+
+<!-- ═══════════ 12. CONSTANTS ═══════════ -->
+<h2 id="constants">12. Constants Reference</h2>
+
+<table>
+    <thead><tr><th>Constant</th><th>Value</th><th>Location</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><code>SenderPort</code></td><td><span class="b b-blue">8502</span></td><td>TabletCommunication</td><td>Outgoing TCP (VR → Tablet, queued)</td></tr>
+        <tr><td><code>ListenerPort</code></td><td><span class="b b-teal">8503</span></td><td>TabletCommunication</td><td>Incoming TCP (Tablet → VR, real-time)</td></tr>
+        <tr><td><code>DiscoveryPort</code></td><td><span class="b b-yellow">8505</span></td><td>TCPServer</td><td>UDP broadcast + multicast discovery</td></tr>
+        <tr><td><code>BuffSize</code></td><td>1024 bytes</td><td>TCPServer</td><td>TCP read buffer size</td></tr>
+        <tr><td><code>PingAckFlag</code></td><td><code>"PING"</code></td><td>TCPServer</td><td>Keep-alive string — resets timeout, not forwarded to callback</td></tr>
+        <tr><td><code>DiscoveryMessage</code></td><td><code>"NEURASIM_VR"</code></td><td>TCPServer</td><td>Broadcast message prefix</td></tr>
+        <tr><td>Broadcast interval</td><td>3 seconds</td><td>TCPServer</td><td>UDP broadcast frequency</td></tr>
+        <tr><td>Multicast interval</td><td>5 seconds</td><td>TCPServer</td><td>UDP multicast frequency</td></tr>
+        <tr><td>Ping timeout</td><td>5 seconds</td><td>TCPServer</td><td>Idle timeout before auto-restart</td></tr>
+        <tr><td>Max queue size</td><td>30 messages</td><td>TCPServer</td><td>Outgoing queue hard cap</td></tr>
+        <tr><td>Queue dispatch interval</td><td>40 ms</td><td>TCPServer</td><td>Outgoing queue polling frequency</td></tr>
+        <tr><td>Queue retry delay</td><td>500 ms</td><td>TCPServer</td><td>Back-off on send error</td></tr>
+        <tr><td>Multicast group</td><td><code>224.0.0.1</code></td><td>TCPServer</td><td>IPv4 multicast group address</td></tr>
+        <tr><td><code>wifiPass</code></td><td><code>"R3mm3D#!"</code></td><td>ConnectTabletWifi</td><td><span class="b b-red">Plaintext WiFi password — see §11</span></td></tr>
+    </tbody>
+</table>
+
+<!-- ═══════════ 13. COMPONENT REFERENCE ═══════════ -->
+<h2 id="component-ref">13. Component Reference</h2>
+
+<table>
+    <thead><tr><th>File</th><th>Class</th><th>Role</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><code>TabletCommunication/TabletCommunication.cs</code></td>
+            <td><code>TabletCommunication</code></td>
+            <td>Persistent singleton. Owns both TCP servers, routes messages, manages lifecycle. Primary API surface.</td>
+        </tr>
+        <tr>
+            <td><code>TabletCommunication/TCPServer.cs</code></td>
+            <td><code>TCPServer</code></td>
+            <td>All TCP I/O, UDP discovery, ping timeout, outgoing queue. Used for both port 8502 and 8503 with different configuration.</td>
+        </tr>
+        <tr>
+            <td><code>TabletCommunication/TabletData.cs</code></td>
+            <td><code>FromTabletData, ToTabletData, TherapyController, Telemetry, CompletedGame, ConnectionStatus, InitData, GameIdentity</code></td>
+            <td>All message data model classes. Serialized/deserialized with LitJson.</td>
+        </tr>
+        <tr>
+            <td><code>TabletCommunication/NetworkDiscovery.cs</code></td>
+            <td><code>NetworkDiscovery</code></td>
+            <td>Client-side (tablet app) server discovery — broadcast, multicast, network scan.</td>
+        </tr>
+        <tr>
+            <td><code>TabletCommunication/ConnectTabletWifi.cs</code></td>
+            <td><code>ConnectTabletWifi</code></td>
+            <td>Configures Android WiFi static IP for tablet hotspot connection. Contains hardcoded credentials.</td>
+        </tr>
+        <tr>
+            <td><code>Shared Scripts/UnityThread.cs</code></td>
+            <td><code>UnityThread</code></td>
+            <td>Thread marshalling — dispatches background-thread callbacks to Unity main thread via action queue.</td>
+        </tr>
+        <tr>
+            <td><code>LOADER/Scripts/LoaderController.cs</code></td>
+            <td><code>LoaderController</code></td>
+            <td>Receives <code>TherapyEvent()</code> and <code>InitWebAPIData()</code> calls from TCP thread (via UnityThread). Owns TCP server start/stop decision.</td>
+        </tr>
+        <tr>
+            <td><code>Shared Scripts/Events/TabletStateChanged.cs</code></td>
+            <td><code>TabletStateChanged</code></td>
+            <td>Broker event args fired on client connect/disconnect. Used by UI and LoaderController.</td>
+        </tr>
+        <tr>
+            <td><code>Shared Scripts/TherapyEvents/TherapyEventBroker.cs</code></td>
+            <td><code>TherapyEventBroker</code></td>
+            <td>Priority-sorted dispatcher that receives therapy commands (converted from <code>TherapyController</code>) and routes to all subscribers.</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+<p style="color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 36px;">
+    NeuraSim VR &mdash; Tablet TCP Communication &mdash; Generated 2026-02-25
+</p>
+
+</div>
+
+<script>
+    // ── Back-to-top visibility ──
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+
+    // ── Active sidebar link on scroll ──
+    const sections = Array.from(document.querySelectorAll('h2[id], h3[id], div[id]'));
+    const sideLinks = Array.from(document.querySelectorAll('.sidebar a[href^="#"]'));
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                sideLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+                });
+            }
+        });
+    }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+
+    sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

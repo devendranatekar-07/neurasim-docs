@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Hub &amp; Game Selection</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232633;
+            --surface3: #2a2e3f;
+            --border: #2e3248;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa7;
+            --accent: #6c8aff;
+            --accent2: #a78bfa;
+            --accent3: #c084fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #38bdf8;
+            --teal: #2dd4bf;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 300px; height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 20px 0; overflow-y: auto; z-index: 100;
+        }
+        .sidebar-brand {
+            padding: 0 20px 16px;
+            font-size: 13px; font-weight: 800;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a {
+            display: block; padding: 6px 20px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: 12.5px; transition: all 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        /* ── Top Nav ── */
+        @media (max-width: 900px) { .topnav { left: 0; } }
+        .topnav {
+            position: fixed; top: 0; left: 300px; right: 0; z-index: 200;
+            height: 40px; background: rgba(26,29,39,0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; padding: 0 24px;
+            font-size: 12px;
+        }
+        .topnav span { color: var(--text-muted); font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 5px; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; cursor: default; }
+
+        /* ── Back to top ── */
+        #btt {
+            position: fixed; bottom: 28px; right: 28px; z-index: 300;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--teal); color: #000; border: none;
+            font-size: 17px; font-weight: 700; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3);
+        }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        /* ── Main ── */
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+
+        h1 { font-size: 38px; font-weight: 900;
+            background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px;
+            padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 24px 0 10px; }
+        p { margin-bottom: 12px; color: var(--text); }
+        ul, ol { padding-left: 20px; margin-bottom: 12px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+        code {
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+            background: var(--surface3); border: 1px solid var(--border);
+            padding: 1px 5px; border-radius: 4px;
+        }
+
+        /* ── Code blocks ── */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            margin: 12px 0 20px;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+        pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+        /* Syntax tokens */
+        .kw { color: #c084fc; }
+        .ty { color: #38bdf8; }
+        .fn { color: #6c8aff; }
+        .st { color: #4ade80; }
+        .cm { color: #4b5563; font-style: italic; }
+        .nu { color: #fb923c; }
+        .in { color: var(--info); }
+        .tl { color: var(--teal); }
+        .wa { color: var(--warning); }
+        .pk { color: var(--pink); }
+        .er { color: var(--error); }
+        .hl { color: var(--teal); font-weight: 700; }
+        .gr { color: var(--success); }
+        .dim { color: var(--text-muted); }
+
+        /* ── Cards / grids ── */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .gcard {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 18px;
+            border-top: 3px solid var(--teal);
+        }
+        .gcard h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gcard p { font-size: 13px; margin-bottom: 6px; }
+
+        /* ── Mode cards ── */
+        .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .mode-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .mode-card .mode-badge {
+            display: inline-block;
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        .mode-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+        .mode-card p { font-size: 13px; margin-bottom: 6px; }
+        .mode-card ul { font-size: 13px; }
+
+        /* ── Flow diagrams ── */
+        .flow {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin: 16px 0;
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 2;
+        }
+        .flow .node {
+            display: inline-block;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 12px;
+        }
+        .flow .node.hl { border-color: var(--teal); color: var(--teal); }
+        .flow .node.acc { border-color: var(--accent); color: var(--accent); }
+        .flow .node.warn { border-color: var(--warning); color: var(--warning); }
+        .flow .node.suc { border-color: var(--success); color: var(--success); }
+        .flow .node.err { border-color: var(--error); color: var(--error); }
+        .flow .arrow { color: var(--text-muted); }
+        .flow .label { color: var(--text-muted); font-size: 11px; font-style: italic; }
+
+        /* ── Tables ── */
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            background: var(--surface2);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 11px;
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        tr:hover td { background: var(--surface); }
+
+        /* ── Badges ── */
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal { background: rgba(45,212,191,0.15); color: var(--teal); border: 1px solid rgba(45,212,191,0.3); }
+        .b-blue { background: rgba(108,138,255,0.15); color: var(--accent); border: 1px solid rgba(108,138,255,0.3); }
+        .b-green { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow { background: rgba(251,191,36,0.15); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+        .b-red { background: rgba(248,113,113,0.15); color: var(--error); border: 1px solid rgba(248,113,113,0.3); }
+        .b-purple { background: rgba(167,139,250,0.15); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+        .b-orange { background: rgba(251,146,60,0.15); color: var(--orange); border: 1px solid rgba(251,146,60,0.3); }
+
+        /* ── Alerts ── */
+        .alert {
+            border-left: 3px solid;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 14px 0;
+            font-size: 13.5px;
+        }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,0.08); border-color: var(--warning); }
+        .alert-err { background: rgba(248,113,113,0.08); border-color: var(--error); }
+        .alert-ok { background: rgba(74,222,128,0.08); border-color: var(--success); }
+
+        /* ── File refs ── */
+        .f {
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--surface2);
+            border-left: 3px solid var(--teal);
+            padding: 6px 12px;
+            border-radius: 0 6px 6px 0;
+            display: block;
+            margin: 8px 0;
+        }
+
+        /* ── Step / sequence ── */
+        .steps { margin: 16px 0; }
+        .step {
+            display: flex; gap: 16px; margin-bottom: 14px;
+            padding-left: 14px; border-left: 2px solid var(--teal);
+        }
+        .step-num {
+            min-width: 26px; height: 26px;
+            background: var(--teal); color: #000;
+            border-radius: 50%; font-size: 12px; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .step-body { font-size: 13.5px; padding-top: 3px; }
+
+        /* ── Struct fields ── */
+        .struct-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .struct-title {
+            background: var(--surface2);
+            padding: 8px 14px;
+            font-size: 12px; font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .sf {
+            display: flex; gap: 12px;
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            align-items: baseline;
+        }
+        .sf:last-child { border-bottom: none; }
+        .sf-type { color: var(--info); font-family: monospace; width: 60px; flex-shrink: 0; font-size: 12px; }
+        .sf-name { color: var(--teal); font-family: monospace; width: 205px; flex-shrink: 0; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; flex: 1; min-width: 0; overflow-wrap: break-word; }
+
+        /* ── Demo state grid ── */
+        .demo-state {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 6px 16px;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .ds-label { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+        .ds-val { color: var(--text); }
+
+        section { scroll-margin-top: 60px; }
+
+        /* ── Visual Flowchart ── */
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-decision { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; border: 1.5px dashed var(--warning); color: var(--warning); background: rgba(251,191,36,0.08); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+        .fc-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-divider::before, .fc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════  SIDEBAR  ═══════════════════════════════════ -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Hub &amp; Game Selection — Doc 02</small>
+    </div>
+
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#entry-gates" class="sub">Entry Gates</a>
+    <a href="#modes" class="sh">Hub Modes</a>
+    <a href="#stationary" class="sub">Stationary</a>
+    <a href="#home" class="sub">Home</a>
+    <a href="#scene-arch" class="sh">Scene Architecture</a>
+    <a href="#loader-mode" class="sub">LoaderMode &amp; SceneParams</a>
+    <a href="#async-load" class="sub">AsyncLoadScene</a>
+    <a href="#interactables" class="sh">Interactables (Home)</a>
+    <a href="#interactable-manager" class="sub">InteractableManager</a>
+    <a href="#demo-tracker" class="sub">DemoTracker</a>
+    <a href="#demo-play-button" class="sub">DemoPlayButton</a>
+    <a href="#start-therapy-button" class="sub">StartTherapyButton</a>
+    <a href="#settings-door" class="sub">SettingsDoorInteractable</a>
+    <a href="#game-launch" class="sh">Game Launch Flow</a>
+    <a href="#game-identity" class="sub">GameIdentity</a>
+    <a href="#start-game" class="sub">StartGame()</a>
+    <a href="#param-polling" class="sub">Parameter Polling</a>
+    <a href="#inter-game" class="sh">Inter-Game Flow</a>
+    <a href="#session-complete" class="sh">Session Completion</a>
+    <a href="#therapy-flags" class="sh">TherapyEvent Flags</a>
+    <a href="#project-scene" class="sh">ProjectScene Reference</a>
+    <a href="#component-ref" class="sh">Component Reference</a>
+</nav>
+
+<!-- ═══════════════════════════════════  TOP NAV  ═══════════════════════════════════ -->
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <span class="current">Hub &amp; Game Selection</span>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<!-- ═══════════════════════════════════  MAIN  ═══════════════════════════════════════ -->
+<main class="main">
+
+    <h1>Hub &amp; Game Selection</h1>
+    <p class="hero-sub">3D lobby, portal interactables, demo enforcement, and therapy game launch flow</p>
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <section id="overview">
+        <h2>Overview</h2>
+        <p>
+            The <strong>Hub</strong> is the 3D lobby scene that sits between game sessions during an active therapy.
+            It is loaded by <code>LoaderController</code> after therapy entry (<code>TherapyEventFlags.Enter</code>)
+            and again after each game completes, until the full session is done.
+        </p>
+        <p>
+            What the patient sees and can interact with in the Hub depends entirely on the
+            <strong>therapy mode</strong>. In <code>stationary</code> mode the Hub is purely decorative — game
+            selection is driven by the therapist's tablet. In <code>home</code> mode the Hub is interactive —
+            physical game portals appear and the patient must watch a demo of each game before starting therapy.
+        </p>
+
+        <div class="fc">
+            <div class="fc-seq">
+                <div class="fc-box fc-bl">Loader Scene<br><small>TherapyEventFlags.Enter fired</small></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-tl">Hub Scene (3D Lobby)</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-decision">therapy mode?</div>
+                <div class="fc-fork">
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl">Stationary</div>
+                        <div class="fc-box fc-yw">Tablet sends start_game command</div>
+                    </div>
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl">Home</div>
+                        <div class="fc-box fc-pu">Patient selects a game portal</div>
+                    </div>
+                </div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-gn">Game Scene<br><small>therapy module plays</small></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-decision">more games in session?</div>
+                <div class="fc-fork">
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl fc-gn">Yes — ModuleFinished</div>
+                        <div class="fc-box fc-tl">Return to Hub<br><small>next game selected</small></div>
+                    </div>
+                    <div class="fc-branch">
+                        <div class="fc-branch-lbl fc-rd">No — SessionComplete</div>
+                        <div class="fc-seq">
+                            <div class="fc-box fc-yw">Hub (blocked)<br><small>session end animation</small></div>
+                            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                            <div class="fc-box fc-bl">Loader Scene<br><small>back to start</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="entry-gates">Entry Gates</h3>
+        <p>Before transitioning to the Hub, two watchdogs are checked:</p>
+        <div class="grid2">
+            <div class="gcard" style="border-top-color:var(--info)">
+                <h4>NetworkStatusWatchdog</h4>
+                <p>Verifies active internet + reachability to the server URL. If the network check fails, an error dialog is shown before Hub loads in stationary mode.</p>
+            </div>
+            <div class="gcard" style="border-top-color:var(--warning)">
+                <h4>BatteryLevelWatchdog</h4>
+                <p>Monitors headset battery. A low-battery warning may be shown. Does not block Hub entry but fires <code>Broker&lt;BatteryLevelChanged&gt;</code> events that UI components listen to.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ HUB MODES ═══ -->
+    <section id="modes">
+        <h2>Hub Modes</h2>
+        <p>
+            The Hub behaves differently depending on <code>GlobalConfig.communicationMode</code> and
+            <code>LoaderController.currentTherapyMode</code>:
+        </p>
+
+        <div class="mode-grid">
+            <div class="mode-card" style="border-top: 3px solid var(--accent)">
+                <div class="mode-badge b b-blue">stationary</div>
+                <h4 id="stationary">Stationary Mode</h4>
+                <p>Full clinical setup — therapist controls everything from the companion tablet.</p>
+                <ul>
+                    <li>No portal prefabs are spawned (<code>InteractableManager.Start()</code> returns early)</li>
+                    <li><code>SettingsDoorInteractable</code> is <strong>permanently blocked</strong> — patient cannot exit</li>
+                    <li><code>StartTherapyButton</code> is hidden (<code>SetActive(false)</code>)</li>
+                    <li>Hub simply waits for a <code>TherapyEventFlags.StartGame</code> event from the TCP listener</li>
+                    <li>Parameter polling (<code>TherapySetParameters</code>) begins immediately on game start</li>
+                </ul>
+            </div>
+            <div class="mode-card" style="border-top: 3px solid var(--teal)">
+                <div class="mode-badge b b-teal">home</div>
+                <h4 id="home">Home Mode</h4>
+                <p>Patient uses the headset independently at home — no tablet required.</p>
+                <ul>
+                    <li><code>InteractableManager</code> spawns one portal <code>DemoPlayButton</code> per game in the therapy plan</li>
+                    <li>Patient must watch a demo (<span class="b b-orange">max 3 plays per game</span>) before therapy unlocks</li>
+                    <li><code>StartTherapyButton</code> is visible but <strong>disabled</strong> until all mandatory demos are complete</li>
+                    <li>15-second timer runs between games (<code>HomeTherapyDelayedNextGame</code>)</li>
+                    <li><code>SettingsDoorInteractable</code> is enabled — patient can exit to Loader/settings</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Hub entry parameter:</strong> <code>StartHub(bool enableInteractables)</code> — when called with
+            <code>true</code>, immediately fires <code>Broker&lt;InteractablesStateChange&gt;(0f)</code> to unblock portals.
+            Called with <code>false</code> during <code>SessionComplete</code> to keep Hub locked while data uploads.
+        </div>
+    </section>
+
+    <!-- ═══ SCENE ARCH ═══ -->
+    <section id="scene-arch">
+        <h2>Scene Architecture</h2>
+        <span class="f">Assets/LOADER/Scripts/LoaderController.cs</span>
+
+        <h3 id="loader-mode">LoaderMode &amp; SceneParameters</h3>
+        <p>Every scene load carries a <code>SceneParameters</code> struct that tells the destination scene how to initialise itself:</p>
+
+        <div class="grid2">
+            <div class="struct-box">
+                <div class="struct-title">enum LoaderMode</div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">SimpleMode = 0</span><span class="sf-desc">Basic loader UI</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">AdvancedMode = 1</span><span class="sf-desc">Full loader with advanced options</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">Results = 2</span><span class="sf-desc">Post-game results screen</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">NoUI = 3</span><span class="sf-desc">Loader with no visible UI</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">Hub = 4</span><span class="sf-desc">Hub lobby scene</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">Stationary = 5</span><span class="sf-desc">Stationary (tablet-driven) therapy</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">Home = 6</span><span class="sf-desc">Home standalone therapy</span></div>
+                <div class="sf"><span class="sf-type">int</span><span class="sf-name">Default = 7</span><span class="sf-desc">Fallback default</span></div>
+            </div>
+            <div class="struct-box">
+                <div class="struct-title">struct SceneParameters</div>
+                <div class="sf"><span class="sf-type">bool</span><span class="sf-name">waitForParamsToStartTheGame</span><span class="sf-desc">Default <code>true</code> — block game start until first param poll returns</span></div>
+                <div class="sf"><span class="sf-type">LoaderMode</span><span class="sf-name">loaderMode</span><span class="sf-desc">Mode to initialise destination scene with</span></div>
+                <div class="sf"><span class="sf-type">static</span><span class="sf-name">Default</span><span class="sf-desc"><code>waitForParams=true</code>, <code>loaderMode=SimpleMode</code></span></div>
+            </div>
+        </div>
+
+        <p>
+            These are stored in the static field <code>LoaderController.sceneParameters</code> and read by destination
+            scene scripts in their <code>Start()</code> / <code>Awake()</code> via <code>LoaderController.Instance.Init(loaderMode)</code>.
+        </p>
+
+        <h3 id="async-load">AsyncLoadScene()</h3>
+        <pre><code><span class="kw">public async</span> <span class="ty">UniTask</span> <span class="fn">AsyncLoadScene</span>(<span class="ty">string</span> name, <span class="ty">LoadedSceneCallback</span> loaded = <span class="kw">null</span>,
+    <span class="ty">SceneParameters</span>? sceneParameters = <span class="kw">null</span>)
+{
+    LoaderController.sceneParameters = sceneParameters ?? SceneParameters.Default;
+    <span class="ty">AsyncOperation</span> asyncLoad = SceneManager.LoadSceneAsync(name);
+    <span class="kw">if</span> (asyncLoad != <span class="kw">null</span>)
+    {
+        progressBar.gameObject?.SetActive(<span class="kw">true</span>);
+        CancelInvoke();                              <span class="cm">// cancel any pending Invoke callbacks</span>
+        UGC.UGCGameController.Instance?.OnGameStop(); <span class="cm">// stop any running game</span>
+        <span class="kw">while</span> (!asyncLoad.isDone)
+        {
+            progressBar.Value = asyncLoad.progress * <span class="nu">100f</span>;
+            <span class="kw">await</span> UniTask.WaitForEndOfFrame();
+        }
+        <span class="kw">await</span> asyncLoad.ToUniTask();
+        loaded?.Invoke();                            <span class="cm">// callback fires AFTER scene is live</span>
+    }
+    <span class="kw">else</span>
+        ToastText3D.Instance.Show3DTextToast(<span class="st">"Scene is missing"</span>);
+}</code></pre>
+
+        <p>
+            The progress bar is driven from <code>AsyncOperation.progress</code> (0→1 mapped to 0→100%).
+            <code>UGCGameController.OnGameStop()</code> ensures the previous game is cleanly stopped before the new
+            scene loads. The <code>loaded</code> callback fires <em>after</em> the scene is fully active.
+        </p>
+    </section>
+
+    <!-- ═══ INTERACTABLES ═══ -->
+    <section id="interactables">
+        <h2>Interactables (Home Mode)</h2>
+        <p>
+            All interactive Hub objects implement <code>InteractableObject</code> (base class) and subscribe to
+            <code>Broker&lt;InteractablesStateChange&gt;</code> for block/unblock events. The state change carries a
+            <strong>duration in seconds</strong>; zero or negative unblocks immediately;
+            <code>InteractablesStateChange.Permanently</code> blocks indefinitely.
+        </p>
+
+        <h3 id="interactable-manager">InteractableManager</h3>
+        <span class="f">Assets/LOADER/NewLoaderGraphics/interactable objects/InteractableManager.cs</span>
+
+        <p>
+            Runs at Hub scene startup. Dynamically spawns the correct game portal prefab for each game in the
+            current therapy session set, placed at numbered spawn points.
+        </p>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    Checks <code>LoaderController.currentTherapyMode == TherapyMode.home</code>. In stationary mode,
+                    logs "dont spawn frames" and exits early.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    Iterates <code>currentTherapy.sessionset.Last().sessionsetgame</code>. For each game, picks the
+                    matching <code>frameObjects[n]</code> prefab by <code>game_id</code> and instantiates it at the
+                    next <code>framePositions[i]</code> spawn point (sorted by name). Sets <code>DemoPlayButton.instanceID</code>
+                    to the session-set game's unique <code>id</code> (not the <code>game_id</code>).
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    Queries <code>DemoTracker</code> for any games with zero plays. If any exist, starts the
+                    <code>ForceDemo()</code> coroutine which blocks all interactables, unblocks the settings door,
+                    and individually enables colliders only on the unplayed portals (with <code>forcedInteraction=true</code>).
+                    Games already played at least once have their collider disabled.
+                </div>
+            </div>
+        </div>
+
+        <div class="tbl-wrap">
+            <table>
+                <tr><th>game_id</th><th>Game Name</th><th>frameObjects index</th></tr>
+                <tr><td><code>7</code></td><td>Gem Collection (old sakady)</td><td>7</td></tr>
+                <tr><td><code>8</code></td><td>The Surprise Egg (wodzenie)</td><td>5</td></tr>
+                <tr><td><code>9</code></td><td>Hungry Fish (sakadyMain6DoF)</td><td>6</td></tr>
+                <tr><td><code>10</code></td><td>Underwater Treasures (bs_przeniesione)</td><td>0</td></tr>
+                <tr><td><code>14</code></td><td>Space Drawings (sakkadyinspace)</td><td>4</td></tr>
+                <tr><td><code>17</code></td><td>Magic Hut (micegame)</td><td>3</td></tr>
+                <tr><td><code>18</code></td><td>Sea Race (followgamescene)</td><td>2</td></tr>
+                <tr><td><code>19</code></td><td>Snowball Fight (snowmanhead)</td><td>1</td></tr>
+                <tr><td><code>21</code></td><td>Two Or One (mashrooms)</td><td>8</td></tr>
+                <tr><td><code>22</code></td><td>CSaber</td><td>9</td></tr>
+            </table>
+        </div>
+
+        <h3 id="demo-tracker">DemoTracker</h3>
+        <span class="f">Assets/Shared/Scripts/DemoTracker.cs</span>
+
+        <p>
+            Singleton (lazy-loaded from disk) that tracks how many times the patient has watched each game demo.
+            Persists to <code>Application.persistentDataPath/DemoTracker.json</code>. Also implements
+            <code>ITherapyEventReceiver</code> to automatically increment the play count when a demo
+            (<code>TherapyEventFlags.Demo</code>) is followed by a <code>ModuleFinished</code> event.
+        </p>
+
+        <div class="struct-box">
+            <div class="struct-title">Key members</div>
+            <div class="sf"><span class="sf-type">const int</span><span class="sf-name">singleDemoMaxPlaysCount</span><span class="sf-desc"><code>= 3</code> — cap per game portal</span></div>
+            <div class="sf"><span class="sf-type">bool</span><span class="sf-name">AnyDemosToPlay</span><span class="sf-desc">Returns <code>true</code> if any game in the current session set has zero plays. Gates portal access during forced-demo sequence.</span></div>
+            <div class="sf"><span class="sf-type">int</span><span class="sf-name">GetDemoPlayCount(id)</span><span class="sf-desc">Returns play count for a specific session-set game instance ID (not the game_id).</span></div>
+            <div class="sf"><span class="sf-type">void</span><span class="sf-name">MarkAllDemosAsPlayedOnce()</span><span class="sf-desc">Debug / admin shortcut to skip forced demo sequence (home mode only).</span></div>
+            <div class="sf"><span class="sf-type">void</span><span class="sf-name">ClearPlayedDemos()</span><span class="sf-desc">Resets all counts and deletes the JSON file.</span></div>
+        </div>
+
+        <h4 style="color:var(--text-muted);font-size:13px;margin:16px 0 8px;">Demo State Machine per Portal</h4>
+        <div class="fc">
+            <div class="fc-fork" style="align-items:stretch">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-rd">plays == 0</div>
+                    <div class="fc-box fc-rd">Must be played<br><small>forcedInteraction=true</small><br><small>collider ON · saturated</small></div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-yw">0 &lt; plays &lt; 3</div>
+                    <div class="fc-seq">
+                        <div class="fc-decision">AnyDemosToPlay?</div>
+                        <div class="fc-fork">
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl fc-rd">Yes</div>
+                                <div class="fc-box fc-gy">Wait for others<br><small>collider OFF · desaturated</small></div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl fc-gn">No</div>
+                                <div class="fc-box fc-gn">Optional replay<br><small>collider ON · saturated</small></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gy">plays ≥ 3</div>
+                    <div class="fc-box fc-gy">Max plays reached<br><small>collider OFF · desaturated</small><br><small>permanently disabled</small></div>
+                </div>
+            </div>
+        </div>
+
+        <h3 id="demo-play-button">DemoPlayButton</h3>
+        <span class="f">Assets/LOADER/NewLoaderGraphics/interactable objects/DemoPlayButton.cs</span>
+
+        <p>
+            Attached to each game portal prefab. When the patient gazes at / triggers it:
+        </p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    Blocks all interactables for 5 seconds:
+                    <code>Broker&lt;InteractablesStateChange&gt;.Invoke(new InteractablesStateChange(5f))</code>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    Populates <code>LastKnownTherapyController</code> fields:
+                    <code>demo_max_time = demoTime</code> (default 30s),
+                    <code>game_identity.game_id = (int)gameScene</code>,
+                    <code>game_identity.instance_id = instanceID</code>,
+                    <code>mode = TherapyMode.home</code>,
+                    <code>demo_version = true</code>.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    Fires <code>TherapyEventBroker.InformSubscribers(TherapyEventFlags.Demo, mode)</code>.
+                    <code>LoaderController</code> responds to this flag in its <code>ITherapyEventReceiver</code>
+                    implementation by loading the game scene.
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Note on instance ID vs game ID:</strong> <code>instanceID</code> is the session-set game's database
+            row ID (unique per patient/therapy), not the <code>game_id</code> (which identifies the game type). The
+            DemoTracker keys on <code>instanceID</code>, so demo counts are per-therapy-plan, not per-game-type globally.
+        </div>
+
+        <h3 id="start-therapy-button">StartTherapyButton</h3>
+        <span class="f">Assets/LOADER/NewLoaderGraphics/interactable objects/StartTherapyButton.cs</span>
+
+        <p>
+            A 3D world-space UI button that only appears in home mode. Gate logic at <code>Start()</code>:
+        </p>
+        <ul>
+            <li>If therapy mode is not <code>home</code> → <code>SetActive(false)</code>, done</li>
+            <li>If any game in the session has zero demo plays → <code>button.interactable = false</code>, animator disabled</li>
+            <li>If all games have at least one demo play → button is interactive, animated</li>
+        </ul>
+        <p>
+            On click: calls <code>LoaderController.Instance.StartStandaloneHomeTherapy()</code> which sets
+            the therapy in motion and begins the first game's 15-second countdown.
+        </p>
+
+        <h3 id="settings-door">SettingsDoorInteractable</h3>
+        <span class="f">Assets/LOADER/NewLoaderGraphics/interactable objects/SettingsDoorInteractable.cs</span>
+
+        <p>
+            A 3D door model the patient can hold-activate to return to the Loader (settings/home screen). The interaction
+            is a <strong>hold-to-confirm</strong> pattern — the door rotates progressively over
+            <code>acceptingExitDelay</code> seconds while the action button is held.
+        </p>
+        <ul>
+            <li>In <strong>stationary</strong> mode: <code>BlockInteractablePerma()</code> is called at <code>Start()</code> — door is locked</li>
+            <li>In <strong>home</strong> mode with unplayed demos: <code>ForceDemo()</code> calls <code>Messenger.Broadcast("unblockDoor")</code> to re-enable the collider so the patient can exit if needed</li>
+            <li>On successful activation: calls <code>LoaderController.Instance.StartLoader()</code></li>
+        </ul>
+    </section>
+
+    <!-- ═══ GAME LAUNCH ═══ -->
+    <section id="game-launch">
+        <h2>Game Launch Flow</h2>
+
+        <h3 id="game-identity">GameIdentity</h3>
+        <p>
+            Every game launch is identified by a <code>GameIdentity</code> object carrying two IDs:
+        </p>
+        <div class="struct-box">
+            <div class="struct-title">class GameIdentity (from TherapyController)</div>
+            <div class="sf"><span class="sf-type">int</span><span class="sf-name">game_id</span><span class="sf-desc">Matches <code>ProjectScene</code> enum integer value (7–22). Identifies which game type to load.</span></div>
+            <div class="sf"><span class="sf-type">int</span><span class="sf-name">instance_id</span><span class="sf-desc">Session-set game's unique database ID. Used for REST API parameter queries (<code>POST /therapy/getgame</code>).</span></div>
+        </div>
+
+        <h3 id="start-game">StartGame()</h3>
+        <pre><code><span class="kw">public async</span> <span class="ty">UniTaskVoid</span> <span class="fn">StartGame</span>(<span class="ty">GameIdentity</span> gameID, <span class="ty">LoadedSceneCallback</span> loadedScene)
+{
+    <span class="kw">if</span> (Enum.IsDefined(<span class="kw">typeof</span>(<span class="ty">ProjectScene</span>), gameID.game_id))
+    {
+        currentGameID = gameID;
+        <span class="ty">ProjectScene</span> currenGame = (<span class="ty">ProjectScene</span>) gameID.game_id;
+        ToastText3D.Instance?.Show3DTextToast(<span class="st">"Starting Game..."</span>);
+        <span class="kw">await</span> <span class="fn">AsyncLoadScene</span>(currenGame.ToString(), loadedScene);
+    }
+    <span class="kw">else</span>
+        ToastText3D.Instance.Show3DTextToast(<span class="st">"Therapy Game Not Defined"</span>);
+}</code></pre>
+
+        <p>
+            <code>Enum.IsDefined</code> validates the <code>game_id</code> against the <code>ProjectScene</code> enum
+            before attempting a scene load. Unknown IDs show a toast and abort gracefully.
+        </p>
+
+        <h3 id="param-polling">Parameter Polling — TherapySetParameters()</h3>
+        <p>
+            In <strong>stationary mode</strong>, after a game loads, <code>LoaderController</code> starts a polling
+            loop that continuously fetches therapy parameters from the server and broadcasts them to the game:
+        </p>
+
+        <div class="fc">
+            <div class="fc-seq">
+                <div class="fc-box fc-gy">Loop every ~1.5s while game is running</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-bl">POST /therapy/getgame<br><small>fetch game params for current instance_id</small></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-yw">Messenger.Broadcast("paramsUpdated", params)</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-tl">UGCParametersController.OnParametersUpdated()</div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-gn">VFX applied<br><small>blur · brightness · IPD · eye patching · scaling…</small></div>
+            </div>
+        </div>
+
+        <p>
+            The loop runs as a <code>UniTask</code> with a <code>CancellationToken</code> that fires when the game
+            ends or the player leaves the scene. The call body uses <code>instance_id</code> to identify which game
+            parameters to fetch. Exceptions are logged but the loop continues; only an explicit cancellation or
+            network disconnect terminates it.
+        </p>
+
+        <div class="alert alert-warn">
+            <strong>Home mode does not poll:</strong> In home therapy, parameters are baked into the therapy plan and
+            do not change mid-session. <code>TherapySetParameters</code> is called once with <code>repeat = false</code>
+            to do a single parameter fetch, or skipped if <code>waitForParamsToStartTheGame = false</code>.
+        </div>
+    </section>
+
+    <!-- ═══ INTER-GAME ═══ -->
+    <section id="inter-game">
+        <h2>Inter-Game Flow (Home Mode)</h2>
+        <p>
+            After a game's <code>ModuleFinished</code> event fires in home mode, the Hub is reloaded and
+            <code>HomeTherapyDelayedNextGame()</code> is called to pace the next game start:
+        </p>
+
+        <pre><code><span class="kw">public async</span> <span class="ty">UniTaskVoid</span> <span class="fn">HomeTherapyDelayedNextGame</span>()
+{
+    nextGameTimerRunning = <span class="kw">true</span>;
+    timeBetwenScenesLeft = <span class="nu">15f</span>;
+    Broker&lt;<span class="ty">InteractablesStateChange</span>&gt;.Invoke(<span class="kw">this</span>, <span class="kw">new</span> <span class="ty">InteractablesStateChange</span>(<span class="nu">20f</span>)); <span class="cm">// block for 20s</span>
+    <span class="kw">await</span> UniTask.Delay(<span class="nu">15000</span>);                                                           <span class="cm">// wait 15s</span>
+    nextGameTimerRunning = <span class="kw">false</span>;
+    <span class="ty">TherapyController</span> therapyController = <span class="kw">new</span> <span class="ty">TherapyController</span>();
+    therapyController.start_game = <span class="kw">true</span>;
+    therapyController.mode = TherapyMode.home;
+    therapyController.game_identity.instance_id = currentTherapy.sessionset.First()
+        .sessionsetgame[homeTherapyGameIndex].id;
+    therapyController.game_identity.game_id = currentTherapy.sessionset.First()
+        .sessionsetgame[homeTherapyGameIndex].game.id;
+    <span class="fn">TherapyEvent</span>(therapyController);   <span class="cm">// triggers StartGame for next index</span>
+}</code></pre>
+
+        <div class="grid2">
+            <div class="gcard">
+                <h4>Timing</h4>
+                <p>Interactables are blocked for <strong>20 seconds</strong> via <code>InteractablesStateChange(20f)</code>. The actual next-game start is at <strong>15 seconds</strong>, so the block covers the full transition plus 5s buffer.</p>
+            </div>
+            <div class="gcard">
+                <h4>Game Index</h4>
+                <p><code>homeTherapyGameIndex</code> increments after each completed game. The order follows <code>sessionset.First().sessionsetgame</code> — set server-side by the therapist's treatment plan.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ SESSION COMPLETE ═══ -->
+    <section id="session-complete">
+        <h2>Session Completion</h2>
+        <span class="f">Assets/LOADER/Scripts/LoaderController.cs — SessionComplete(float backToLoaderDelay)</span>
+
+        <p>
+            Called when all games in the therapy session have been completed. Handles data upload with retry
+            logic, then returns the patient to the Loader.
+        </p>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <strong>Toast + half-delay:</strong> Shows "Session Completed" toast, waits
+                    <code>backToLoaderDelay / 2</code> seconds (realtime).
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <strong>Return to Hub (locked):</strong> If not already in Hub, loads Hub with
+                    <code>InteractablesStateChange.Permanently</code> — portals and door are frozen.
+                    This creates a "safe environment" while data uploads.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <strong>Save therapy data (3 retries):</strong> <code>currentTherapy.SaveTherapy()</code>
+                    called up to 3 times. On each retry, shows a progress toast
+                    <em>"Sending therapy data… Attempt N/3"</em>.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <strong>End therapy (3 retries):</strong> Only attempted if save succeeded.
+                    <code>currentTherapy.EndTherapy()</code> up to 3 times with retry toasts.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-body">
+                    <strong>Failure fallback:</strong> If both save + end fail, home therapy data is saved
+                    locally (<code>SaveHomeTherapyToFile()</code>) and a network-error dialog is shown.
+                    Unsent data can be re-submitted on next login.
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">6</div>
+                <div class="step-body">
+                    <strong>Return to Loader:</strong> <code>AndroidHelper.KeepScreenOff()</code> then
+                    <code>AsyncLoadScene(ProjectScene.Loader)</code>. Screen sleep is re-enabled after
+                    therapy ends.
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warn">
+            <strong>Home mode only:</strong> On session complete for home therapy, <code>MessageStore.StoreMessage("OngoingTherapy", "false")</code>
+            is persisted so that if the app crashes before returning to Loader, the next launch knows the therapy
+            was fully completed and skips any "resume session" flow.
+        </div>
+    </section>
+
+    <!-- ═══ THERAPY FLAGS ═══ -->
+    <section id="therapy-flags">
+        <h2>TherapyEvent Flags — Hub Relevance</h2>
+        <p>
+            <code>TherapyController</code> boolean fields are mapped to <code>TherapyEventFlags</code> bitmask values
+            in <code>LoaderController.TherapyEvent()</code>. Hub-relevant mappings:
+        </p>
+
+        <div class="tbl-wrap">
+            <table>
+                <tr><th>TherapyController field</th><th>TherapyEventFlags bit</th><th>Hub effect</th></tr>
+                <tr>
+                    <td><code>enter = true</code></td>
+                    <td><span class="b b-teal">Enter</span></td>
+                    <td>Loads Hub scene, initialises therapy session</td>
+                </tr>
+                <tr>
+                    <td><code>exit = true</code></td>
+                    <td><span class="b b-red">Exit</span></td>
+                    <td>Ends therapy, returns to Loader without session complete flow</td>
+                </tr>
+                <tr>
+                    <td><code>start_game = true</code></td>
+                    <td><span class="b b-green">StartGame</span></td>
+                    <td>Triggers <code>StartGame(gameIdentity)</code> — loads the target game scene</td>
+                </tr>
+                <tr>
+                    <td><code>stop_game = true</code></td>
+                    <td><span class="b b-yellow">StopGame</span></td>
+                    <td>Stops current game, returns to Hub</td>
+                </tr>
+                <tr>
+                    <td><code>demo_version = true</code></td>
+                    <td><span class="b b-purple">Demo</span></td>
+                    <td>Loads game as demo; DemoTracker increments count on <code>ModuleFinished</code></td>
+                </tr>
+                <tr>
+                    <td><code>force_stop = true</code></td>
+                    <td><span class="b b-red">ForceStop</span></td>
+                    <td>Immediately exits therapy; fires before scene unload</td>
+                </tr>
+                <tr>
+                    <td><code>force_stop_game = true</code></td>
+                    <td><span class="b b-red">ForceStopGame</span></td>
+                    <td>Force-exits current game and returns to Hub</td>
+                </tr>
+                <tr>
+                    <td><code>pause_game = true</code></td>
+                    <td><span class="b b-yellow">Pause</span></td>
+                    <td>Pauses game timer via <code>UGCGameController</code> subscription</td>
+                </tr>
+                <tr>
+                    <td><code>resume_game = true</code></td>
+                    <td><span class="b b-green">ResumeGame</span></td>
+                    <td>Resumes paused game</td>
+                </tr>
+                <tr>
+                    <td><code>param_changed = true</code></td>
+                    <td><span class="b b-blue">ParamChanged</span></td>
+                    <td>Triggers immediate parameter re-fetch from server</td>
+                </tr>
+                <tr>
+                    <td><code>continue_therapy = true</code></td>
+                    <td><span class="b b-teal">ContinueTherapy</span></td>
+                    <td>Advances to next game in sequence (home mode)</td>
+                </tr>
+                <tr>
+                    <td><em>(set by DemoTracker)</em></td>
+                    <td><span class="b b-purple">ModuleFinished</span></td>
+                    <td>Game scene complete; triggers home-mode next-game countdown or stationary Hub return</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="alert alert-info">
+            <code>TherapyEvent()</code> is marked <code>[Obsolete]</code>. New code should dispatch events directly via
+            <code>TherapyEventBroker.InformSubscribers(sender, new TherapyEventArgs(flags, mode))</code>.
+            The old method still works and calls <code>OldTherapyEvent(therapy)</code> after broker dispatch.
+        </div>
+    </section>
+
+    <!-- ═══ PROJECT SCENE REFERENCE ═══ -->
+    <section id="project-scene">
+        <h2>ProjectScene Reference</h2>
+        <span class="f">Assets/Shared/Scripts/ProjectScene.cs</span>
+
+        <p>
+            The <code>ProjectScene</code> enum maps game names to the integer IDs used by the server (same values as
+            <code>GameIdentity.game_id</code>). The negative IDs are internal and never sent over the API.
+        </p>
+
+        <div class="tbl-wrap">
+            <table>
+                <tr><th>Enum Name</th><th>game_id</th><th>Scene Folder / Name</th><th>Therapy Module</th></tr>
+                <tr><td><code>Gem_Collection</code></td><td><span class="b b-blue">7</span></td><td>Antysupresja</td><td>Anti-suppression</td></tr>
+                <tr><td><code>The_Suprise_Egg</code></td><td><span class="b b-blue">8</span></td><td>Niedowidzenia_oko_reka</td><td>Amblyopia / hand-eye</td></tr>
+                <tr><td><code>Hungry_Fish</code></td><td><span class="b b-blue">9</span></td><td>ZakresyMice</td><td>Saccades</td></tr>
+                <tr><td><code>Underwater_Treasures</code></td><td><span class="b b-blue">10</span></td><td>Wodzenie</td><td>Smooth pursuit</td></tr>
+                <tr><td><code>Space_Drawings</code></td><td><span class="b b-blue">14</span></td><td>Sakady / SakkadyInSpace</td><td>Saccades in space</td></tr>
+                <tr><td><code>Magic_Hut</code></td><td><span class="b b-blue">17</span></td><td>Magic_Hut</td><td>Mice game / vergence</td></tr>
+                <tr><td><code>Sea_Race</code></td><td><span class="b b-blue">18</span></td><td>FollowObject</td><td>Object following</td></tr>
+                <tr><td><code>Snowball_Fight</code></td><td><span class="b b-blue">19</span></td><td>Snowman</td><td>Snowman / targeting</td></tr>
+                <tr><td><code>Two_Or_One</code></td><td><span class="b b-blue">21</span></td><td>Stereopsja / Fuzja / Konwergencja</td><td>Stereopsis / fusion</td></tr>
+                <tr><td><code>CSaber</code></td><td><span class="b b-blue">22</span></td><td>CSaber</td><td>Controller precision</td></tr>
+                <tr><td><code>Loader</code></td><td><span class="b b-purple">−1</span></td><td>Loader.unity</td><td>Internal — login / init</td></tr>
+                <tr><td><code>Hub</code></td><td><span class="b b-purple">−2</span></td><td>Hub.unity</td><td>Internal — lobby</td></tr>
+            </table>
+        </div>
+
+        <p>
+            <code>ProjectSceneExtensions.ToStringFast()</code> provides a switch-expression alternative to
+            <code>.ToString()</code> on the enum, avoiding reflection overhead on Android. Used in
+            <code>SessionComplete</code> when loading the Hub by name.
+        </p>
+    </section>
+
+    <!-- ═══ COMPONENT REFERENCE ═══ -->
+    <section id="component-ref">
+        <h2>Component Reference</h2>
+
+        <div class="grid2">
+            <div class="gcard">
+                <h4>LoaderController</h4>
+                <p><code>Assets/LOADER/Scripts/LoaderController.cs</code></p>
+                <p>Persistent singleton. Owns <code>StartHub()</code>, <code>StartGame()</code>, <code>AsyncLoadScene()</code>, <code>SessionComplete()</code>, <code>HomeTherapyDelayedNextGame()</code>, <code>TherapyEvent()</code>, <code>TherapySetParameters()</code>.</p>
+            </div>
+            <div class="gcard">
+                <h4>InteractableManager</h4>
+                <p><code>Assets/LOADER/NewLoaderGraphics/interactable objects/InteractableManager.cs</code></p>
+                <p>Hub scene MonoBehaviour. Spawns game portal prefabs from <code>frameObjects[]</code> array, assigns instance IDs, initiates forced demo sequence if needed.</p>
+            </div>
+            <div class="gcard">
+                <h4>DemoTracker</h4>
+                <p><code>Assets/Shared/Scripts/DemoTracker.cs</code></p>
+                <p>Singleton (not MonoBehaviour). Persists demo play counts to disk as JSON. Implements <code>ITherapyEventReceiver</code> — listens for Demo + ModuleFinished to auto-increment. Disposed at session end.</p>
+            </div>
+            <div class="gcard">
+                <h4>DemoPlayButton</h4>
+                <p><code>Assets/LOADER/NewLoaderGraphics/interactable objects/DemoPlayButton.cs</code></p>
+                <p>Per-portal component. Controls collider + material based on demo play count. Fires <code>TherapyEventFlags.Demo</code> on interaction.</p>
+            </div>
+            <div class="gcard">
+                <h4>StartTherapyButton</h4>
+                <p><code>Assets/LOADER/NewLoaderGraphics/interactable objects/StartTherapyButton.cs</code></p>
+                <p>World-space UI button, home mode only. Gated by <code>DemoTracker.AnyDemosToPlay</code>. Calls <code>StartStandaloneHomeTherapy()</code> on click.</p>
+            </div>
+            <div class="gcard">
+                <h4>SettingsDoorInteractable</h4>
+                <p><code>Assets/LOADER/NewLoaderGraphics/interactable objects/SettingsDoorInteractable.cs</code></p>
+                <p>Hold-to-confirm exit mechanism. Disabled in stationary mode. Re-enabled during forced demo sequence via Messenger broadcast. Leads to <code>StartLoader()</code>.</p>
+            </div>
+            <div class="gcard">
+                <h4>ProjectScene</h4>
+                <p><code>Assets/Shared/Scripts/ProjectScene.cs</code></p>
+                <p>Enum mapping game names to server-side integer IDs (7–22). Negative values (Loader=−1, Hub=−2) are internal. <code>ToStringFast()</code> extension avoids reflection.</p>
+            </div>
+            <div class="gcard">
+                <h4>InteractableObject</h4>
+                <p><code>Assets/LOADER/NewLoaderGraphics/interactable objects/</code></p>
+                <p>Abstract base class for all Hub interactables. Subscribes to <code>Broker&lt;InteractablesStateChange&gt;</code>. Sets <code>ifBlockingBetweenGames = true</code> to auto-block during scene transitions.</p>
+            </div>
+        </div>
+    </section>
+
+
+</main>
+
+<button id="btt" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+    // Scroll spy
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const active = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    sections.forEach(s => obs.observe(s));
+
+    // Back to top button
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 400));
+</script>
+</body>
+</html>

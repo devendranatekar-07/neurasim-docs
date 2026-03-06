@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Therapeutic VFX &amp; Difficulty</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117; --surface: #1a1d27; --surface2: #232633; --surface3: #2a2e3f;
+            --border: #2e3248; --text: #e1e4ed; --text-muted: #8b8fa7;
+            --accent: #6c8aff; --accent2: #a78bfa; --accent3: #c084fc;
+            --success: #4ade80; --warning: #fbbf24; --error: #f87171;
+            --info: #38bdf8; --teal: #2dd4bf; --pink: #f472b6; --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 16px; font-size: 13px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a { display: block; padding: 6px 20px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; transition: all 0.15s; border-left: 3px solid transparent; }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        .topnav { position: fixed; top: 0; left: 300px; right: 0; z-index: 200; height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 24px; font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; }
+
+        #btt { position: fixed; bottom: 28px; right: 28px; z-index: 300; width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #000; border: none; font-size: 17px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+        h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 24px 0 10px; }
+        h4 { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        p { margin-bottom: 12px; font-size: 14px; }
+        ul, ol { padding-left: 20px; margin-bottom: 12px; font-size: 14px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+        code { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12.5px; background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+        section { scroll-margin-top: 60px; }
+
+        pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.65; }
+        pre code { background: none; border: none; padding: 0; font-size: inherit; }
+        .kw { color: #c084fc; } .ty { color: #38bdf8; } .fn { color: #6c8aff; }
+        .st { color: #4ade80; } .cm { color: #4b5563; font-style: italic; } .nu { color: #fb923c; }
+        .tl { color: var(--teal); } .wa { color: var(--warning); } .pk { color: var(--pink); }
+        .gr { color: var(--success); } .dim { color: var(--text-muted); } .in { color: var(--info); }
+
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal  { background: rgba(45,212,191,0.12);  color: var(--teal);    border: 1px solid rgba(45,212,191,0.3); }
+        .b-blue  { background: rgba(108,138,255,0.12); color: var(--accent);  border: 1px solid rgba(108,138,255,0.3); }
+        .b-green { background: rgba(74,222,128,0.12);  color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow{ background: rgba(251,191,36,0.12);  color: var(--warning); border: 1px solid rgba(251,146,60,0.3); }
+        .b-red   { background: rgba(248,113,113,0.12); color: var(--error);   border: 1px solid rgba(248,113,113,0.3); }
+        .b-purple{ background: rgba(167,139,250,0.12); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+        .b-orange{ background: rgba(251,146,60,0.12);  color: var(--orange);  border: 1px solid rgba(251,146,60,0.3); }
+        .b-gray  { background: rgba(139,143,167,0.12); color: var(--text-muted); border: 1px solid rgba(139,143,167,0.3); }
+
+        .alert { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13.5px; }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,0.08); border-color: var(--warning); }
+        .alert-ok   { background: rgba(74,222,128,0.08); border-color: var(--success); }
+
+        .f { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12px; color: var(--text-muted); background: var(--surface2); border-left: 3px solid var(--teal); padding: 6px 12px; border-radius: 0 6px 6px 0; display: block; margin: 8px 0; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0; }
+        .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-top: 3px solid var(--teal); }
+        .gcard h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gcard p  { font-size: 13px; margin-bottom: 6px; }
+        .gcard ul { font-size: 13px; }
+        .gcard.blue { border-top-color: var(--accent); }
+        .gcard.blue h4 { color: var(--accent); }
+        .gcard.purple { border-top-color: var(--accent2); }
+        .gcard.purple h4 { color: var(--accent2); }
+        .gcard.yellow { border-top-color: var(--warning); }
+        .gcard.yellow h4 { color: var(--warning); }
+        .gcard.orange { border-top-color: var(--orange); }
+        .gcard.orange h4 { color: var(--orange); }
+        .gcard.pink { border-top-color: var(--pink); }
+        .gcard.pink h4 { color: var(--pink); }
+        .gcard.green { border-top-color: var(--success); }
+        .gcard.green h4 { color: var(--success); }
+
+        .struct-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+        .struct-title { background: var(--surface2); padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .sf { display: flex; gap: 12px; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: baseline; flex-wrap: wrap; }
+        .sf:last-child { border-bottom: none; }
+        .sf-type { color: var(--info); font-family: monospace; width: 110px; flex-shrink: 0; font-size: 12px; }
+        .sf-name { color: var(--teal); font-family: monospace; width: 230px; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; flex: 1; }
+
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-or { background: rgba(251,146,60,0.12);  border-color: var(--orange);  color: var(--orange); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tr:hover td { background: var(--surface); }
+
+        .scale-bar { display: flex; gap: 3px; align-items: center; }
+        .scale-seg { height: 8px; border-radius: 2px; background: var(--teal); opacity: 0.3; width: 18px; }
+        .scale-seg.on { opacity: 1; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .grid2, .grid3 { grid-template-columns: 1fr; }
+            .topnav { left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Therapeutic VFX &amp; Difficulty — Doc 06</small>
+    </div>
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#overview">How the systems connect</a>
+
+    <a href="#vfx" class="sh">Therapeutic VFX</a>
+    <a href="#vfx">UGCTherapeuticEventsController</a>
+    <a href="#eye-patching" class="sub">Eye Patching</a>
+    <a href="#ipd" class="sub">IPD Management</a>
+    <a href="#visual-effects" class="sub">Visual Effects</a>
+    <a href="#object-scaling" class="sub">Object Scaling</a>
+    <a href="#vfx-params" class="sub">Parameter Subscriptions</a>
+
+    <a href="#difficulty" class="sh">Difficulty System</a>
+    <a href="#difficulty">ComboManager Architecture</a>
+    <a href="#progression" class="sub">Difficulty Progression</a>
+    <a href="#combo-mechanic" class="sub">Combo Mechanic</a>
+    <a href="#scalable" class="sub">Scalable Component</a>
+
+    <a href="#subclasses" class="sh">Subclass Reference</a>
+    <a href="#subclasses">All ComboManagers</a>
+</nav>
+
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <span class="current">VFX &amp; Difficulty</span>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<div class="main">
+
+<h1>Therapeutic VFX &amp; Difficulty</h1>
+<p class="hero-sub">How therapy parameters drive per-eye visual effects, and how player performance drives difficulty and object scaling.</p>
+
+<!-- ═══════════════════════════════════════════════════ OVERVIEW -->
+<section id="overview">
+<h2>1. How the Systems Connect</h2>
+
+<p>These two systems sit at the output end of the therapy pipeline. Parameters arrive from the dashboard, the VFX system translates them into on-screen changes (blur, brightness, eye patching, IPD), and the difficulty system adapts those parameters in real time based on how well the patient is performing.</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-box fc-gy">Dashboard / Tablet sends therapy parameters</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+        <div class="fc-box fc-bl">UGCParametersController — distributes to IParam callbacks</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">Visual params (IPD, blur, etc.)</div>
+                <div class="fc-box fc-tl">UGCTherapeuticEventsController<br><span style="font-size:11px;font-weight:400">applies per-eye rendering effects</span></div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">objectSize / difficulty</div>
+                <div class="fc-box fc-pu">ComboManager<br><span style="font-size:11px;font-weight:400">adjusts difficulty on correct/wrong/timeout</span></div>
+                <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                <div class="fc-box fc-or">Scalable components<br><span style="font-size:11px;font-weight:400">animate to new size</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <strong>Key relationship:</strong> <code>UGCTherapeuticEventsController</code> handles the <em>therapist-prescribed</em> visual effects (fixed per session). <code>ComboManager</code> drives the <em>adaptive difficulty</em> (changes live during gameplay). Both write through <code>UGCParametersController</code>.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════ VFX SYSTEM -->
+<section id="vfx">
+<h2>2. UGCTherapeuticEventsController</h2>
+<span class="f">Assets/UGC-Protype/UGCTherapeuticEventsController.cs</span>
+
+<p>Singleton MonoBehaviour present in every game scene. It subscribes to parameter callbacks on <code>Start()</code> and translates each incoming value into a rendering change on the left or right eye camera. It is the only place in the codebase that touches camera-level image effects.</p>
+
+<!-- EYE PATCHING -->
+<section id="eye-patching">
+<h3>2.1 Eye Patching</h3>
+
+<p>Eye patching controls which eye can see each group of game objects. It works by changing the Unity layer of every <code>EyePatchable</code> in the scene to match the dominant-eye parameter.</p>
+
+<span class="f">Assets/UGC-Protype/EyePatchable.cs</span>
+
+<p>Place <code>EyePatchable</code> on any GameObject that needs per-eye visibility control. Set its <code>group</code> to one of:</p>
+
+<div class="grid3">
+    <div class="gcard">
+        <h4>Interactable</h4>
+        <p>The objects the patient interacts with — targets, collectibles, response stimuli.</p>
+    </div>
+    <div class="gcard blue">
+        <h4>Deployer</h4>
+        <p>Objects that spawn or host game elements — launchers, containers, background actors.</p>
+    </div>
+    <div class="gcard purple">
+        <h4>Controller</h4>
+        <p>The aiming reticle / controller pointer visible to the patient.</p>
+    </div>
+</div>
+
+<p>Each group has its own <code>transparencyParam</code> and eye-layer assignment in <code>UGCTherapeuticEventsController</code>, so the therapist can independently patch each group to a different eye.</p>
+
+<div class="struct-box">
+    <div class="struct-title">EyeLayer enum — Assets/Shared/Scripts/Shared Scripts/SharedHelper.cs</div>
+    <div class="sf"><span class="sf-type">int 10</span><span class="sf-name">LeftEye</span><span class="sf-desc">Object rendered only by the left eye camera (Camera culling mask layer 10)</span></div>
+    <div class="sf"><span class="sf-type">int 11</span><span class="sf-name">RightEye</span><span class="sf-desc">Object rendered only by the right eye camera (Camera culling mask layer 11)</span></div>
+    <div class="sf"><span class="sf-type">int 0</span><span class="sf-name">Both</span><span class="sf-desc">Default layer — visible to both eyes</span></div>
+</div>
+
+<p><code>EyePatchable.Patch(EyeLayer)</code> recursively walks child transforms up to <code>depth</code> levels (default 10) and sets each <code>GameObject.layer</code>. It re-patches automatically on <code>OnEnable()</code>.</p>
+</section>
+
+<!-- IPD -->
+<section id="ipd">
+<h3>2.2 IPD Management</h3>
+
+<p>Interpupillary distance is applied as a horizontal camera offset. The value arrives as an integer (millimetres) from the <code>currentIPDParam</code> and is converted to world-space units:</p>
+
+<pre><code><span class="kw">void</span> <span class="fn">SetIPD</span>(<span class="kw">int</span> ipd_mm)
+{
+    <span class="kw">float</span> offset = (ipd_mm / <span class="nu">2f</span>) / <span class="nu">1000f</span>;          <span class="cm">// mm → metres, half per eye</span>
+    leftCamera.localPosition  = <span class="kw">new</span> <span class="ty">Vector3</span>(-offset, <span class="nu">0</span>, <span class="nu">0</span>);
+    rightCamera.localPosition = <span class="kw">new</span> <span class="ty">Vector3</span>(+offset, <span class="nu">0</span>, <span class="nu">0</span>);
+}</code></pre>
+
+<p>Default IPD is 65 mm. Changing this in-session does not require a scene reload.</p>
+</section>
+
+<!-- VISUAL EFFECTS -->
+<section id="visual-effects">
+<h3>2.3 Visual Effects</h3>
+
+<p>All effects are applied per-eye via two render pipeline components: <code>ColorGradingLwrp</code> (URP renderer feature, per-eye gamma/contrast) and <code>StandardRP_Blur_Brightness</code> (singleton managing <code>BlurOptimized</code> and <code>BrightnessContrastGamma</code> image effects on each camera).</p>
+
+<div class="alert alert-warn">
+    <strong>Which eye receives which effect?</strong> Effects are intentionally asymmetric — therapeutic amblyopia/suppression treatment applies stimulation to the <em>weaker</em> eye and patching/reduction to the dominant eye. The dominant eye is determined by <code>dominantEyeParam</code>.
+</div>
+
+<div class="tbl-wrap">
+<table>
+    <thead><tr><th>Effect</th><th>Parameter</th><th>Target Eye</th><th>Range</th><th>Implementation</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><strong>Blur</strong></td>
+            <td><code>blurParam</code></td>
+            <td>Dominant eye</td>
+            <td>0 – 10 (→ 0 – 100 internally)</td>
+            <td><code>StandardRP_Blur_Brightness.BlurEyeLeft/Right()</code> via <code>BlurOptimized</code></td>
+        </tr>
+        <tr>
+            <td><strong>Brightness</strong></td>
+            <td><code>brightnessParam</code></td>
+            <td>Non-dominant eye</td>
+            <td>0 – 100</td>
+            <td><code>ColorGradingLwrp.settings.Gamma</code> + <code>StandardRP_Blur_Brightness.BrightnessLeftEye/RightEye()</code></td>
+        </tr>
+        <tr>
+            <td><strong>Darkness</strong></td>
+            <td><code>darknessParam</code></td>
+            <td>Dominant eye</td>
+            <td>0 – 100 (applied as negative gamma)</td>
+            <td><code>ColorGradingLwrp.settings.Gamma</code> (inverted value)</td>
+        </tr>
+        <tr>
+            <td><strong>Contrast</strong></td>
+            <td><code>contrastParam</code></td>
+            <td>Dominant eye</td>
+            <td>0 – 100 (→ 1.0× – 9.0× multiplier)</td>
+            <td><code>StandardRP_Blur_Brightness.ContrastLeftEye/RightEye()</code></td>
+        </tr>
+        <tr>
+            <td><strong>Transparency — Interactable</strong></td>
+            <td><code>transparencyInteractableParam</code></td>
+            <td>All objects in Interactable group</td>
+            <td>0.0 – 1.0</td>
+            <td><code>TransparencyController.SetTransparency()</code></td>
+        </tr>
+        <tr>
+            <td><strong>Transparency — Deployer</strong></td>
+            <td><code>transparencyDeployerParam</code></td>
+            <td>All objects in Deployer group</td>
+            <td>0.0 – 1.0</td>
+            <td><code>TransparencyController.SetTransparency()</code></td>
+        </tr>
+        <tr>
+            <td><strong>Transparency — Controller</strong></td>
+            <td><code>transparencyControllerParam</code></td>
+            <td>Controller / reticle</td>
+            <td>0.0 – 1.0</td>
+            <td><code>TransparencyController.SetTransparency()</code></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<p><code>TransparencyController</code> supports both instant changes (<code>SetTransparency()</code>) and animated fades (<code>FadeAnimation(target, seconds)</code>). It holds a <code>Transparency[]</code> array of materials to modify.</p>
+</section>
+
+<!-- OBJECT SCALING -->
+<section id="object-scaling">
+<h3>2.4 Object Scaling (Difficulty-Driven)</h3>
+
+<p>When difficulty changes, <code>OnDifficultyChange(int difficulty)</code> recalculates a scale value from the current <code>ObjectSize</code> mode and broadcasts it to all <code>Scalable</code> components in the scene.</p>
+
+<pre><code><span class="cm">// Scale formula: baseSize - (difficulty × 0.03)</span>
+<span class="kw">float</span> scale = objectSizeParam.FirstValue <span class="kw">switch</span>
+{
+    <span class="ty">ObjectSize</span>.Small  => <span class="nu">0.7f</span> - difficulty * <span class="nu">0.03f</span>,
+    <span class="ty">ObjectSize</span>.Medium => <span class="nu">1.0f</span> - difficulty * <span class="nu">0.03f</span>,
+    <span class="ty">ObjectSize</span>.Big    => <span class="nu">1.3f</span> - difficulty * <span class="nu">0.03f</span>,
+    _ => <span class="nu">1.0f</span>
+};</code></pre>
+
+<div class="tbl-wrap">
+<table>
+    <thead><tr><th>Difficulty</th><th>Small</th><th>Medium</th><th>Big</th></tr></thead>
+    <tbody>
+        <tr><td>0</td><td>0.70×</td><td>1.00×</td><td>1.30×</td></tr>
+        <tr><td>2</td><td>0.64×</td><td>0.94×</td><td>1.24×</td></tr>
+        <tr><td>5</td><td>0.55×</td><td>0.85×</td><td>1.15×</td></tr>
+        <tr><td>8</td><td>0.46×</td><td>0.76×</td><td>1.06×</td></tr>
+        <tr><td>10</td><td>0.40×</td><td>0.70×</td><td>1.00×</td></tr>
+    </tbody>
+</table>
+</div>
+
+<p>Changing <code>ObjectSize</code> mode (Small/Medium/Big) calls <code>OnObjectSizeChanged()</code> which resets <code>difficulty</code> to 0 and re-evaluates the scale.</p>
+</section>
+
+<!-- PARAM SUBSCRIPTIONS -->
+<section id="vfx-params">
+<h3>2.5 Parameter Subscriptions</h3>
+
+<p>All subscriptions are set up in <code>Start()</code> via <code>IParam.OnUpdate</code> callbacks:</p>
+
+<div class="struct-box">
+    <div class="struct-title">UGCTherapeuticEventsController — Start() subscriptions</div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">currentIPDParam</span><span class="sf-desc">→ SetIPD(int) — adjusts camera horizontal offset</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">objectSizeParam</span><span class="sf-desc">→ OnObjectSizeChanged() — resets difficulty, re-scales</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">darknessParam</span><span class="sf-desc">→ ApplyDarkness(float) — negative gamma on dominant eye</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">brightnessParam</span><span class="sf-desc">→ ApplyBrightness(float) — gamma on non-dominant eye</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">contrastParam</span><span class="sf-desc">→ ApplyContrast(float) — 1×–9× multiplier on dominant eye</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">blurParam</span><span class="sf-desc">→ ApplyBlurDominant(float) — BlurOptimized on dominant eye</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">transparencyInteractable</span><span class="sf-desc">→ SetTransparency on Interactable group</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">transparencyDeployer</span><span class="sf-desc">→ SetTransparency on Deployer group</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">transparencyController</span><span class="sf-desc">→ SetTransparency on Controller group</span></div>
+    <div class="sf"><span class="sf-type">IParam</span><span class="sf-name">dominantEyeParam</span><span class="sf-desc">→ re-evaluates which eye receives each effect</span></div>
+    <div class="sf"><span class="sf-type">Messenger</span><span class="sf-name">"onDifficultyChange"</span><span class="sf-desc">→ OnDifficultyChange(int) — recalculates and applies scale</span></div>
+</div>
+</section>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════ DIFFICULTY SYSTEM -->
+<section id="difficulty">
+<h2>3. ComboManager &amp; Difficulty</h2>
+<span class="f">Assets/Combos/ComboManager.cs</span>
+
+<p><code>ComboManager</code> is an abstract MonoBehaviour that sits in each game scene and listens to three <code>Messenger</code> events. It accumulates a difficulty-progress score and, once thresholds are crossed, increments or decrements the global difficulty level (0–10).</p>
+
+<div class="grid2">
+    <div class="gcard">
+        <h4>Listens for</h4>
+        <ul>
+            <li><code>Consts.correctAnswer</code> — patient answered correctly</li>
+            <li><code>Consts.wrongAnswer</code> — patient answered incorrectly</li>
+            <li><code>Consts.timeout</code> — answer window expired</li>
+        </ul>
+    </div>
+    <div class="gcard blue">
+        <h4>Broadcasts</h4>
+        <ul>
+            <li><code>Consts.onDifficultyChange</code> — received by <code>UGCTherapeuticEventsController</code> to rescale objects</li>
+        </ul>
+    </div>
+</div>
+
+<!-- DIFFICULTY PROGRESSION -->
+<section id="progression">
+<h3>3.1 Difficulty Progression Mechanics</h3>
+
+<p>Difficulty does not change immediately on each event. Instead a static accumulator (<code>difficultyProgress</code>) collects deltas, and only crosses thresholds trigger a level change:</p>
+
+<div class="fc">
+    <div class="fc-seq">
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">Correct answer</div>
+                <div class="fc-box fc-gn">+1 progress</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">Wrong answer</div>
+                <div class="fc-box fc-rd">−1 or −2 progress</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">Timeout</div>
+                <div class="fc-box fc-yw">varies by subclass</div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-gy">difficultyProgress accumulates</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">progress &gt; 5</div>
+                <div class="fc-box fc-gn">difficulty++ (max 10), reset to 1</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">progress &lt; 0</div>
+                <div class="fc-box fc-rd">difficulty-- (min 0), reset to 4</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">otherwise</div>
+                <div class="fc-box fc-gy">no level change</div>
+            </div>
+        </div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-tl">Messenger.Broadcast("onDifficultyChange", difficulty)</div>
+        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+        <div class="fc-box fc-pu">UGCTherapeuticEventsController rescales all Scalable objects</div>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <strong>Why an accumulator instead of direct change?</strong> The threshold system creates hysteresis — difficulty does not oscillate rapidly on alternating correct/wrong answers. The patient must demonstrate sustained improvement (&gt;5 accumulated) before the game gets harder, and sustained failure before it gets easier.
+</div>
+
+<p>The reset values after a threshold crossing (<code>1</code> after going up, <code>4</code> after going down) give the system a head-start toward the next change in the same direction, rewarding streaks.</p>
+</section>
+
+<!-- COMBO MECHANIC -->
+<section id="combo-mechanic">
+<h3>3.2 Combo Mechanic</h3>
+
+<p>Alongside difficulty progression, <code>ComboManager</code> tracks a <em>combo level</em> that unlocks celebratory visual feedback via a <code>ComboActivate</code> component. Combos are purely cosmetic — they do not affect difficulty directly.</p>
+
+<div class="struct-box">
+    <div class="struct-title">Combo lifecycle</div>
+    <div class="sf"><span class="sf-type">step 1</span><span class="sf-name">Combo(comboLevel)</span><span class="sf-desc">Called by subclass when a threshold of correct answers is reached. Triggers combo.StartCombo(level) visual.</span></div>
+    <div class="sf"><span class="sf-type">step 2</span><span class="sf-name">OnReachingMaxCombo</span><span class="sf-desc">If level ≥ 2, starts a 5-second coroutine before automatically breaking the combo.</span></div>
+    <div class="sf"><span class="sf-type">step 3</span><span class="sf-name">BreakCombo()</span><span class="sf-desc">Called on wrong answer, timeout, or after 5-second max-combo timer. Resets combo visual and combo counter.</span></div>
+</div>
+
+<p>Subclasses define the <em>threshold</em> for invoking a combo — typically a list of correct-answer counts per level (e.g., <code>[3, 5, 7]</code> means 3 correct for level 1, 5 more for level 2, 7 more for level 3).</p>
+</section>
+
+<!-- SCALABLE COMPONENT -->
+<section id="scalable">
+<h3>3.3 Scalable Component</h3>
+<span class="f">Assets/UGC-Protype/Scalable.cs</span>
+
+<p>Place <code>Scalable</code> on any GameObject that should respond to difficulty changes. <code>UGCTherapeuticEventsController.OnDifficultyChange()</code> calls <code>FindObjectsOfType&lt;Scalable&gt;()</code> and broadcasts the new scale to each one.</p>
+
+<div class="struct-box">
+    <div class="struct-title">Scalable — key fields</div>
+    <div class="sf"><span class="sf-type">bool</span><span class="sf-name">relativeScale</span><span class="sf-desc">If true, multiplies the incoming scale against the object's starting scale rather than Vector3.one</span></div>
+    <div class="sf"><span class="sf-type">bool</span><span class="sf-name">scaleGraduallyOverTime</span><span class="sf-desc">Animates the scale change over scaleTime seconds (default true)</span></div>
+    <div class="sf"><span class="sf-type">float</span><span class="sf-name">scaleTime</span><span class="sf-desc">Duration of the scale animation in seconds (default 0.5s)</span></div>
+    <div class="sf"><span class="sf-type">bool</span><span class="sf-name">autoScaleOnParamChange</span><span class="sf-desc">If false, the object opts out of automatic difficulty-driven rescaling</span></div>
+</div>
+
+<p>On <code>OnEnable()</code>, <code>Scalable</code> calls <code>ScaleFromZero()</code> — the object animates in from zero scale, giving a smooth appearance effect at spawn. The <code>GetFinalScale()</code> virtual method can be overridden in subclasses for per-object scale adjustments.</p>
+
+<pre><code><span class="cm">// Gradual scale coroutine rechecks param.SecondValue each frame,</span>
+<span class="cm">// so if difficulty changes mid-animation it catches up cleanly.</span>
+<span class="kw">while</span> (elapsed &lt; scaleTime)
+{
+    elapsed += <span class="ty">Time</span>.deltaTime;
+    <span class="kw">float</span> t = elapsed / scaleTime;
+    transform.localScale = <span class="ty">Vector3</span>.Lerp(from, baseScale * param.SecondValue, t);
+    <span class="kw">yield return null</span>;
+}</code></pre>
+</section>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════ SUBCLASS REFERENCE -->
+<section id="subclasses">
+<h2>4. ComboManager Subclass Reference</h2>
+
+<p>The class hierarchy has two abstract intermediaries before reaching game-specific implementations:</p>
+
+<pre><code><span class="ty">ComboManager</span>  (abstract)
+├── <span class="ty">IncrementalComboManager</span>  (abstract) — count-based correct-answer thresholds
+│   ├── <span class="ty">TimeoutableIncrementalComboManager</span>  (abstract) — adds timeout → break combo
+│   │   ├── <span class="ty">SakadyComboManager</span>
+│   │   └── <span class="ty">NiedowidzenieComboManager</span>
+│   ├── <span class="ty">AntysupresjaComboManager</span>   — wrong answer penalty −1 (softer)
+│   ├── <span class="ty">ConstellationGameComboManager</span>
+│   ├── <span class="ty">MiceGameComboManager</span>
+│   └── <span class="ty">FollowGameRaceComboManager</span>
+└── <span class="ty">FollowGameComboManager</span>      — time-based (seconds held, not count)</code></pre>
+
+<div class="tbl-wrap">
+<table>
+    <thead>
+        <tr>
+            <th style="width:22%">Class</th>
+            <th style="width:18%">Game</th>
+            <th style="width:12%">Correct Δ</th>
+            <th style="width:12%">Wrong Δ</th>
+            <th style="width:12%">Timeout</th>
+            <th style="width:24%">Combo trigger</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>IncrementalComboManager</code> <span class="b b-gray">abstract</span></td>
+            <td>—</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>no-op</td>
+            <td>Configurable count list per level</td>
+        </tr>
+        <tr>
+            <td><code>TimeoutableIncrementalComboManager</code> <span class="b b-gray">abstract</span></td>
+            <td>—</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>break combo + reset</td>
+            <td>Inherits incremental list</td>
+        </tr>
+        <tr>
+            <td><code>AntysupresjaComboManager</code></td>
+            <td>Gem Collection</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-yellow">−1</span></td>
+            <td>no-op</td>
+            <td>Count list</td>
+        </tr>
+        <tr>
+            <td><code>SakadyComboManager</code></td>
+            <td>Space Drawings</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>break combo + reset</td>
+            <td>Count list</td>
+        </tr>
+        <tr>
+            <td><code>NiedowidzenieComboManager</code></td>
+            <td>Surprise Egg</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>break combo + reset</td>
+            <td>Count list</td>
+        </tr>
+        <tr>
+            <td><code>ConstellationGameComboManager</code></td>
+            <td>Space Drawings</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>no-op</td>
+            <td>Count list</td>
+        </tr>
+        <tr>
+            <td><code>MiceGameComboManager</code></td>
+            <td>Hungry Fish</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>no-op</td>
+            <td>Count list</td>
+        </tr>
+        <tr>
+            <td><code>FollowGameRaceComboManager</code></td>
+            <td>Sea Race</td>
+            <td><span class="b b-green">+1</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>no-op</td>
+            <td>Count list</td>
+        </tr>
+        <tr>
+            <td><code>FollowGameComboManager</code></td>
+            <td>Follow Object</td>
+            <td><span class="b b-green">+1/sec</span> <span class="b b-gray">held</span></td>
+            <td><span class="b b-red">−2</span></td>
+            <td>no-op</td>
+            <td>Seconds held per level list</td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<h3>IncrementalComboManager — Inspector Configuration</h3>
+
+<p>The key Inspector field is <code>n_CorrectAnswersToInvokeCombo</code> — a list where each element is the number of additional correct answers needed to reach that combo level:</p>
+
+<pre><code><span class="cm">// Example: [3, 5, 7]</span>
+<span class="cm">// Level 0→1: 3 correct answers</span>
+<span class="cm">// Level 1→2: 5 more correct answers</span>
+<span class="cm">// Level 2→3: 7 more correct answers → OnReachingMaxCombo() → auto-break after 5s</span></code></pre>
+
+<p><code>keepComboBetweenLevels</code> (default <code>false</code>) — if false, the combo counter resets when a new level starts in the scene.</p>
+
+<h3>FollowGameComboManager — Inspector Configuration</h3>
+
+<p>Uses <code>followTimesToInvokeCombo</code> — a list of cumulative seconds the patient must keep the reticle on the target to advance each combo level:</p>
+
+<pre><code><span class="cm">// Example: [3.5, 7.2, 12.0] seconds of continuous tracking</span></code></pre>
+
+<p>Every second of successful tracking adds <code>+1</code> difficulty progress. Breaking tracking calls <code>SetDifficulty(-2)</code>.</p>
+
+</section>
+
+<hr>
+<p style="color: var(--text-muted); font-size: 12px; text-align: center; margin-top: 36px;">
+    NeuraSim VR &mdash; Therapeutic VFX &amp; Difficulty &mdash; Doc 06 &mdash; Generated 2026-02-26
+</p>
+
+</div>
+
+<script>
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => { btt.classList.toggle('visible', window.scrollY > 400); }, { passive: true });
+
+    const sections = Array.from(document.querySelectorAll('section[id], h2[id]'));
+    const sideLinks = Array.from(document.querySelectorAll('.sidebar a[href^="#"]'));
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                sideLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

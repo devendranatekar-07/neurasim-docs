@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Game Framework (UGC)</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232633;
+            --surface3: #2a2e3f;
+            --border: #2e3248;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa7;
+            --accent: #6c8aff;
+            --accent2: #a78bfa;
+            --accent3: #c084fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #38bdf8;
+            --teal: #2dd4bf;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+        /* Sidebar */
+        .sidebar { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 16px; font-size: 13px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a { display: block; padding: 6px 20px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; transition: all 0.15s; border-left: 3px solid transparent; }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        /* Topnav */
+        .topnav { position: fixed; top: 0; left: 300px; right: 0; z-index: 200; height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 24px; font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 5px; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; cursor: default; }
+
+        /* Back to top */
+        #btt { position: fixed; bottom: 28px; right: 28px; z-index: 300; width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #000; border: none; font-size: 17px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        /* Main */
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+        h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 24px 0 10px; }
+        h4 { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        p { margin-bottom: 12px; }
+        ul, ol { padding-left: 20px; margin-bottom: 12px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+        code { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 13px; background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+
+        /* Code blocks */
+        pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 13px; line-height: 1.65; }
+        pre code { background: none; border: none; padding: 0; font-size: inherit; }
+        .kw { color: #c084fc; } .ty { color: #38bdf8; } .fn { color: #6c8aff; }
+        .st { color: #4ade80; } .cm { color: #4b5563; font-style: italic; } .nu { color: #fb923c; }
+        .tl { color: var(--teal); } .wa { color: var(--warning); } .pk { color: var(--pink); }
+        .gr { color: var(--success); } .dim { color: var(--text-muted); } .in { color: var(--info); }
+
+        /* Badges */
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal  { background: rgba(45,212,191,0.12); color: var(--teal);    border: 1px solid rgba(45,212,191,0.3); }
+        .b-blue  { background: rgba(108,138,255,0.12); color: var(--accent);  border: 1px solid rgba(108,138,255,0.3); }
+        .b-green { background: rgba(74,222,128,0.12);  color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow{ background: rgba(251,191,36,0.12);  color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+        .b-red   { background: rgba(248,113,113,0.12); color: var(--error);   border: 1px solid rgba(248,113,113,0.3); }
+        .b-purple{ background: rgba(167,139,250,0.12); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+        .b-orange{ background: rgba(251,146,60,0.12);  color: var(--orange);  border: 1px solid rgba(251,146,60,0.3); }
+        .b-gray  { background: rgba(139,143,167,0.12); color: var(--text-muted); border: 1px solid rgba(139,143,167,0.3); }
+
+        /* Alerts */
+        .alert { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13.5px; }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,0.08); border-color: var(--warning); }
+        .alert-ok   { background: rgba(74,222,128,0.08); border-color: var(--success); }
+        .alert-err  { background: rgba(248,113,113,0.08); border-color: var(--error); }
+
+        /* File ref */
+        .f { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12px; color: var(--text-muted); background: var(--surface2); border-left: 3px solid var(--teal); padding: 6px 12px; border-radius: 0 6px 6px 0; display: block; margin: 8px 0; }
+
+        /* Grids */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0; }
+        .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-top: 3px solid var(--teal); }
+        .gcard h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gcard p  { font-size: 13px; margin-bottom: 6px; }
+        .gcard ul { font-size: 13px; }
+
+        /* Steps */
+        .steps { margin: 16px 0; }
+        .step { display: flex; gap: 16px; margin-bottom: 14px; padding-left: 14px; border-left: 2px solid var(--teal); }
+        .step-num { min-width: 26px; height: 26px; background: var(--teal); color: #000; border-radius: 50%; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .step-body { font-size: 13.5px; padding-top: 3px; }
+
+        /* Struct box */
+        .struct-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+        .struct-title { background: var(--surface2); padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .sf { display: flex; gap: 12px; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: baseline; flex-wrap: wrap; }
+        .sf:last-child { border-bottom: none; }
+        .sf-type { color: var(--info); font-family: monospace; width: var(--sf-type-w, 60px); flex-shrink: 0; font-size: 12px; white-space: nowrap; }
+        .sf-name { color: var(--teal); font-family: monospace; width: 220px; flex-shrink: 0; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; flex: 1; min-width: 0; overflow-wrap: break-word; }
+
+        /* ── Visual Flowchart ── */
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-decision { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; border: 1.5px dashed var(--warning); color: var(--warning); background: rgba(251,191,36,0.08); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+        .fc-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-divider::before, .fc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Tables */
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tr:hover td { background: var(--surface); }
+
+        /* Hierarchy tree */
+        .tree { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 13px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 12px 0; line-height: 2; }
+        .tree .t-root { color: var(--teal); font-weight: 700; }
+        .tree .t-mid  { color: var(--accent2); }
+        .tree .t-leaf { color: var(--accent); }
+        .tree .t-dim  { color: var(--text-muted); }
+        .tree .t-note { color: var(--text-muted); font-size: 11px; font-style: italic; }
+
+        section { scroll-margin-top: 60px; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Game Framework (UGC) — Doc 03</small>
+    </div>
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#scene-setup" class="sub">Scene Setup</a>
+    <a href="#game-controller" class="sh">UGCGameController</a>
+    <a href="#gc-fields" class="sub">Fields &amp; References</a>
+    <a href="#gc-lifecycle" class="sub">Lifecycle</a>
+    <a href="#gc-timer" class="sub">Timer Setup</a>
+    <a href="#gc-events" class="sub">TherapyEvent Receiver</a>
+    <a href="#playable" class="sh">Playable Hierarchy</a>
+    <a href="#playable-base" class="sub">Playable Base Class</a>
+    <a href="#level-manager" class="sub">UGCLevelManager</a>
+    <a href="#level-container" class="sub">UGCLevelContainer</a>
+    <a href="#level" class="sub">UGCLevel</a>
+    <a href="#params-controller" class="sh">UGCParametersController</a>
+    <a href="#params-static" class="sub">Shared Static Params</a>
+    <a href="#params-flow" class="sub">Parameter Update Flow</a>
+    <a href="#params-wait" class="sub">AwaitFirstParameterArrive</a>
+    <a href="#params-difficulty" class="sub">Difficulty System</a>
+    <a href="#param-types" class="sh">Param Types</a>
+    <a href="#iparam" class="sub">IParam Interface</a>
+    <a href="#param-classes" class="sub">Param&lt;T&gt; Classes</a>
+    <a href="#eyelayerparam" class="sub">EyeLayerParam</a>
+    <a href="#vfx-controller" class="sh">Therapeutic VFX</a>
+    <a href="#vfx-color" class="sub">Blur / Brightness / Contrast</a>
+    <a href="#vfx-ipd" class="sub">IPD</a>
+    <a href="#vfx-eye" class="sub">Eye Patching</a>
+    <a href="#vfx-transparency" class="sub">Transparency</a>
+    <a href="#scalable" class="sh">Scalable</a>
+    <a href="#extending" class="sh">Extending the Framework</a>
+    <a href="#component-ref" class="sh">Component Reference</a>
+</nav>
+
+<!-- TOPNAV -->
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <span class="current">Game Framework (UGC)</span>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+<h1>Game Framework (UGC)</h1>
+<p class="hero-sub">The three-component scaffold every therapy game builds on: controller, parameters, and VFX</p>
+
+<!-- ══════════════════════════════ OVERVIEW ══════════════════════════════ -->
+<section id="overview">
+    <h2>Overview</h2>
+    <p>
+        The <code>UGC</code> namespace (<code>Assets/UGC-Protype/</code>) provides the standard scaffold that every
+        therapy game scene is built on. It encapsulates game lifecycle, parameter reception, visual effects, and
+        level sequencing so game-specific code only needs to implement the actual therapy logic.
+    </p>
+
+    <div class="grid3">
+        <div class="gcard" style="border-top-color:var(--teal)">
+            <h4>UGCGameController</h4>
+            <p>Singleton MonoBehaviour. Owns the game lifecycle: start, pause, resume, stop. Holds references to cameras, timer, level manager, and VFX controller.</p>
+        </div>
+        <div class="gcard" style="border-top-color:var(--accent2)">
+            <h4>UGCParametersController</h4>
+            <p>Receives therapy parameters via <code>Messenger</code>. Maintains a static <code>HashSet&lt;IParam&gt;</code> of all params and dispatches updates to registered <code>IParam</code> instances.</p>
+        </div>
+        <div class="gcard" style="border-top-color:var(--accent)">
+            <h4>UGCTherapeuticEventsController</h4>
+            <p>Reacts to param changes. Applies visual effects: blur, brightness, contrast, darkness, IPD offset, eye patching (layer), object transparency, and difficulty-driven scaling.</p>
+        </div>
+    </div>
+
+    <h3 id="scene-setup">Scene Setup Requirements</h3>
+    <p>Every game scene must have all three components present as GameObjects:</p>
+    <div class="struct-box">
+        <div class="struct-title">Required scene components</div>
+        <div class="sf"><span class="sf-type">required</span><span class="sf-name">UGCGameController</span><span class="sf-desc">Or a game-specific subclass (e.g. <code>UGCSakadyGameController</code>). Must have references to left/right/head cameras assigned in Inspector.</span></div>
+        <div class="sf"><span class="sf-type">required</span><span class="sf-name">UGCParametersController</span><span class="sf-desc">Or a game-specific subclass. Must have <code>scriptableParameter[]</code> array populated with any game-specific params.</span></div>
+        <div class="sf"><span class="sf-type">required</span><span class="sf-name">UGCTherapeuticEventsController</span><span class="sf-desc">Or a game-specific subclass. Must have <code>ColorGradingLwrp</code> reference assigned.</span></div>
+        <div class="sf"><span class="sf-type">required</span><span class="sf-name">GameTimer</span><span class="sf-desc">Referenced by <code>UGCGameController.gameTimer</code>. Drives session/demo time limit.</span></div>
+        <div class="sf"><span class="sf-type">optional</span><span class="sf-name">UGCLevelManager</span><span class="sf-desc">Referenced by <code>UGCGameController.levelManager</code>. Required if the game uses the Playable hierarchy for level sequencing. Leave null for games that manage their own level flow.</span></div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════ UGCGAMECONTROLLER ══════════════════════════════ -->
+<section id="game-controller">
+    <h2>UGCGameController</h2>
+    <span class="f">Assets/UGC-Protype/UGCGameController.cs</span>
+
+    <h3 id="gc-fields">Fields &amp; Inspector References</h3>
+    <div class="struct-box" style="--sf-type-w: 230px">
+        <div class="struct-title">Serialized fields (set in Inspector)</div>
+        <div class="sf"><span class="sf-type">Camera</span><span class="sf-name">leftCamera</span><span class="sf-desc">Left eye camera — used by VFX controller for IPD and blur.</span></div>
+        <div class="sf"><span class="sf-type">Camera</span><span class="sf-name">rightCamera</span><span class="sf-desc">Right eye camera.</span></div>
+        <div class="sf"><span class="sf-type">Camera</span><span class="sf-name">headCamera</span><span class="sf-desc">Head-tracking (main) camera for head-locked objects.</span></div>
+        <div class="sf"><span class="sf-type">GameTimer</span><span class="sf-name">gameTimer</span><span class="sf-desc">Session/demo countdown timer.</span></div>
+        <div class="sf"><span class="sf-type">UGCLevelManager</span><span class="sf-name">levelManager</span><span class="sf-desc">Optional — level hierarchy root. Marked <code>[CanBeNull]</code>.</span></div>
+        <div class="sf"><span class="sf-type">UGCTherapeuticEventsController</span><span class="sf-name">therapeuticEventsController</span><span class="sf-desc">VFX controller — called by <code>OnGameStop()</code> to reset all effects.</span></div>
+        <div class="sf"><span class="sf-type">Instruction</span><span class="sf-name">instruction</span><span class="sf-desc">Optional demo instruction shown before game starts in demo mode.</span></div>
+    </div>
+
+    <h3 id="gc-lifecycle">Lifecycle</h3>
+    <p>The startup sequence from scene load to active gameplay:</p>
+
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-tl">Awake</div>
+            <div class="fc-note">Sets singleton · finds ComboManager · subscribes to TherapyEventBroker</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-tl">Start</div>
+            <div class="fc-note">Calls Ready() immediately &mdash; WaitForParamsInit path is currently commented out</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-tl">Ready()</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">Is this a demo version?</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">Yes &mdash; Demo mode</div>
+                    <div class="fc-box fc-yw">ShowInstruction()</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-yw">OnInstructionFinished()</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-gn">SetDemoTimer()</div>
+                    <div class="fc-note">Uses demo_max_time from DemoPlayButton (default 30s)</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">No &mdash; Home / Normal</div>
+                    <div class="fc-box fc-gn">SetHomeTherapyTimer()</div>
+                    <div class="fc-note">Reads game-time param in minutes from session</div>
+                </div>
+            </div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-tl">StartGame()</div>
+            <div class="fc-note">Calls levelManager?.Play(null) · starts timer if demo or home mode</div>
+        </div>
+        <div class="fc-divider">During Gameplay — incoming events</div>
+        <div class="fc-fork">
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">TherapyEventFlags.Pause</div>
+                <div class="fc-box fc-bl">Pause(true)</div>
+                <div class="fc-note">Hides laser pointer</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">TherapyEventFlags.ResumeGame</div>
+                <div class="fc-box fc-bl">Pause(false)</div>
+                <div class="fc-note">Restores laser pointer</div>
+            </div>
+            <div class="fc-branch">
+                <div class="fc-branch-lbl">StopGame / scene change</div>
+                <div class="fc-box fc-rd">OnGameStop()</div>
+                <div class="fc-note">Resets all VFX effects</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warn">
+        <strong>WaitForParamsInit is currently disabled.</strong> The call to <code>WaitForParamsInit().Forget()</code>
+        in <code>Start()</code> is commented out — the game calls <code>Ready()</code> immediately. Re-enabling
+        it would make every game scene wait for the first REST parameter poll before gameplay begins.
+    </div>
+
+    <h3 id="gc-timer">Timer Setup</h3>
+    <p>Two timer-setup paths run before <code>StartGame()</code>:</p>
+    <div class="grid2">
+        <div class="gcard" style="border-top-color:var(--warning)">
+            <h4>SetDemoTimer()</h4>
+            <p>Called after instruction finishes (demo mode). Reads <code>LoaderController.StartDemoTimer()</code> which returns the <code>demo_max_time</code> set by <code>DemoPlayButton</code> (default 30s).</p>
+            <p>Calls <code>gameTimer.SetTimer(demoMaxTime, <span class="b b-red">countDown=true</span>)</code>.</p>
+        </div>
+        <div class="gcard" style="border-top-color:var(--success)">
+            <h4>SetHomeTherapyTimer()</h4>
+            <p>Called in home mode. Reads <code>game-time</code> parameter from the session-set game's params array (value is in <strong>minutes</strong>).</p>
+            <p>Calls <code>gameTimer.SetTimer(minutes × 60f, <span class="b b-red">countDown=false</span>)</code>.</p>
+        </div>
+    </div>
+    <p>
+        Timer only <em>starts</em> (via <code>StartTimerIfDemoOrHomeTherapy()</code>) if
+        <code>gameTimer.currentGameTime &gt; 0</code>. A value of <code>0</code> means unlimited time — the game
+        runs until a <code>StopGame</code> or <code>ForceStopGame</code> event arrives from the tablet.
+    </p>
+
+    <h3 id="gc-events">TherapyEvent Receiver</h3>
+    <p>
+        <code>UGCGameController</code> implements <code>ITherapyEventReceiver</code> and subscribes to
+        <code>TherapyEventBroker</code> in <code>Awake()</code>, unsubscribing in <code>OnDestroy()</code>.
+    </p>
+    <div class="struct-box">
+        <div class="struct-title">AcceptedEvents</div>
+        <div class="sf"><span class="sf-type">flag</span><span class="sf-name">TherapyEventFlags.Pause</span><span class="sf-desc">Calls <code>Pause(true)</code>. Sets controller state to <code>EnabledWithoutPointers</code> (shows controllers, hides laser).</span></div>
+        <div class="sf"><span class="sf-type">flag</span><span class="sf-name">TherapyEventFlags.ResumeGame</span><span class="sf-desc">Calls <code>Pause(false)</code>. Restores controller state to <code>EnabledWithPointers</code>.</span></div>
+    </div>
+    <p>
+        Game-specific subclasses can override <code>OnTherapyEvent()</code> and expand
+        <code>AcceptedEvents</code> to handle additional flags.
+    </p>
+</section>
+
+<!-- ══════════════════════════════ PLAYABLE HIERARCHY ══════════════════════════════ -->
+<section id="playable">
+    <h2>Playable Hierarchy</h2>
+    <p>
+        The level system is built on a three-tier hierarchy of <code>Playable</code> subclasses.
+        <code>UGCGameController</code> holds a reference to the root <code>UGCLevelManager</code> and calls
+        <code>levelManager.Play(null)</code> to kick off the sequence.
+    </p>
+
+    <div class="tree">
+<span class="t-root">UGCLevelManager</span>   <span class="t-note">  ← root; held by UGCGameController</span>
+  <span class="t-dim">├─</span> <span class="t-mid">UGCLevelContainer</span>  <span class="t-note">  (containerName="Default") ← first container</span>
+  <span class="t-dim">│    ├─</span> <span class="t-leaf">UGCLevel</span>          <span class="t-note">  ← individual round / challenge</span>
+  <span class="t-dim">│    ├─</span> <span class="t-leaf">UGCLevel</span>
+  <span class="t-dim">│    └─</span> <span class="t-leaf">UGCLevel</span>
+  <span class="t-dim">└─</span> <span class="t-mid">UGCLevelContainer</span>  <span class="t-note">  (containerName="Hard") ← second container (optional)</span>
+       <span class="t-dim">└─</span> <span class="t-leaf">UGCLevel</span>
+    </div>
+
+    <h3 id="playable-base">Playable Base Class</h3>
+    <span class="f">Assets/UGC-Protype/Playable.cs</span>
+    <p>
+        Abstract base for all hierarchy nodes. Extends Odin's <code>SerializedMonoBehaviour</code>.
+        Provides two <code>UnityEvent</code> hooks that can be wired in the Inspector <em>instead</em> of
+        overriding the virtual methods — if an event has persistent listeners, the virtual method
+        is <strong>not</strong> called automatically and must be invoked manually from the listener.
+    </p>
+
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-bl">Play(callback?)</div>
+            <div class="fc-note">Called by parent container or UGCGameController</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">Does OnPlay have Inspector listeners?</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">Yes</div>
+                    <div class="fc-box fc-yw">OnPlay.Invoke(this)</div>
+                    <div class="fc-note">⚠ Listener must manually call BeginPlay()</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">No (default path)</div>
+                    <div class="fc-box fc-tl">BeginPlay()</div>
+                    <div class="fc-note">Subclass overrides this to run game logic</div>
+                </div>
+            </div>
+        </div>
+        <div class="fc-divider">When subclass signals it is done</div>
+        <div class="fc-seq">
+            <div class="fc-box fc-bl">Finish() &nbsp;<span style="font-weight:400;font-size:11px">(protected — subclass calls this)</span></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">Does OnFinish have Inspector listeners?</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">Yes</div>
+                    <div class="fc-box fc-yw">OnFinish.Invoke(this)</div>
+                    <div class="fc-note">⚠ Listener must manually call BeginFinish()</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">No (default path)</div>
+                    <div class="fc-box fc-tl">BeginFinish()</div>
+                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                    <div class="fc-box fc-gn">OnFinishAuto fires</div>
+                    <div class="fc-note">Notifies parent container to advance to next level</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warn">
+        <strong>Inspector hook caveat:</strong> If you wire <code>OnPlay</code> or <code>OnFinish</code> in the
+        Inspector, you <em>must</em> manually call <code>BeginPlay()</code> / <code>BeginFinish()</code> from your
+        listener. The Playable will silently stall if you forget — no error is thrown.
+    </div>
+
+    <h3 id="level-manager">UGCLevelManager</h3>
+    <span class="f">Assets/UGC-Protype/UGCLevelManager.cs</span>
+    <p>Top-level Playable. Contains an array of named <code>UGCLevelContainer[]</code>.</p>
+    <ul>
+        <li><code>BeginPlay()</code> calls <code>PlayContainer(firstContainer)</code> — starts the container named by the <code>firstContainer</code> string field (default <code>"Default"</code>)</li>
+        <li><code>PlayContainer(name)</code> stops any currently running container, finds the named one, and calls <code>container.Play(OnFinishContainer)</code></li>
+        <li>When the container fires its finish callback, <code>OnFinishContainer()</code> calls <code>Finish()</code> which signals the game is complete via <code>OnFinishAuto</code> → <code>ModuleFinished</code> event</li>
+        <li><code>PlayContainer()</code> can be called at any time to switch containers mid-game (e.g. difficulty gating)</li>
+    </ul>
+
+    <h3 id="level-container">UGCLevelContainer</h3>
+    <span class="f">Assets/UGC-Protype/UGCLevelContainer.cs</span>
+    <p>Mid-hierarchy Playable. Groups a set of <code>Playable</code> children (either <code>UGCLevel</code> or nested <code>UGCLevelContainer</code>) and sequences them.</p>
+
+    <div class="grid2">
+        <div class="gcard">
+            <h4>FindNextLevelMethod</h4>
+            <p><span class="b b-blue">Sequentially</span> — plays unfinished levels in index order (1→2→3). Returns <code>null</code> when all are done.</p>
+            <p><span class="b b-purple">Randomly</span> — picks a random unfinished level. If <code>startFromFirstLevel=true</code>, always starts with index 0 on first play after restart.</p>
+        </div>
+        <div class="gcard">
+            <h4>Loop Mode</h4>
+            <p>When <code>loop=true</code> the container doesn't finish — it calls <code>Restart()</code> instead of <code>Finish()</code>. Levels are re-spawned from <code>levelPrefabs[]</code> on each restart so they reset to a clean state.</p>
+            <p>Non-loop mode uses <code>GetComponentsInChildren&lt;UGCLevel&gt;</code> to find levels at startup (no prefab required).</p>
+        </div>
+    </div>
+
+    <p>
+        When a child <code>Playable</code> finishes, <code>OnChildPlayableFinished()</code> deactivates it and
+        calls <code>BeginPlay()</code> again to advance to the next. The <code>OnChildPlay</code> UnityEvent fires
+        each time a child starts — useful when level GameObjects don't have direct scene references (since they're
+        spawned from prefabs).
+    </p>
+
+    <h3 id="level">UGCLevel</h3>
+    <span class="f">Assets/UGC-Protype/UGCLevel.cs</span>
+    <p>
+        Leaf node in the hierarchy. Contains only one public method: <code>FinishLevel()</code> which calls the
+        protected <code>Finish()</code>. Game logic scripts on the same GameObject call
+        <code>GetComponent&lt;UGCLevel&gt;().FinishLevel()</code> when the round is over (correct answer, timeout, etc.).
+    </p>
+</section>
+
+<!-- ══════════════════════════════ PARAMETERS ══════════════════════════════ -->
+<section id="params-controller">
+    <h2>UGCParametersController</h2>
+    <span class="f">Assets/UGC-Protype/UGCParametersController.cs</span>
+
+    <p>
+        Central parameter hub for each game scene. Maintains a <strong>static</strong>
+        <code>HashSet&lt;IParam&gt; parameters</code> — shared across the entire application lifetime. Params are added
+        to this set either by static field initialisation (the named params below) or by
+        <code>UGCParametersController.AddParam(param)</code>.
+    </p>
+
+    <div class="alert alert-info">
+        <strong>Why static?</strong> Parameters persist across scene loads. This means parameter values carry
+        over from one game to the next without needing a REST round-trip, which reduces first-frame latency.
+        The <code>OnLevelFinishedLoading</code> hook resets <code>difficulty</code> only — other param values
+        remain until explicitly updated by the server.
+    </div>
+
+    <h3 id="params-static">Shared Static Parameters</h3>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Field Name</th><th>API name</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+            <tr><td><code>currentIPDParam</code></td><td><code>ipd</code></td><td><span class="b b-blue">IntParam</span></td><td>65</td><td>mm. Drives camera X offset for stereo.</td></tr>
+            <tr><td><code>gameTimeParam</code></td><td><code>game-time</code></td><td><span class="b b-blue">FloatParam</span></td><td>0</td><td>Minutes. 0 = unlimited time.</td></tr>
+            <tr><td><code>dominantEyeParam</code></td><td><code>dominant-eye</code></td><td><span class="b b-purple">CustomParam&lt;EyeVR&gt;</span></td><td>Left</td><td>Polish strings: <em>"lewe oko"</em> / <em>"prawe oko"</em>.</td></tr>
+            <tr><td><code>objectSizeParam</code></td><td><code>object-size-dynamic</code></td><td><span class="b b-purple">CustomParam&lt;ObjectSize,float&gt;</span></td><td>Medium / 1f</td><td>Polish: <em>"Mały"/"Średni"/"Duży"</em>. Fires <code>Broker&lt;ObjectSizeChanged&gt;</code>. Second value is the actual scale multiplier set by difficulty.</td></tr>
+            <tr><td><code>blurParam</code></td><td><code>blur-dominant</code></td><td><span class="b b-blue">IntParam</span></td><td>0</td><td>0–100 → remapped to 0–10 for shader.</td></tr>
+            <tr><td><code>brightnessParam</code></td><td><code>brightness</code></td><td><span class="b b-blue">FloatParam</span></td><td>0</td><td>Applied to <strong>non-dominant</strong> eye.</td></tr>
+            <tr><td><code>darknessParam</code></td><td><code>darkness</code></td><td><span class="b b-blue">FloatParam</span></td><td>0</td><td>Applied to <strong>dominant</strong> eye (stored negated internally).</td></tr>
+            <tr><td><code>contrastParam</code></td><td><code>contrast</code></td><td><span class="b b-blue">FloatParam</span></td><td>0</td><td>0–100 → remapped to 1–9 (1=normal).</td></tr>
+            <tr><td><code>transparencyInteractableParam</code></td><td><code>transparency-int</code></td><td><span class="b b-purple">CustomParam&lt;float&gt;</span></td><td>1f</td><td>0–100 → remapped to 0.2–0.9 opacity. Applied to <code>PatchableGroup.Interactable</code>.</td></tr>
+            <tr><td><code>transparencyDeployerParam</code></td><td><code>transparency-dep</code></td><td><span class="b b-purple">CustomParam&lt;float&gt;</span></td><td>1f</td><td>Applied to <code>Deployer</code> + <code>Environment</code>.</td></tr>
+            <tr><td><code>transparencyControllerParam</code></td><td><code>transparency-con</code></td><td><span class="b b-purple">CustomParam&lt;float&gt;</span></td><td>1f</td><td>Applied to <code>PatchableGroup.Controller</code>.</td></tr>
+            <tr><td><code>aimingCamParam</code></td><td><code>celowanie</code></td><td><span class="b b-orange">EyeLayerParam</span></td><td>Both / false / false</td><td>"celowanie" = aiming. Controls controller layer.</td></tr>
+            <tr><td><code>interactableObjectCameraParam</code></td><td><code>main-object</code></td><td><span class="b b-orange">EyeLayerParam</span></td><td>Both / false / false</td><td>Alt. name: <code>main-object-diamond</code>.</td></tr>
+            <tr><td><code>deployerObjectCameraParam</code></td><td><code>main-object-starfish</code></td><td><span class="b b-orange">EyeLayerParam</span></td><td>Both / false / false</td><td>Deployers always on opposite layer from interactables when alternating.</td></tr>
+            <tr><td><code>speedParam</code></td><td><code>tempo</code></td><td><span class="b b-blue">FloatParam</span></td><td>1f</td><td>"tempo" = speed. Consumed by game-specific code.</td></tr>
+            <tr><td><code>objectDistanceParam</code></td><td><code>object-distance-norm</code></td><td><span class="b b-purple">CustomParam&lt;DistanceMode,float&gt;</span></td><td>Static / 2f</td><td>Polish: <em>"mieszane"/"minimalny vac"/"near"/"far"</em> or numeric string. Fires <code>Broker&lt;ObjectDistanceChanged&gt;</code>. VAC minimum = 1.7m.</td></tr>
+            <tr><td><code>worldBasedSceneDistanceParam</code></td><td><code>focus-objects-distan</code></td><td><span class="b b-blue">FloatParam</span></td><td>0f</td><td>Currently unused (handler body is empty).</td></tr>
+            <tr><td><code>controllImagesParam</code></td><td><code>controll-images</code></td><td><span class="b b-blue">BoolParam</span></td><td>false</td><td>Shows/hides controller UI images.</td></tr>
+            <tr><td><code>snapToHeadParam</code></td><td><code>snap-to-head</code></td><td><span class="b b-blue">BoolParam</span></td><td>false</td><td>Locks game objects to head orientation.</td></tr>
+        </table>
+    </div>
+
+    <h3 id="params-flow">Parameter Update Flow</h3>
+    <p>
+        <code>UGCParametersController</code> subscribes to <code>Messenger</code> key
+        <code>LoaderController.ParamsUpdated</code> (<code>"paramsUpdated"</code>) in <code>Awake()</code>.
+        The key is marked <code>Permanent</code> so it persists across scene loads.
+    </p>
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-bl">REST API poll returns<br><small>LoaderController every ~1.5s</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-yw">Messenger.Broadcast(<br>"paramsUpdated", List&lt;Param&gt;)</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-tl">OnParametersUpdated()<br><small>iterates each Sessionsetgame.Param</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+            <div class="fc-decision">matching IParam found<br>by Name or SecondName?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-rd">No match</div>
+                    <div class="fc-box fc-gy">skip param</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gn">Matched</div>
+                    <div class="fc-seq">
+                        <div class="fc-decision">StringValue == startvalue<br>(no change)?</div>
+                        <div class="fc-fork">
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl fc-rd">Same value</div>
+                                <div class="fc-box fc-gy">skip — no update</div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl fc-gn">Changed</div>
+                                <div class="fc-seq">
+                                    <div class="fc-box fc-tl">param.UpdateParameter(sessionParam)</div>
+                                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                                    <div class="fc-box fc-yw">Parse(startvalue)<br><small>sets typed value on IParam</small></div>
+                                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                                    <div class="fc-box fc-tl">OnUpdate?.Invoke(value)</div>
+                                    <div class="fc-note">subscribed by UGCTherapeuticEventsController → applies VFX</div>
+                                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                                    <div class="fc-box fc-gn">SignalParameterArrive()</div>
+                                    <div class="fc-note">resolves all pending AwaitFirstParameterArrive() UniTasks</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="params-wait">AwaitFirstParameterArrive()</h3>
+    <p>
+        Returns a <code>UniTask</code> that completes when the first parameter update arrives.
+        <code>UGCGameController.WaitForParamsInit()</code> awaits this before calling <code>Ready()</code>,
+        ensuring the game doesn't start before the server's initial state is applied.
+        Multiple callers can await simultaneously — all are resolved at once via a
+        <code>List&lt;UniTaskCompletionSource&gt;</code>.
+    </p>
+
+    <h3 id="params-difficulty">Difficulty System</h3>
+    <p>
+        <code>UGCParametersController.difficulty</code> is a static clamped int (0–10) that drives object scale.
+        It is managed separately from the parameter polling system:
+    </p>
+    <ul>
+        <li><code>ComboManager</code> increments/decrements it based on correct/wrong answer events</li>
+        <li>The value is tracked per <code>ObjectSize</code> tier via <code>highestDifficulty[3]</code></li>
+        <li>When <code>objectSizeParam</code> changes, <code>ResetDifficulty()</code> restores difficulty to the highest previously reached for that size tier (so difficulty isn't lost when size changes)</li>
+        <li>On scene unload, <code>OnLevelFinishedLoading</code> zeroes all difficulty values</li>
+    </ul>
+    <p>
+        The scale multiplier (<code>objectSizeParam.SecondValue</code>) is derived from difficulty in
+        <code>OnDifficultyChange()</code>:
+    </p>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>ObjectSize</th><th>Base scale</th><th>Per-difficulty decrement</th><th>Range (diff 0–10)</th></tr>
+            <tr><td>Small</td><td>0.7</td><td>−0.03 / step</td><td>0.70 → 0.40</td></tr>
+            <tr><td>Medium</td><td>1.0</td><td>−0.03 / step</td><td>1.00 → 0.70</td></tr>
+            <tr><td>Big</td><td>1.3</td><td>−0.03 / step</td><td>1.30 → 1.00</td></tr>
+        </table>
+    </div>
+</section>
+
+<!-- ══════════════════════════════ PARAM TYPES ══════════════════════════════ -->
+<section id="param-types">
+    <h2>Param Types</h2>
+
+    <h3 id="iparam">IParam Interface</h3>
+    <span class="f">Assets/UGC-Protype/IParam.cs</span>
+    <div class="struct-box">
+        <div class="struct-title">interface IParam : IEquatable&lt;Sessionsetgame.Param&gt;</div>
+        <div class="sf"><span class="sf-type">string</span><span class="sf-name">Name</span><span class="sf-desc">Primary API parameter name. Matched against <code>Sessionsetgame.Param.game_parameters.name</code>.</span></div>
+        <div class="sf"><span class="sf-type">string</span><span class="sf-name">SecondName</span><span class="sf-desc">Alternative API name for the same parameter (e.g. <code>"main-object-diamond"</code>).</span></div>
+        <div class="sf"><span class="sf-type">string</span><span class="sf-name">StringValue</span><span class="sf-desc">Last received raw string from the API. Used for change detection — update skipped if equal to new value.</span></div>
+        <div class="sf"><span class="sf-type">void</span><span class="sf-name">Reset()</span><span class="sf-desc">Restores typed value to default. Fires <code>OnUpdate</code> if value actually changed.</span></div>
+        <div class="sf"><span class="sf-type">void</span><span class="sf-name">UpdateParameter(param)</span><span class="sf-desc">Parses the server value, updates typed value, fires <code>OnUpdate</code>. Must not throw.</span></div>
+    </div>
+
+    <h3 id="param-classes">Param&lt;T&gt; Class Hierarchy</h3>
+
+    <div class="alert alert-warn">
+        <strong>All concrete Param classes are marked <code>[Obsolete]</code>.</strong> New game-specific parameters
+        should use <code>ScriptableParameter&lt;T&gt;</code> assets (via Unity menu: Parameters/Bool, Parameters/Int).
+        The static shared params in <code>UGCParametersController</code> still use the old classes and won't be
+        migrated.
+    </div>
+
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Class</th><th>Values</th><th>Parse behaviour</th></tr>
+            <tr><td><code>FloatParam</code></td><td><code>T=float</code></td><td><code>float.TryParse()</code></td></tr>
+            <tr><td><code>IntParam</code></td><td><code>T=int</code></td><td><code>int.TryParse()</code></td></tr>
+            <tr><td><code>BoolParam</code></td><td><code>T=bool</code></td><td><code>"on"/"włączony"</code> → true, <code>"off"/"wyłączony"</code> → false</td></tr>
+            <tr><td><code>CustomParam&lt;T&gt;</code></td><td><code>T</code></td><td>User-supplied <code>Func&lt;string,T&gt;</code> parse function</td></tr>
+            <tr><td><code>CustomParam&lt;T,U&gt;</code></td><td><code>(T,U)</code> tuple</td><td>User-supplied <code>Func&lt;string,(T,U)&gt;</code></td></tr>
+            <tr><td><code>EyeLayerParam</code></td><td><code>EyeLayer + bool isAlternating + bool isDichomatic</code></td><td>See below</td></tr>
+        </table>
+    </div>
+
+    <h3 id="eyelayerparam">EyeLayerParam</h3>
+    <p>Parses Polish string values to a three-part state:</p>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Polish value</th><th>EyeLayer</th><th>IsAlternatingEye</th><th>IsDichomatic</th><th>Meaning</th></tr>
+            <tr><td><code>prawe oko</code></td><td>RightEye</td><td>false</td><td>false</td><td>Fixed right eye</td></tr>
+            <tr><td><code>lewe oko</code></td><td>LeftEye</td><td>false</td><td>false</td><td>Fixed left eye</td></tr>
+            <tr><td><code>obuocznie</code></td><td>Both</td><td>false</td><td>false</td><td>Both eyes (binocular)</td></tr>
+            <tr><td><code>naprzemiennie</code></td><td>Both</td><td>true</td><td>false</td><td>Alternating per correct answer</td></tr>
+            <tr><td><code>dwuocznie</code></td><td>Both</td><td>true</td><td>true</td><td>Dichoptic — random L/R per object</td></tr>
+        </table>
+    </div>
+    <p>
+        <code>SwapAlternatingLayer()</code> toggles the internal alternating layer between Left and Right.
+        Called by <code>UGCTherapeuticEventsController.AlternateEye()</code> on each correct answer.
+    </p>
+</section>
+
+<!-- ══════════════════════════════ VFX CONTROLLER ══════════════════════════════ -->
+<section id="vfx-controller">
+    <h2>UGCTherapeuticEventsController</h2>
+    <span class="f">Assets/UGC-Protype/UGCTherapeuticEventsController.cs</span>
+
+    <p>
+        Singleton. Subscribes to <code>IParam.OnUpdate</code> callbacks from every shared param in
+        <code>Start()</code> and unsubscribes in <code>OnDestroy()</code>. Applies the resulting visual effects
+        via <code>ColorGradingLwrp</code> and <code>StandardRP_Blur_Brightness</code>.
+    </p>
+
+    <h3 id="vfx-color">Blur / Brightness / Darkness / Contrast</h3>
+    <p>
+        All four colour effects are applied <strong>per-eye</strong> and respect <code>dominantEyeParam</code>.
+        The dominant eye receives darkening/blur; the non-dominant eye receives brightening.
+        Contrast is applied to the dominant eye only (non-dominant stays at 1).
+    </p>
+
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Effect</th><th>Method</th><th>Applied to</th><th>Range mapping</th></tr>
+            <tr><td>Blur</td><td><code>ApplyBlurDominant(v)</code></td><td>Dominant eye only</td><td>0–100 API → 0–10 shader value</td></tr>
+            <tr><td>Brightness</td><td><code>ApplyBrightness(v)</code></td><td>Non-dominant eye</td><td>Direct float</td></tr>
+            <tr><td>Darkness</td><td><code>ApplyDarkness(v)</code></td><td>Dominant eye</td><td>Stored as negative (0 → −value)</td></tr>
+            <tr><td>Contrast</td><td><code>ApplyContrast(v)</code></td><td>Dominant eye</td><td>0–100 API → 1–9 (1=neutral); non-dominant forced to 1</td></tr>
+        </table>
+    </div>
+
+    <p>
+        <code>ResetVFX()</code> is called by <code>UGCGameController.OnGameStop()</code> — sets blur=0,
+        brightness=0, contrast=1, darkness=0 before scene transitions.
+    </p>
+
+    <h3 id="vfx-ipd">IPD</h3>
+    <p>
+        <code>SetIPD(int ipd)</code> converts millimetres to metres and offsets the left/right camera
+        <code>localPosition.x</code> symmetrically:
+    </p>
+    <pre><code>leftCamera.localPosition.x  = <span class="nu">-(ipd / 2f) / 1000f</span>   <span class="cm">// e.g. 65mm → left x = -0.0325</span>
+rightCamera.localPosition.x = <span class="nu">+(ipd / 2f) / 1000f</span>   <span class="cm">// right x = +0.0325</span></code></pre>
+    <p>Called at <code>Start()</code> with the current default (65mm), then on every <code>currentIPDParam.OnUpdate</code>.</p>
+
+    <h3 id="vfx-eye">Eye Patching System</h3>
+    <p>
+        Game objects that should appear on a specific eye carry an <code>EyePatchable</code> component.
+        <code>UGCTherapeuticEventsController.SetLayers(param, patchables)</code> iterates all patchables in the
+        given group and calls <code>patchable.Patch(eyeLayer)</code> which recursively sets the Unity layer
+        (<code>LayerMask</code>) on the object and its children up to <code>depth</code> levels deep.
+    </p>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>PatchableGroup</th><th>Controls</th><th>Param</th><th>Alternating behaviour</th></tr>
+            <tr><td><code>Interactable</code></td><td>Target objects (things to hit/catch)</td><td><code>interactableObjectCameraParam</code></td><td>Always alternated; never same layer as Deployer</td></tr>
+            <tr><td><code>Deployer</code></td><td>Spawner / environment objects</td><td><code>deployerObjectCameraParam</code></td><td>Always alternated; forced to opposite of Interactable</td></tr>
+            <tr><td><code>Controller</code></td><td>VR controller / laser pointer</td><td><code>aimingCamParam</code></td><td>Alternated only when <code>IsAlternatingEye=true</code></td></tr>
+            <tr><td><code>Environment</code></td><td>Background / skybox objects</td><td>—</td><td>No patching</td></tr>
+        </table>
+    </div>
+
+    <p>
+        <code>AlternateEye()</code> is called after a correct answer to swap alternating layers. It calls
+        <code>SwapAlternatingLayer()</code> on each relevant param then re-applies layers to all
+        <code>EyePatchable</code>s in the scene.
+    </p>
+
+    <h3 id="vfx-transparency">Transparency</h3>
+    <p>
+        Transparency params (0–100 from API) are remapped to 0.2–0.9 opacity and applied via
+        <code>TransparencyController</code> components grouped by <code>PatchableGroup</code>. Zero from the API
+        maps to full opacity (1f) — meaning "no transparency effect".
+    </p>
+</section>
+
+<!-- ══════════════════════════════ SCALABLE ══════════════════════════════ -->
+<section id="scalable">
+    <h2>Scalable</h2>
+    <span class="f">Assets/UGC-Protype/Scalable.cs</span>
+    <p>
+        Add to any GameObject that should resize when <code>objectSizeParam</code> changes or when
+        <code>difficulty</code> changes. <code>OnDifficultyChange</code> in the VFX controller calls
+        <code>Scale(objectSizeParam.SecondValue)</code> on every <code>Scalable</code> in the scene.
+    </p>
+
+    <div class="grid2">
+        <div class="gcard">
+            <h4>relativeScale = false (default)</h4>
+            <p>Final scale = <code>Vector3.one × paramScale</code>. All objects with this flag off end up the same absolute size regardless of their starting scale.</p>
+        </div>
+        <div class="gcard">
+            <h4>relativeScale = true</h4>
+            <p>Final scale = <code>startingScale × paramScale</code>. Objects maintain their proportions relative to each other — useful when different objects should be scaled but stay in ratio.</p>
+        </div>
+    </div>
+    <p>
+        Scaling is animated by default (<code>scaleGraduallyOverTime=true</code>, <code>scaleTime=0.5s</code>)
+        via a <code>Vector3.Lerp</code> coroutine. The target scale is re-read each frame during the lerp, so
+        mid-animation param changes are handled gracefully. On <code>OnEnable</code>, objects scale in from zero
+        (<code>ScaleFromZero</code>) — giving a pop-in animation each time a level activates.
+    </p>
+</section>
+
+<!-- ══════════════════════════════ EXTENDING ══════════════════════════════ -->
+<section id="extending">
+    <h2>Extending the Framework</h2>
+    <p>
+        A minimal game-specific implementation requires three subclasses. Here's the typical extension pattern:
+    </p>
+
+    <pre><code><span class="cm">// 1. Game controller — override only what you need</span>
+<span class="kw">public class</span> <span class="ty">UGCSakadyGameController</span> : <span class="ty">UGCGameController</span>
+{
+    <span class="kw">public override void</span> <span class="fn">StartGame</span>()
+    {
+        <span class="kw">base</span>.StartGame();               <span class="cm">// starts levelManager + timer</span>
+        SpawnInitialObjects();          <span class="cm">// game-specific setup</span>
+    }
+
+    <span class="kw">protected override void</span> <span class="fn">Ready</span>()   <span class="cm">// optional — runs before StartGame</span>
+    {
+        SetupUI();
+        <span class="kw">base</span>.Ready();
+    }
+}
+
+<span class="cm">// 2. Parameters controller — add game-specific params</span>
+<span class="kw">public class</span> <span class="ty">UGCMiceGameParametersController</span> : <span class="ty">UGCParametersController</span>
+{
+    <span class="cm">// Game-specific param declared as new (shadows the base static)</span>
+    <span class="kw">public new static</span> <span class="ty">IntParam</span> numberOfObjectsParam = <span class="kw">new</span> <span class="ty">IntParam</span>(<span class="st">"fruit-count"</span>, <span class="nu">3</span>);
+}
+
+<span class="cm">// 3. VFX controller — override only changed handlers</span>
+<span class="kw">public class</span> <span class="ty">UGCSakadyTherapeuticEventsController</span> : <span class="ty">UGCTherapeuticEventsController</span>
+{
+    <span class="kw">protected override void</span> <span class="fn">OnObjectSizeChanged</span>(<span class="ty">ObjectSize</span> size, <span class="kw">float</span> scale)
+    {
+        <span class="kw">base</span>.OnObjectSizeChanged(size, scale); <span class="cm">// scales all Scalable objects</span>
+        AdjustSpawnRadius(scale);               <span class="cm">// game-specific response</span>
+    }
+}</code></pre>
+
+    <div class="alert alert-ok">
+        <strong>Adding a game-specific ScriptableParameter:</strong> Create the asset via
+        <em>Assets → Parameters → Int/Bool</em>, add it to the game scene's
+        <code>UGCParametersController.scriptableParameter[]</code> array in the Inspector. The parameter is
+        automatically added to the static <code>HashSet</code> in <code>Awake()</code> and removed in
+        <code>OnDestroy()</code>, so it's only active while the game scene is loaded.
+    </div>
+</section>
+
+<!-- ══════════════════════════════ COMPONENT REF ══════════════════════════════ -->
+<section id="component-ref">
+    <h2>Component Reference</h2>
+    <div class="grid2">
+        <div class="gcard">
+            <h4>UGCGameController</h4>
+            <p><code>UGC-Protype/UGCGameController.cs</code></p>
+            <p>Base singleton. Game lifecycle: <code>Awake → Start → Ready → StartGame</code>. Handles Pause/Resume via TherapyEventBroker. Holds camera refs + GameTimer.</p>
+        </div>
+        <div class="gcard">
+            <h4>UGCParametersController</h4>
+            <p><code>UGC-Protype/UGCParametersController.cs</code></p>
+            <p>Owns static <code>HashSet&lt;IParam&gt;</code>. Bridges <code>Messenger("paramsUpdated")</code> to typed <code>IParam.UpdateParameter()</code> calls. Manages difficulty reset on scene load.</p>
+        </div>
+        <div class="gcard">
+            <h4>UGCTherapeuticEventsController</h4>
+            <p><code>UGC-Protype/UGCTherapeuticEventsController.cs</code></p>
+            <p>Reacts to all param <code>OnUpdate</code> events. Applies: IPD, blur, brightness, darkness, contrast, transparency, eye patching, difficulty scaling.</p>
+        </div>
+        <div class="gcard">
+            <h4>Playable / UGCLevelManager / UGCLevelContainer / UGCLevel</h4>
+            <p><code>UGC-Protype/Playable.cs</code> et al.</p>
+            <p>Level hierarchy. Manager holds containers; containers sequence levels (sequential or random, with optional loop). Level calls <code>FinishLevel()</code> when done.</p>
+        </div>
+        <div class="gcard">
+            <h4>EyePatchable</h4>
+            <p><code>UGC-Protype/EyePatchable.cs</code></p>
+            <p>Marks a GameObject as belonging to a <code>PatchableGroup</code>. On <code>OnEnable</code> applies correct layer. Depth field controls recursion into children.</p>
+        </div>
+        <div class="gcard">
+            <h4>Scalable</h4>
+            <p><code>UGC-Protype/Scalable.cs</code></p>
+            <p>Reacts to <code>objectSizeParam.SecondValue</code> changes. Animates scale over 0.5s. Supports relative and absolute scaling modes.</p>
+        </div>
+        <div class="gcard">
+            <h4>IParam / Param&lt;T&gt;</h4>
+            <p><code>UGC-Protype/IParam.cs</code>, <code>Param.cs</code></p>
+            <p>Parameter contract and legacy base classes (<code>[Obsolete]</code>). Concrete types: <code>FloatParam</code>, <code>IntParam</code>, <code>BoolParam</code>, <code>CustomParam</code>, <code>EyeLayerParam</code>.</p>
+        </div>
+        <div class="gcard">
+            <h4>GameTimer</h4>
+            <p><code>Assets/GameTimer.cs</code></p>
+            <p>Session and demo countdown. <code>SetTimer(seconds, countDown)</code> configures; <code>StartTimer()</code> begins. Fires events on expiry to trigger <code>ModuleFinished</code>.</p>
+        </div>
+    </div>
+</section>
+
+
+</main>
+
+<button id="btt" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const a = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
+                if (a) a.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    sections.forEach(s => obs.observe(s));
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 400));
+</script>
+</body>
+</html>

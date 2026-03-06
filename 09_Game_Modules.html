@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Game Modules</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117; --surface: #1a1d27; --surface2: #232633; --surface3: #2a2e3f;
+            --border: #2e3248; --text: #e1e4ed; --text-muted: #8b8fa7;
+            --accent: #6c8aff; --accent2: #a78bfa;
+            --success: #4ade80; --warning: #fbbf24; --error: #f87171;
+            --info: #38bdf8; --teal: #2dd4bf; --pink: #f472b6; --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 16px; font-size: 13px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a { display: block; padding: 6px 20px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; transition: all 0.15s; border-left: 3px solid transparent; }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        .topnav { position: fixed; top: 0; left: 300px; right: 0; z-index: 200; height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 24px; font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; }
+
+        #btt { position: fixed; bottom: 28px; right: 28px; z-index: 300; width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #000; border: none; font-size: 17px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1100px; }
+        h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 44px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 22px 0 10px; }
+        p { margin-bottom: 12px; font-size: 14px; }
+        ul { padding-left: 20px; margin-bottom: 12px; font-size: 14px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 44px 0; }
+        code { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12.5px; background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+        section { scroll-margin-top: 60px; }
+
+        .f { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12px; color: var(--text-muted); background: var(--surface2); border-left: 3px solid var(--teal); padding: 6px 12px; border-radius: 0 6px 6px 0; display: block; margin: 8px 0; }
+
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal  { background: rgba(45,212,191,0.12);  color: var(--teal);    border: 1px solid rgba(45,212,191,0.3); }
+        .b-blue  { background: rgba(108,138,255,0.12); color: var(--accent);  border: 1px solid rgba(108,138,255,0.3); }
+        .b-green { background: rgba(74,222,128,0.12);  color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow{ background: rgba(251,191,36,0.12);  color: var(--warning); border: 1px solid rgba(251,146,60,0.3); }
+        .b-purple{ background: rgba(167,139,250,0.12); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+        .b-orange{ background: rgba(251,146,60,0.12);  color: var(--orange);  border: 1px solid rgba(251,146,60,0.3); }
+        .b-pink  { background: rgba(244,114,182,0.12); color: var(--pink);    border: 1px solid rgba(244,114,182,0.3); }
+        .b-gray  { background: rgba(139,143,167,0.12); color: var(--text-muted); border: 1px solid rgba(139,143,167,0.3); }
+
+        .alert { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13.5px; }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+
+        /* Master table */
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tr:hover td { background: var(--surface); }
+
+        /* Game cards */
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 20px 0; }
+        .game-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .game-card-head { padding: 12px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 10px; }
+        .game-card-head .gname { font-size: 14px; font-weight: 700; color: var(--text); }
+        .game-card-head .gid   { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+        .game-card-body { padding: 12px 16px; font-size: 13px; }
+        .game-card-body .row { display: flex; gap: 8px; margin-bottom: 5px; align-items: baseline; }
+        .game-card-body .lbl { color: var(--text-muted); width: 90px; flex-shrink: 0; font-size: 11.5px; }
+        .game-card-body .val { color: var(--text); font-size: 12.5px; }
+        .game-card-body .note { font-size: 12px; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.5; }
+        .game-card.accent-teal .game-card-head { border-left: 3px solid var(--teal); }
+        .game-card.accent-blue .game-card-head { border-left: 3px solid var(--accent); }
+        .game-card.accent-purple .game-card-head { border-left: 3px solid var(--accent2); }
+        .game-card.accent-orange .game-card-head { border-left: 3px solid var(--orange); }
+        .game-card.accent-pink .game-card-head { border-left: 3px solid var(--pink); }
+        .game-card.accent-green .game-card-head { border-left: 3px solid var(--success); }
+        .game-card.accent-yellow .game-card-head { border-left: 3px solid var(--warning); }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .game-grid { grid-template-columns: 1fr; }
+            .topnav { left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Game Modules — Doc 09</small>
+    </div>
+
+    <a href="#reference" class="sh">Quick Reference</a>
+    <a href="#reference">All Games Table</a>
+
+    <a href="#modules" class="sh">Module Cards</a>
+    <a href="#gem-collection" class="sub">Gem Collection (7)</a>
+    <a href="#surprise-egg" class="sub">Surprise Egg (8)</a>
+    <a href="#hungry-fish" class="sub">Hungry Fish (9)</a>
+    <a href="#underwater" class="sub">Underwater Treasures (10)</a>
+    <a href="#space-drawings" class="sub">Space Drawings (14)</a>
+    <a href="#magic-hut" class="sub">Magic Hut (17)</a>
+    <a href="#sea-race" class="sub">Sea Race (18)</a>
+    <a href="#snowball" class="sub">Snowball Fight (19)</a>
+    <a href="#two-or-one" class="sub">Two Or One (21)</a>
+    <a href="#csaber" class="sub">CSaber (22)</a>
+
+    <a href="#adding" class="sh">Adding a Game</a>
+    <a href="#adding">Checklist</a>
+</nav>
+
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <span class="current">Game Modules</span>
+</div>
+
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<div class="main">
+
+<h1>Game Modules</h1>
+<p class="hero-sub">Per-module reference: server IDs, folder layout, controller subclasses, and game-specific parameters for all 10 therapy games.</p>
+
+<!-- ══════════════════════════════ REFERENCE TABLE ══════════════════════════════ -->
+<section id="reference">
+<h2>1. Quick Reference</h2>
+
+<div class="tbl-wrap">
+<table>
+    <thead>
+        <tr>
+            <th>Game (English)</th>
+            <th>ID</th>
+            <th>ProjectScene Enum</th>
+            <th>Therapy Module Folder</th>
+            <th>UGC Controller</th>
+            <th>Custom Params</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Gem Collection</strong></td>
+            <td><code>7</code></td>
+            <td><code>Gem_Collection</code></td>
+            <td><code>Antysupresja</code></td>
+            <td><code>UGCAntysupresjaGameController</code></td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>Surprise Egg</strong></td>
+            <td><code>8</code></td>
+            <td><code>The_Suprise_Egg</code></td>
+            <td><code>Niedowidzenia_oko_reka</code></td>
+            <td><code>UGCNiedowidzenieGameController</code></td>
+            <td><code>game-mode</code></td>
+        </tr>
+        <tr>
+            <td><strong>Hungry Fish</strong></td>
+            <td><code>9</code></td>
+            <td><code>Hungry_Fish</code></td>
+            <td><code>ZakresyMice</code></td>
+            <td><code>UGCMiceGameGameController</code></td>
+            <td><code>fruit-count</code>, <code>stereo-angle</code>, <code>fruit-depth-diff</code></td>
+        </tr>
+        <tr>
+            <td><strong>Underwater Treasures</strong></td>
+            <td><code>10</code></td>
+            <td><code>Underwater_Treasures</code></td>
+            <td><code>Wodzenie</code></td>
+            <td><code>UGCGameController</code> (base)</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>Space Drawings</strong></td>
+            <td><code>14</code></td>
+            <td><code>Space_Drawings</code></td>
+            <td><code>Sakady</code> / <code>SakkadyInSpace</code></td>
+            <td><code>UGCSakadyGameController</code></td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>Magic Hut</strong></td>
+            <td><code>17</code></td>
+            <td><code>Magic_Hut</code></td>
+            <td><code>Magic_Hut</code></td>
+            <td><code>UGCConstellationGameController</code></td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>Sea Race</strong></td>
+            <td><code>18</code></td>
+            <td><code>Sea_Race</code></td>
+            <td><code>FollowObject</code></td>
+            <td><code>UGCFollowGameRaceGameController</code></td>
+            <td><code>fish-direction</code></td>
+        </tr>
+        <tr>
+            <td><strong>Snowball Fight</strong></td>
+            <td><code>19</code></td>
+            <td><code>Snowball_Fight</code></td>
+            <td><code>Snowman</code></td>
+            <td><code>UGCSnowmanGameController</code></td>
+            <td><code>difficulty-level</code>, <code>snowball-color-mode</code>, <code>snowman-game-mode</code></td>
+        </tr>
+        <tr>
+            <td><strong>Two Or One</strong></td>
+            <td><code>21</code></td>
+            <td><code>Two_Or_One</code></td>
+            <td><code>Stereopsja</code> / <code>Fuzja</code> / <code>Konwergencja</code></td>
+            <td><code>UGCGameController</code> (base)</td>
+            <td>—</td>
+        </tr>
+        <tr>
+            <td><strong>CSaber</strong></td>
+            <td><code>22</code></td>
+            <td><code>CSaber</code></td>
+            <td><code>CSaber</code></td>
+            <td><code>CSaberGameController</code></td>
+            <td><code>object-distance-norm</code> (override), <code>vision-acuity</code>, <code>cube-move-speed</code></td>
+        </tr>
+    </tbody>
+</table>
+</div>
+
+<p>Scene ID values are the server-side game IDs. <code>ProjectScene</code> enum integer values match them exactly. The enum is in <code>Assets/Shared/Scripts/ProjectScene.cs</code> and is used by <code>LoaderController</code> to route scene transitions.</p>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════ MODULE CARDS ══════════════════════════════ -->
+<section id="modules">
+<h2>2. Module Cards</h2>
+
+<div class="game-grid">
+
+    <!-- GEM COLLECTION -->
+    <div class="game-card accent-teal" id="gem-collection">
+        <div class="game-card-head">
+            <span class="gname">Gem Collection</span>
+            <span class="gid">ID 7 · Gem_Collection</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>Antysupresja</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCAntysupresjaGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val">base <code>UGCParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>AntysupresjaComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-teal">Anti-suppression</span></span></div>
+            <div class="note">Binocular suppression therapy. Gems appear on a plane; the suppressed eye must detect them. References <code>Sakady.SakadyGame</code> for the saccade sub-task and exposes <code>levelResults</code> for end-of-round UI.</div>
+        </div>
+    </div>
+
+    <!-- SURPRISE EGG -->
+    <div class="game-card accent-orange" id="surprise-egg">
+        <div class="game-card-head">
+            <span class="gname">Surprise Egg</span>
+            <span class="gid">ID 8 · The_Suprise_Egg</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>Niedowidzenia_oko_reka</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCNiedowidzenieGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>UGCNiedowidzenieParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>NiedowidzenieComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-orange">Amblyopia / Hand-eye</span></span></div>
+            <div class="note">
+                Lazy-eye hand-eye coordination game. On Neo 1/Goblin 2 defaults to 3DoF (<code>ControllerOnlyrot = true</code>); Neo 2 uses 6DoF. Extra param: <code>game-mode</code> — "Jedna Rybka" (single fish) vs. "Wiele Rybek" (many fish).
+            </div>
+        </div>
+    </div>
+
+    <!-- HUNGRY FISH -->
+    <div class="game-card accent-blue" id="hungry-fish">
+        <div class="game-card-head">
+            <span class="gname">Hungry Fish</span>
+            <span class="gid">ID 9 · Hungry_Fish</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>ZakresyMice</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCMiceGameGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>UGCMiceGameParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>MiceGameComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-blue">Stereopsis / Vergence</span></span></div>
+            <div class="note">
+                Stereo depth discrimination game with fruit-shaped targets. Extra params: <code>fruit-count</code> ("Auto" → DifficultyBased, or integer); <code>stereo-angle</code> (arc-minute string, e.g. <code>20"</code> or <code>40''</code>); <code>fruit-depth-diff</code> (ignored, legacy). Mouse celebration animation fires via <code>MouseAnimationEvent</code>.
+            </div>
+        </div>
+    </div>
+
+    <!-- UNDERWATER TREASURES -->
+    <div class="game-card accent-teal" id="underwater">
+        <div class="game-card-head">
+            <span class="gname">Underwater Treasures</span>
+            <span class="gid">ID 10 · Underwater_Treasures</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>Wodzenie</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val">base <code>UGCGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>UGCWodzenieParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>WodzenieComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-teal">Smooth Pursuit</span></span></div>
+            <div class="note">Smooth pursuit / tracking therapy. Player follows a moving underwater object. Game controller is the base class with no overrides; all logic lives in <code>UGCWodzenieTherapeuticEventsController</code> and game-specific level components.</div>
+        </div>
+    </div>
+
+    <!-- SPACE DRAWINGS -->
+    <div class="game-card accent-purple" id="space-drawings">
+        <div class="game-card-head">
+            <span class="gname">Space Drawings</span>
+            <span class="gid">ID 14 · Space_Drawings</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folders</span><span class="val"><code>Sakady</code> / <code>SakkadyInSpace</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCSakadyGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>UGCSakadyParametersController</code> (base, no extras)</span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>SakadyComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-purple">Saccades</span></span></div>
+            <div class="note">Saccadic eye movement training. Two module folders exist: <code>Sakady</code> (original) and <code>SakkadyInSpace</code> (space-themed reskin). Both use the same controller. Both feed into the same <code>ProjectScene.Space_Drawings</code> ID.</div>
+        </div>
+    </div>
+
+    <!-- MAGIC HUT -->
+    <div class="game-card accent-yellow" id="magic-hut">
+        <div class="game-card-head">
+            <span class="gname">Magic Hut</span>
+            <span class="gid">ID 17 · Magic_Hut</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>Magic_Hut</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCConstellationGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val">base <code>UGCParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>ConstellationGameComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-yellow">Constellation / Tracking</span></span></div>
+            <div class="note">In demo/home therapy mode, plays the "Demo" level container instead of the standard progression. Controller name reflects an earlier name ("Constellation Game") for this module.</div>
+        </div>
+    </div>
+
+    <!-- SEA RACE -->
+    <div class="game-card accent-green" id="sea-race">
+        <div class="game-card-head">
+            <span class="gname">Sea Race</span>
+            <span class="gid">ID 18 · Sea_Race</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>FollowObject</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCFollowGameRaceGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>UGCFollowGameRaceParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>FollowGameComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-green">Follow Object / Vergence</span></span></div>
+            <div class="note">Player follows a moving fish/object along a path. Extra param: <code>fish-direction</code> — "Prawo" (right), "Lewo" (left), "Naprzemiennie" (alternating). <code>goingRight</code> is a static bool toggled by <code>SwitchDirections()</code> for alternating mode.</div>
+        </div>
+    </div>
+
+    <!-- SNOWBALL FIGHT -->
+    <div class="game-card accent-blue" id="snowball">
+        <div class="game-card-head">
+            <span class="gname">Snowball Fight</span>
+            <span class="gid">ID 19 · Snowball_Fight</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>Snowman</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>UGCSnowmanGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>UGCSnowmanGameParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val"><code>SnowmanComboManager</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-blue">Anti-suppression / Binocular</span></span></div>
+            <div class="note">
+                Player dodges or catches snowballs. In demo mode shows an instruction screen before starting. Extra params: <code>difficulty-level</code> — "Łatwy"/"Średni"/"Trudny" (fixed speeds 4/6/8) or "Zaawansowany" (adaptive); <code>snowball-color-mode</code> — White / Mixed Colors; <code>snowman-game-mode</code> — Default / Donuts / Mixed.
+            </div>
+        </div>
+    </div>
+
+    <!-- TWO OR ONE -->
+    <div class="game-card accent-pink" id="two-or-one">
+        <div class="game-card-head">
+            <span class="gname">Two Or One</span>
+            <span class="gid">ID 21 · Two_Or_One</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folders</span><span class="val"><code>Stereopsja</code> / <code>Fuzja</code> / <code>Konwergencja</code></span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val">base <code>UGCGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val">base <code>UGCParametersController</code></span></div>
+            <div class="row"><span class="lbl">Combo</span><span class="val">varies per variant</span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-pink">Stereopsis / Fusion / Convergence</span></span></div>
+            <div class="note">Three therapy variants share one <code>ProjectScene</code> ID. Each variant lives in its own module folder (<code>Stereopsja</code>, <code>Fuzja</code>, <code>Konwergencja</code>) with independent level and VFX setup. The scene selection on the tablet determines which variant is loaded.</div>
+        </div>
+    </div>
+
+    <!-- CSABER -->
+    <div class="game-card accent-orange" id="csaber">
+        <div class="game-card-head">
+            <span class="gname">CSaber</span>
+            <span class="gid">ID 22 · CSaber</span>
+        </div>
+        <div class="game-card-body">
+            <div class="row"><span class="lbl">Folder</span><span class="val"><code>CSaber</code> (self-contained in THERAPY MODULES)</span></div>
+            <div class="row"><span class="lbl">Controller</span><span class="val"><code>CSaberGameController</code></span></div>
+            <div class="row"><span class="lbl">Params ctrl</span><span class="val"><code>CSaberParametersController</code></span></div>
+            <div class="row"><span class="lbl">Therapy type</span><span class="val"><span class="b b-orange">Visual Acuity / Saber</span></span></div>
+            <div class="note">
+                Saber-slash game with Landolt C optotype targets for visual acuity testing. Extra params override or extend shared ones: <code>object-distance-norm</code> (shadowed as <code>FloatParam</code> defaulting to 6 m), <code>vision-acuity</code> (default 0.1), <code>cube-move-speed</code> (default 1). Unlike most games, CSaber assets are entirely self-contained under <code>THERAPY MODULES/CSaber/</code>.
+            </div>
+        </div>
+    </div>
+
+</div><!-- .game-grid -->
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════ ADDING A GAME ══════════════════════════════ -->
+<section id="adding">
+<h2>3. Adding a New Game Module</h2>
+
+<p>The minimum required steps to wire a new therapy game into the framework:</p>
+
+<ol style="font-size:14px; line-height:2;">
+    <li>Add a new value to <code>ProjectScene</code> enum with the server-assigned integer ID (<code>Assets/Shared/Scripts/ProjectScene.cs</code>).</li>
+    <li>Create a scene and add the three required GameObjects: <code>UGCGameController</code> subclass, <code>UGCParametersController</code> subclass (or base), <code>UGCTherapeuticEventsController</code> subclass (or base).</li>
+    <li>Wire the scene into <code>LoaderController.AsyncLoadScene()</code> — add a case for the new <code>ProjectScene</code> value.</li>
+    <li>Register the scene in Unity's Build Settings and add it to <code>EditorBuildSettings.asset</code>.</li>
+    <li>Create a portal in the Hub scene (<code>Assets/LOADER/NewLoaderGraphics/Hub.unity</code>) and configure it to pass the correct game ID to the loader.</li>
+    <li>Create a <code>ComboManager</code> subclass if the game needs difficulty progression; attach it to the scene.</li>
+    <li>Add any game-specific parameters by subclassing <code>UGCParametersController</code> and declaring static <code>CustomParam</code> fields, <em>or</em> by creating <code>ScriptableParameter</code> assets and assigning them in the Inspector.</li>
+    <li>Create the module folder under <code>Assets/THERAPY MODULES/{GameName}/</code> for assets, and optionally under <code>Assets/UGC-Protype/{GameName}/</code> for controller scripts.</li>
+</ol>
+
+<div class="alert alert-info">
+    The <code>ProjectScene</code> integer value <strong>must match</strong> the game ID on the dashboard server. Mismatches cause the loader to receive an unrecognised game ID and fall back to the Hub without loading the game.
+</div>
+</section>
+
+</div><!-- .main -->
+
+<script>
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('visible', window.scrollY > 400);
+    });
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const match = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+                if (match) match.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-60px 0px -70% 0px' });
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

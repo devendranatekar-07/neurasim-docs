@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Event Systems</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232633;
+            --surface3: #2a2e3f;
+            --border: #2e3248;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa7;
+            --accent: #6c8aff;
+            --accent2: #a78bfa;
+            --accent3: #c084fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #38bdf8;
+            --teal: #2dd4bf;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+        /* Sidebar */
+        .sidebar { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 16px; font-size: 13px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a { display: block; padding: 6px 20px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; transition: all 0.15s; border-left: 3px solid transparent; }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        /* Topnav */
+        .topnav { position: fixed; top: 0; left: 300px; right: 0; z-index: 200; height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 24px; font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 5px; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; cursor: default; }
+
+        /* Back to top */
+        #btt { position: fixed; bottom: 28px; right: 28px; z-index: 300; width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #000; border: none; font-size: 17px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        /* Main */
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+        h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 24px 0 10px; }
+        h4 { font-size: 13px; font-weight: 700; color: var(--text-muted); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.4px; }
+        p { margin-bottom: 12px; }
+        ul, ol { padding-left: 20px; margin-bottom: 12px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+        code { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 13px; background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+
+        /* Code blocks */
+        pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 13px; line-height: 1.65; }
+        pre code { background: none; border: none; padding: 0; font-size: inherit; }
+        .kw { color: #c084fc; } .ty { color: #38bdf8; } .fn { color: #6c8aff; }
+        .st { color: #4ade80; } .cm { color: #4b5563; font-style: italic; } .nu { color: #fb923c; }
+        .tl { color: var(--teal); } .wa { color: var(--warning); } .pk { color: var(--pink); }
+        .gr { color: var(--success); } .dim { color: var(--text-muted); } .in { color: var(--info); }
+
+        /* Badges */
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal  { background: rgba(45,212,191,0.12); color: var(--teal);    border: 1px solid rgba(45,212,191,0.3); }
+        .b-blue  { background: rgba(108,138,255,0.12); color: var(--accent);  border: 1px solid rgba(108,138,255,0.3); }
+        .b-green { background: rgba(74,222,128,0.12);  color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow{ background: rgba(251,191,36,0.12);  color: var(--warning); border: 1px solid rgba(251,146,60,0.3); }
+        .b-red   { background: rgba(248,113,113,0.12); color: var(--error);   border: 1px solid rgba(248,113,113,0.3); }
+        .b-purple{ background: rgba(167,139,250,0.12); color: var(--accent2); border: 1px solid rgba(167,139,250,0.3); }
+        .b-orange{ background: rgba(251,146,60,0.12);  color: var(--orange);  border: 1px solid rgba(251,146,60,0.3); }
+        .b-gray  { background: rgba(139,143,167,0.12); color: var(--text-muted); border: 1px solid rgba(139,143,167,0.3); }
+
+        /* Alerts */
+        .alert { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13.5px; }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,0.08); border-color: var(--warning); }
+        .alert-ok   { background: rgba(74,222,128,0.08); border-color: var(--success); }
+        .alert-err  { background: rgba(248,113,113,0.08); border-color: var(--error); }
+
+        /* File ref */
+        .f { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12px; color: var(--text-muted); background: var(--surface2); border-left: 3px solid var(--teal); padding: 6px 12px; border-radius: 0 6px 6px 0; display: block; margin: 8px 0; }
+
+        /* Grids */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0; }
+        .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-top: 3px solid var(--teal); }
+        .gcard h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gcard p  { font-size: 13px; margin-bottom: 6px; }
+        .gcard ul { font-size: 13px; }
+
+        /* Struct box */
+        .struct-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin: 12px 0; }
+        .struct-title { background: var(--surface2); padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .sf { display: flex; gap: 12px; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 13px; align-items: baseline; flex-wrap: wrap; }
+        .sf:last-child { border-bottom: none; }
+        .sf-type { color: var(--info); font-family: monospace; width: var(--sf-type-w, 60px); flex-shrink: 0; font-size: 12px; white-space: nowrap; }
+        .sf-name { color: var(--teal); font-family: monospace; width: 220px; flex-shrink: 0; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; flex: 1; min-width: 0; overflow-wrap: break-word; }
+
+        /* Visual Flowchart */
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-decision { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; border: 1.5px dashed var(--warning); color: var(--warning); background: rgba(251,191,36,0.08); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+        .fc-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-divider::before, .fc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* Tables */
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+        th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; word-break: break-word; }
+        tr:hover td { background: var(--surface); }
+        /* Component ref table column widths */
+        #component-ref table { table-layout: fixed; }
+        #component-ref table th:nth-child(1), #component-ref table td:nth-child(1) { width: 22%; }
+        #component-ref table th:nth-child(2), #component-ref table td:nth-child(2) { width: 38%; }
+        #component-ref table th:nth-child(3), #component-ref table td:nth-child(3) { width: 13%; }
+        #component-ref table th:nth-child(4), #component-ref table td:nth-child(4) { width: 27%; }
+        #component-ref table td:nth-child(2) code { white-space: normal; word-break: break-all; font-size: 12px; }
+
+        /* Priority highlight */
+        .prio-high { color: var(--error); font-weight: 700; }
+        .prio-low  { color: var(--success); font-weight: 700; }
+
+        section { scroll-margin-top: 60px; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .grid2, .grid3 { grid-template-columns: 1fr; }
+            .topnav { left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Event Systems — Doc 05</small>
+    </div>
+
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#comparison" class="sub">System Comparison</a>
+
+    <a href="#messenger" class="sh">Messenger (Legacy)</a>
+    <a href="#msg-api" class="sub">API</a>
+    <a href="#msg-keys" class="sub">Event Keys</a>
+    <a href="#msg-permanent" class="sub">Permanent Messages</a>
+    <a href="#msg-cleanup" class="sub">Cleanup</a>
+
+    <a href="#broker" class="sh">HierarchicalBroker</a>
+    <a href="#broker-interfaces" class="sub">Interfaces</a>
+    <a href="#broker-usage" class="sub">Subscribe &amp; Invoke</a>
+    <a href="#broker-hooks" class="sub">Before / After Hooks</a>
+    <a href="#broker-cancel" class="sub">Cancellation</a>
+    <a href="#broker-logging" class="sub">Logging</a>
+    <a href="#broker-events" class="sub">Known Event Types</a>
+
+    <a href="#therapy-broker" class="sh">TherapyEventBroker</a>
+    <a href="#therapy-flags" class="sub">TherapyEventFlags</a>
+    <a href="#therapy-mode" class="sub">TherapyMode</a>
+    <a href="#therapy-receiver" class="sub">ITherapyEventReceiver</a>
+    <a href="#therapy-priority" class="sub">Priority System</a>
+    <a href="#therapy-dispatch" class="sub">Dispatch Flow</a>
+
+    <a href="#choosing" class="sh">Choosing a System</a>
+    <a href="#component-ref" class="sh">Component Reference</a>
+
+</nav>
+
+<!-- TOPNAV -->
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <span class="current">Event Systems</span>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+<h1>Event Systems</h1>
+<p class="hero-sub">Three event systems coexist in the codebase. Each serves a different scope and purpose. New code should use <strong>HierarchicalBroker</strong> for system-wide events and <strong>TherapyEventBroker</strong> for therapy state commands.</p>
+
+<!-- ══════════════════════════════ OVERVIEW ══════════════════════════════ -->
+<section id="overview">
+    <h2>Overview</h2>
+
+    <div class="grid3">
+        <div class="gcard" style="border-top-color: var(--error)">
+            <h4 style="color:var(--error)"><span class="b b-red">Obsolete</span> &nbsp;Messenger</h4>
+            <p>String-keyed global event bus. Predates the type-safe systems. Still widely used in ComboManagers, parameter broadcasting, and game events — but new code should not add more usages.</p>
+        </div>
+        <div class="gcard">
+            <h4><span class="b b-green">Preferred</span> &nbsp;HierarchicalBroker</h4>
+            <p>Generic type-safe event system. No engine dependencies. Supports pre-event hooks with cancellation, post-event hooks, and structured logging. Use for all new system-wide events.</p>
+        </div>
+        <div class="gcard" style="border-top-color: var(--accent2)">
+            <h4 style="color:var(--accent2)"><span class="b b-purple">Therapy</span> &nbsp;TherapyEventBroker</h4>
+            <p>Specialised static broker for therapy state commands (Enter, StartGame, Pause…). Priority-sorted subscribers. Dispatch stops early if a subscriber returns <code>false</code>.</p>
+        </div>
+    </div>
+
+    <h3 id="comparison">Quick Comparison</h3>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Property</th><th>Messenger</th><th>HierarchicalBroker</th><th>TherapyEventBroker</th></tr>
+            <tr>
+                <td>Key type</td>
+                <td>string</td>
+                <td>Generic type <code>T : IEventArgs</code></td>
+                <td><code>TherapyEventFlags</code> bitmask</td>
+            </tr>
+            <tr>
+                <td>Type safety</td>
+                <td>None (runtime cast)</td>
+                <td>Full compile-time</td>
+                <td>Full compile-time</td>
+            </tr>
+            <tr>
+                <td>Pre-event hook</td>
+                <td>No</td>
+                <td>Yes (<code>.Before</code> chain)</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td>Cancellation</td>
+                <td>No</td>
+                <td>Yes (via <code>ref bool cancel</code>)</td>
+                <td>Yes (return <code>false</code>)</td>
+            </tr>
+            <tr>
+                <td>Priority / order</td>
+                <td>None</td>
+                <td>None</td>
+                <td>Yes (SortedList by priority int)</td>
+            </tr>
+            <tr>
+                <td>Engine dependency</td>
+                <td>Yes (MonoBehaviour cleanup)</td>
+                <td>None (<code>noEngineReferences: true</code>)</td>
+                <td>None</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td><span class="b b-red">Obsolete</span></td>
+                <td><span class="b b-green">Preferred</span></td>
+                <td><span class="b b-green">Preferred for therapy</span></td>
+            </tr>
+        </table>
+    </div>
+</section>
+
+<!-- ══════════════════════════════ MESSENGER ══════════════════════════════ -->
+<section id="messenger">
+    <h2>Messenger <span class="b b-red" style="vertical-align:middle; font-size:12px">[Obsolete]</span></h2>
+    <span class="f">Assets/Shared/Scripts/Helpers/Messenger/Messenger.cs</span>
+
+    <div class="alert alert-err">
+        <strong>Do not add new Messenger usages.</strong> The Messenger class is marked <code>[Obsolete]</code>. It exists to support legacy game code (ComboManagers, parameter broadcasting via <code>"paramsUpdated"</code>). New events should use <code>Broker&lt;T&gt;</code> instead.
+    </div>
+
+    <p>
+        Messenger is a static singleton backed by an <code>eventTable</code> dictionary mapping
+        string keys to <code>Delegate</code> lists. Supports callbacks with 0, 1, 2, or 3 generic
+        parameters.
+    </p>
+
+    <h3 id="msg-api">API</h3>
+    <div class="grid2">
+        <div>
+            <h4>AddListener / RemoveListener</h4>
+            <pre><code><span class="cm">// No params</span>
+<span class="ty">Messenger</span>.<span class="fn">AddListener</span>(<span class="st">"key"</span>, callback);
+
+<span class="cm">// One param</span>
+<span class="ty">Messenger</span>&lt;<span class="ty">int</span>&gt;.<span class="fn">AddListener</span>(<span class="st">"key"</span>, (val) => { });
+
+<span class="cm">// Two params</span>
+<span class="ty">Messenger</span>&lt;<span class="ty">int</span>, <span class="ty">string</span>&gt;.<span class="fn">AddListener</span>(<span class="st">"key"</span>, (a, b) => { });
+
+<span class="cm">// Remove</span>
+<span class="ty">Messenger</span>.<span class="fn">RemoveListener</span>(<span class="st">"key"</span>, callback);</code></pre>
+        </div>
+        <div>
+            <h4>Broadcast</h4>
+            <pre><code><span class="cm">// No params</span>
+<span class="ty">Messenger</span>.<span class="fn">Broadcast</span>(<span class="st">"key"</span>);
+
+<span class="cm">// One param</span>
+<span class="ty">Messenger</span>.<span class="fn">Broadcast</span>(<span class="st">"key"</span>, value);
+
+<span class="cm">// Two params</span>
+<span class="ty">Messenger</span>.<span class="fn">Broadcast</span>(<span class="st">"key"</span>, a, b);
+
+<span class="cm">// MessengerMode controls error policy:</span>
+<span class="cm">// REQUIRE_LISTENER | DONT_REQUIRE_LISTENER</span></code></pre>
+        </div>
+    </div>
+
+    <h3 id="msg-keys">Event Keys — <code>Consts.cs</code></h3>
+    <span class="f">Assets/Shared/Scripts/Const/Consts.cs</span>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Constant</th><th>String value</th><th>Payload</th><th>Used by</th></tr>
+            <tr><td><code>Consts.correctAnswer</code></td><td><code>"correctAnswer"</code></td><td>none</td><td>ComboManagers, game logic</td></tr>
+            <tr><td><code>Consts.wrongAnswer</code></td><td><code>"wrongAnswer"</code></td><td>none</td><td>ComboManagers, game logic</td></tr>
+            <tr><td><code>Consts.timeout</code></td><td><code>"timeout"</code></td><td>none</td><td>ComboManagers, game timers</td></tr>
+            <tr><td><code>Consts.levelCompleted</code></td><td><code>"levelCompleted"</code></td><td>none</td><td>UGCLevel lifecycle</td></tr>
+            <tr><td><code>Consts.onDifficultyChange</code></td><td><code>"onDifficultyChange"</code></td><td><code>int</code> difficulty</td><td>ComboManager → UGCTherapeuticEventsController</td></tr>
+            <tr><td><code>Consts.konwergencjaUpdate</code></td><td><code>"konwergencjaUpdate"</code></td><td>float</td><td>Two-Or-One (convergence)</td></tr>
+            <tr><td><code>Consts.dywergencjaUpdate</code></td><td><code>"dywergencjaUpdate"</code></td><td>float</td><td>Two-Or-One (divergence)</td></tr>
+            <tr><td><code>Consts.konwergencjaFusion</code></td><td><code>"konwergencjaFusion"</code></td><td>none</td><td>Two-Or-One fusion mode</td></tr>
+            <tr><td><code>Consts.dywergencjaFusion</code></td><td><code>"dywergencjaFusion"</code></td><td>none</td><td>Two-Or-One fusion mode</td></tr>
+            <tr><td><code>Consts.gunFire</code></td><td><code>"gunFire"</code></td><td>none</td><td>CSaber game</td></tr>
+            <tr><td><code>Consts.checkIfGameEnds</code></td><td><code>"checkIfGameEnds"</code></td><td>none</td><td>Game end condition checks</td></tr>
+            <tr>
+                <td><code>LoaderController.ParamsUpdated</code></td>
+                <td><code>"paramsUpdated"</code></td>
+                <td><code>List&lt;Param&gt;</code></td>
+                <td>LoaderController → UGCParametersController (marked Permanent)</td>
+            </tr>
+            <tr>
+                <td><code>"therapyGameStop"</code></td>
+                <td><code>"therapyGameStop"</code></td>
+                <td>none</td>
+                <td>LoaderController signals game modules to stop</td>
+            </tr>
+            <tr>
+                <td><code>"unblockDoor"</code></td>
+                <td><code>"unblockDoor"</code></td>
+                <td>none</td>
+                <td>DemoTracker → SettingsDoorInteractable (forced demo unlock)</td>
+            </tr>
+        </table>
+    </div>
+
+    <h3 id="msg-permanent">Permanent Messages</h3>
+    <p>
+        Messenger keys can be marked as <strong>permanent</strong>, meaning they survive the
+        scene-load cleanup that normally purges all listeners. This is used for cross-scene
+        subscribers like <code>UGCParametersController</code>, which must keep receiving
+        <code>"paramsUpdated"</code> even after a scene transition.
+    </p>
+    <pre><code><span class="cm">// Mark a key permanent so it survives scene changes:</span>
+<span class="ty">Messenger</span>.<span class="fn">MarkAsPermanent</span>(<span class="ty">LoaderController</span>.ParamsUpdated);
+
+<span class="cm">// Add a permanent listener (in UGCParametersController.Awake):</span>
+<span class="ty">Messenger</span>&lt;<span class="ty">List</span>&lt;<span class="ty">Param</span>&gt;&gt;.<span class="fn">AddListener</span>(
+    <span class="ty">LoaderController</span>.ParamsUpdated,
+    <span class="fn">OnParametersUpdated</span>,
+    <span class="ty">MessengerMode</span>.DONT_REQUIRE_LISTENER
+);</code></pre>
+
+    <h3 id="msg-cleanup">Cleanup on Scene Load</h3>
+    <p>
+        <code>MessengerHelper</code> is a hidden <code>MonoBehaviour</code> (created automatically)
+        that subscribes to <code>SceneManager.sceneLoaded</code>. On each scene load it calls
+        <code>Messenger.Cleanup()</code>, which removes all non-permanent listeners from the
+        event table. This prevents stale listeners from firing in the wrong scene.
+    </p>
+    <div class="alert alert-warn">
+        <strong>Memory leak risk:</strong> If you add a Messenger listener and forget <code>RemoveListener</code>, the listener will be cleaned up on scene load — but only if the key is not marked permanent. For permanent keys, you must remove the listener manually to avoid leaks.
+    </div>
+</section>
+
+<!-- ══════════════════════════════ BROKER ══════════════════════════════ -->
+<section id="broker">
+    <h2>HierarchicalBroker <span class="b b-green" style="vertical-align:middle; font-size:12px">Preferred</span></h2>
+    <span class="f">Assets/Shared/Scripts/HierachicalBroker/</span>
+
+    <p>
+        A generic, engine-independent event system. Events are typed via an <code>IEventArgs</code>
+        marker interface. Each event type has its own static root broker accessed via
+        <code>Broker&lt;T&gt;</code>. Subscriptions return <code>IDisposable</code> — disposing
+        automatically unsubscribes.
+    </p>
+
+    <h3 id="broker-interfaces">Interfaces</h3>
+    <div class="grid2">
+        <div>
+            <h4>IEventArgs</h4>
+            <span class="f">IEventArgs.cs</span>
+            <pre><code><span class="cm">// Marker interface — all event arg types implement this</span>
+<span class="kw">public interface</span> <span class="ty">IEventArgs</span> { }</code></pre>
+
+            <h4>IBroker&lt;T&gt;</h4>
+            <span class="f">IBroker.cs</span>
+            <pre><code><span class="kw">public interface</span> <span class="ty">IBroker</span>&lt;<span class="ty">T</span>&gt; <span class="kw">where</span> <span class="ty">T</span> : <span class="ty">IEventArgs</span>
+{
+    <span class="kw">delegate void</span> <span class="ty">Delegate</span>(<span class="kw">object</span> sender, <span class="kw">in</span> <span class="ty">T</span> args);
+    <span class="ty">IDisposable</span> <span class="fn">Subscribe</span>(<span class="ty">Delegate</span> @delegate);
+    <span class="ty">IBeforeBroker</span>&lt;<span class="ty">T</span>&gt; Before { <span class="kw">get</span>; }
+    <span class="ty">IBroker</span>&lt;<span class="ty">T</span>&gt; After { <span class="kw">get</span>; }
+}</code></pre>
+        </div>
+        <div>
+            <h4>IBeforeBroker&lt;T&gt;</h4>
+            <span class="f">IBeforeBroker.cs</span>
+            <pre><code><span class="kw">public interface</span> <span class="ty">IBeforeBroker</span>&lt;<span class="ty">T</span>&gt; <span class="kw">where</span> <span class="ty">T</span> : <span class="ty">IEventArgs</span>
+{
+    <span class="kw">delegate void</span> <span class="ty">Delegate</span>(
+        <span class="kw">object</span> sender,
+        <span class="kw">in</span> <span class="ty">T</span> args,
+        <span class="kw">ref bool</span> cancel);  <span class="cm">// set true to cancel</span>
+
+    <span class="ty">IDisposable</span> <span class="fn">Subscribe</span>(<span class="ty">Delegate</span> @delegate);
+    <span class="ty">IBeforeBroker</span>&lt;<span class="ty">T</span>&gt; Before { <span class="kw">get</span>; }
+    <span class="ty">IBroker</span>&lt;<span class="ty">T</span>&gt; After { <span class="kw">get</span>; }
+}</code></pre>
+        </div>
+    </div>
+
+    <h3 id="broker-usage">Subscribe &amp; Invoke</h3>
+    <div class="grid2">
+        <div>
+            <h4>Subscribe</h4>
+            <pre><code><span class="cm">// Returns IDisposable — dispose to unsubscribe</span>
+<span class="ty">IDisposable</span> sub = <span class="ty">Broker</span>&lt;<span class="ty">TabletStateChanged</span>&gt;
+    .<span class="fn">Subscribe</span>(OnTabletStateChanged);
+
+<span class="kw">void</span> <span class="fn">OnTabletStateChanged</span>(
+    <span class="kw">object</span> sender,
+    <span class="kw">in</span> <span class="ty">TabletStateChanged</span> args)
+{
+    <span class="cm">// handle event</span>
+}
+
+<span class="cm">// Unsubscribe (e.g., in OnDestroy):</span>
+sub.<span class="fn">Dispose</span>();</code></pre>
+        </div>
+        <div>
+            <h4>Invoke</h4>
+            <pre><code><span class="cm">// Fire event from any sender</span>
+<span class="ty">Broker</span>&lt;<span class="ty">TabletStateChanged</span>&gt;.<span class="fn">Invoke</span>(
+    <span class="kw">this</span>,
+    <span class="kw">new</span> <span class="ty">TabletStateChanged</span>(
+        address, <span class="ty">ClientState</span>.Connected));
+
+<span class="cm">// Real example from TabletCommunication:</span>
+<span class="ty">Broker</span>&lt;<span class="ty">BatteryLevelChanged</span>&gt;.<span class="fn">Invoke</span>(
+    <span class="kw">this</span>,
+    <span class="kw">new</span> <span class="ty">BatteryLevelChanged</span>(level));</code></pre>
+        </div>
+    </div>
+
+    <h3 id="broker-hooks">Before / After Hooks</h3>
+    <p>
+        Every broker has a <code>.Before</code> chain and an <code>.After</code> chain.
+        These allow pre- and post-processing of events without modifying the primary subscriber.
+    </p>
+
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-pu">Broker&lt;T&gt;.Before.Subscribe(...)<br><small>pre-event hook — can cancel</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">cancel == true?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">Yes — cancelled</div>
+                    <div class="fc-box fc-rd">Invoke aborted<br><small>main handler NOT called</small></div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">No — proceed</div>
+                    <div class="fc-seq">
+                        <div class="fc-box fc-gn">Broker&lt;T&gt;.Subscribe(...)<br><small>main handler fires</small></div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-box fc-tl">Broker&lt;T&gt;.After.Subscribe(...)<br><small>post-event hook</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <pre><code><span class="cm">// Pre-event hook — can cancel the invoke</span>
+<span class="ty">Broker</span>&lt;<span class="ty">InteractablesStateChange</span>&gt;.Before
+    .<span class="fn">Subscribe</span>((<span class="kw">object</span> sender, <span class="kw">in</span> <span class="ty">InteractablesStateChange</span> args, <span class="kw">ref bool</span> cancel) =>
+    {
+        <span class="kw">if</span> (isLocked) cancel = <span class="kw">true</span>;  <span class="cm">// abort the event</span>
+    });
+
+<span class="cm">// Post-event hook — fires after main handlers</span>
+<span class="ty">Broker</span>&lt;<span class="ty">ObjectSizeChanged</span>&gt;.After
+    .<span class="fn">Subscribe</span>(OnObjectSizeChangedAfter);</code></pre>
+
+    <h3 id="broker-cancel">Cancellation</h3>
+    <p>
+        Only <code>.Before</code> subscribers can cancel an event. Setting <code>cancel = true</code>
+        prevents the main <code>IBroker&lt;T&gt;</code> subscribers and the <code>.After</code> chain
+        from firing. The <code>BeforeBroker</code> logs a cancel event if a
+        <code>[BrokerLogger]</code> attribute is present on the args type.
+    </p>
+
+    <h3 id="broker-logging">Logging</h3>
+    <p>
+        Attach <code>[BrokerLogger(typeof(MyLogger), LoggedEvents.All)]</code> to an event args
+        class to enable structured logging of Subscribe, Invoke, Unsubscribe, and CancelInvoke
+        calls. The logger must implement <code>IBrokerLogger&lt;T&gt;</code>.
+    </p>
+    <pre><code><span class="cm">// Attribute on the event args class:</span>
+<span class="tl">[BrokerLogger(typeof(TabletStateChangedLogger), LoggedEvents.Invoke | LoggedEvents.Subscribe)]</span>
+<span class="kw">public class</span> <span class="ty">TabletStateChanged</span> : <span class="ty">IEventArgs</span> { ... }
+
+<span class="cm">// LoggedEvents flags enum:</span>
+<span class="tl">[Flags]</span>
+<span class="kw">public enum</span> <span class="ty">LoggedEvents</span>
+{
+    None = <span class="nu">0</span>, Subscribe = <span class="nu">1</span>, Invoke = <span class="nu">2</span>,
+    Unsubscribe = <span class="nu">3</span>, CancelInvoke = <span class="nu">4</span>,
+    All = Subscribe | Invoke | Unsubscribe | CancelInvoke
+}</code></pre>
+
+    <h3 id="broker-events">Known Event Types</h3>
+    <p>These are the <code>IEventArgs</code> types currently used across the codebase:</p>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Event Type</th><th>Payload Fields</th><th>Who Invokes</th><th>Who Subscribes</th></tr>
+            <tr>
+                <td><code>TabletStateChanged</code></td>
+                <td><code>string Address</code>, <code>ClientState</code> (Connected / Disconnected)</td>
+                <td>TabletCommunication (TCP client callback)</td>
+                <td>LoaderController, connection-status UI</td>
+            </tr>
+            <tr>
+                <td><code>ObjectSizeChanged</code></td>
+                <td>object size value</td>
+                <td>UGCParametersController on <code>objectSizeParam</code> update</td>
+                <td>Scalable components, AngularSizeable</td>
+            </tr>
+            <tr>
+                <td><code>ObjectDistanceChanged</code></td>
+                <td>distance mode / float</td>
+                <td>UGCParametersController on <code>objectDistanceParam</code> update</td>
+                <td>Object placement controllers</td>
+            </tr>
+            <tr>
+                <td><code>NewTranslation</code></td>
+                <td>language / CultureInfo</td>
+                <td>LocalizationManager on language change</td>
+                <td>LocalizedText, LocalizedGameObject, LocalizedMaterial</td>
+            </tr>
+            <tr>
+                <td><code>UpdatingStateChanged</code></td>
+                <td><code>bool IsUpdating</code></td>
+                <td>Updater (OTA system)</td>
+                <td>LoaderController (stops TCP), UI (shows progress bar)</td>
+            </tr>
+            <tr>
+                <td><code>BatteryLevelChanged</code></td>
+                <td>battery percentage, device type</td>
+                <td>BatteryLevelWatchdog</td>
+                <td>Hub UI, LoaderController (blocks entry on low battery)</td>
+            </tr>
+            <tr>
+                <td><code>ControllerStateChanged</code></td>
+                <td><code>RemmedControllersState</code> (Enabled / Disabled / EnabledWithPointers)</td>
+                <td>UGCGameController, LoaderController</td>
+                <td>RemmedControllers, Pico/DPVR input managers</td>
+            </tr>
+            <tr>
+                <td><code>InteractablesStateChange</code></td>
+                <td><code>float duration</code> — block duration in seconds</td>
+                <td>DemoPlayButton (5s block), HomeTherapyDelayedNextGame (20s block)</td>
+                <td>All Hub interactable components</td>
+            </tr>
+        </table>
+    </div>
+</section>
+
+<!-- ══════════════════════════════ THERAPY BROKER ══════════════════════════════ -->
+<section id="therapy-broker">
+    <h2>TherapyEventBroker <span class="b b-purple" style="vertical-align:middle; font-size:12px">Therapy Commands</span></h2>
+    <span class="f">Assets/Shared/Scripts/TherapyEvents/</span>
+
+    <p>
+        A static class that dispatches therapy state commands to a priority-sorted list of
+        <code>ITherapyEventReceiver</code> subscribers. Unlike <code>Broker&lt;T&gt;</code>,
+        dispatch stops early if any subscriber returns <code>false</code> — allowing watchdogs
+        to intercept and block therapy state transitions before they reach <code>LoaderController</code>.
+    </p>
+
+    <h3 id="therapy-flags">TherapyEventFlags</h3>
+    <span class="f">Assets/Shared/Scripts/TherapyEvents/TherapyEventFlags.cs</span>
+    <p>
+        A <code>[Flags]</code> bitmask enum. Multiple flags can be set in a single event.
+        <code>LoaderController.TherapyEvent()</code> maps <code>TherapyController</code> boolean
+        fields to these flags before dispatching.
+    </p>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Flag</th><th>Value</th><th>Meaning</th><th>Typical Source</th></tr>
+            <tr><td><code>NoEvents</code></td><td>0</td><td>Null state — aborts dispatch with error</td><td>—</td></tr>
+            <tr><td><code>Enter</code></td><td>1</td><td>Therapy session begins</td><td>Tablet <code>enter=true</code> / Home "Enter VT Office"</td></tr>
+            <tr><td><code>Exit</code></td><td>2</td><td>Return to Loader after session</td><td>Tablet <code>exit=true</code></td></tr>
+            <tr><td><code>StartGame</code></td><td>4</td><td>Load a game scene (not demo)</td><td>Tablet <code>start_game=true</code> / Home portal</td></tr>
+            <tr><td><code>StopGame</code></td><td>8</td><td>End game, return to Hub</td><td>Tablet <code>stop_game=true</code></td></tr>
+            <tr><td><code>ForceStop</code></td><td>16</td><td>Abort entire session immediately</td><td>Tablet <code>force_stop=true</code></td></tr>
+            <tr><td><code>ForceStopGame</code></td><td>32</td><td>Force-quit game without saving</td><td>Tablet <code>force_stop_game=true</code></td></tr>
+            <tr><td><code>Pause</code></td><td>64</td><td>Pause active game, show pause UI</td><td>Tablet <code>pause_game=true</code></td></tr>
+            <tr><td><code>ResumeGame</code></td><td>128</td><td>Resume paused game</td><td>Tablet <code>resume_game=true</code></td></tr>
+            <tr><td><code>ParamChanged</code></td><td>256</td><td>Update parameters without reloading game</td><td>Tablet <code>param_changed=true</code></td></tr>
+            <tr><td><code>ContinueTherapy</code></td><td>512</td><td>Proceed to next game in therapy plan</td><td>Tablet <code>continue_therapy=true</code></td></tr>
+            <tr><td><code>Demo</code></td><td>1024</td><td>Load game in demo/preview mode</td><td>DemoPlayButton (Hub home mode)</td></tr>
+            <tr><td><code>ModuleFinished</code></td><td>2048</td><td>Game finished successfully or by timeout</td><td>UGCGameController (internal)</td></tr>
+            <tr><td><code>AllEvents</code></td><td>all bits</td><td>Wildcard — subscribe to every event type</td><td>Used in <code>AcceptedEvents</code></td></tr>
+        </table>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Combining flags:</strong> A single dispatch can carry multiple flags. For example, a tablet "stop and exit" command sets <code>StopGame | Exit</code>. Subscribers test with <code>args.EventFlags.HasFlag(TherapyEventFlags.StopGame)</code>.
+    </div>
+
+    <h3 id="therapy-mode">TherapyMode</h3>
+    <p>Every <code>TherapyEventArgs</code> also carries a <code>TherapyMode</code> describing the context of the event:</p>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Value</th><th>Meaning</th></tr>
+            <tr><td><code>stationary</code></td><td>Clinical session — therapist drives everything via tablet</td></tr>
+            <tr><td><code>home</code></td><td>Patient self-directed home session — no tablet</td></tr>
+            <tr><td><code>demo</code></td><td>Demo/preview game play — Hub portal interaction</td></tr>
+            <tr><td><code>callibration</code></td><td>Calibration routine (Polish spelling retained in code)</td></tr>
+            <tr><td><code>none</code></td><td>Mode not applicable / not yet determined</td></tr>
+        </table>
+    </div>
+
+    <h3 id="therapy-receiver">ITherapyEventReceiver</h3>
+    <span class="f">Assets/Shared/Scripts/TherapyEvents/ITherapyEventReceiver.cs</span>
+    <pre><code><span class="kw">public interface</span> <span class="ty">ITherapyEventReceiver</span>
+{
+    <span class="cm">// Bitmask of flags this receiver wants to handle.</span>
+    <span class="cm">// Broker only calls OnTherapyEvent if (incoming & AcceptedEvents) != 0.</span>
+    <span class="kw">public</span> <span class="ty">TherapyEventFlags</span> AcceptedEvents { <span class="kw">get</span>; }
+
+    <span class="cm">// Return true  → allow dispatch to continue to lower-priority subscribers.</span>
+    <span class="cm">// Return false → halt chain — no further subscribers are called.</span>
+    <span class="kw">public bool</span> <span class="fn">OnTherapyEvent</span>(<span class="kw">object</span> sender, <span class="ty">TherapyEventArgs</span> args);
+}
+
+<span class="cm">// Example: UGCGameController only handles Pause and ResumeGame</span>
+<span class="kw">public</span> <span class="ty">TherapyEventFlags</span> AcceptedEvents =>
+    <span class="ty">TherapyEventFlags</span>.Pause | <span class="ty">TherapyEventFlags</span>.ResumeGame;</code></pre>
+
+    <h3 id="therapy-priority">Priority System</h3>
+    <span class="f">Assets/Shared/Scripts/TherapyEvents/TherapyEventBrokerKnownSubscribers.cs</span>
+    <p>
+        Subscribers are stored in a <code>SortedList&lt;int, ITherapyEventReceiver&gt;</code>
+        keyed by priority integer. <strong>Lower integer = higher priority = called first.</strong>
+        Watchdogs sit at the top of the chain and can block events before they reach
+        <code>LoaderController</code>.
+    </p>
+
+    <div class="alert alert-info">
+        <strong>Reserved range:</strong> Priorities from <code>-2048</code> to <code>1024</code> are reserved for known subscribers. Anonymous subscribers (no explicit priority) are auto-assigned an incrementing value outside this range.
+    </div>
+
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Subscriber</th><th>Priority</th><th>Called</th><th>Purpose</th></tr>
+            <tr><td><code>BatteryLevelWatchdog</code></td><td class="prio-high">−2051 (highest)</td><td>First</td><td>Block therapy entry if headset battery too low</td></tr>
+            <tr><td><code>NetworkStatusWatchdog</code></td><td class="prio-high">−2050</td><td>Second</td><td>Block therapy entry if no network connectivity</td></tr>
+            <tr><td><code>InactivityWatchdog</code></td><td class="prio-high">−2049</td><td>Third</td><td>Block therapy entry on device inactivity</td></tr>
+            <tr><td>Anonymous subscribers</td><td>auto-increment</td><td>Middle</td><td>Game controllers, UI components</td></tr>
+            <tr><td><code>LoaderController</code></td><td class="prio-low">Int32.MaxValue (lowest)</td><td>Last</td><td>Actual scene transitions and game management</td></tr>
+        </table>
+    </div>
+
+    <pre><code><span class="cm">// Subscribe with a known priority:</span>
+<span class="ty">TherapyEventBroker</span>.<span class="fn">SubscribeToTherapyEvents</span>(
+    <span class="kw">this</span>,
+    <span class="ty">TherapyEventBrokerKnownSubscribers</span>.LoaderController);
+
+<span class="cm">// Subscribe without a priority (auto-assigned):</span>
+<span class="ty">TherapyEventBroker</span>.<span class="fn">SubscribeToTherapyEvents</span>(<span class="kw">this</span>);
+
+<span class="cm">// Unsubscribe:</span>
+<span class="ty">TherapyEventBroker</span>.<span class="fn">UnsubscribeFromTherapyEvents</span>(<span class="kw">this</span>);</code></pre>
+
+    <h3 id="therapy-dispatch">Dispatch Flow</h3>
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-pu">TherapyController arrives<br><small>from TCP tablet message · DemoPlayButton · HomeTherapyDelayedNextGame · internal</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-yw">Map booleans → TherapyEventFlags bitmask<br><small>enter→Enter · exit→Exit · start_game→StartGame · pause_game→Pause … etc.</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">flags == NoEvents?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">Yes</div>
+                    <div class="fc-box fc-rd">LogError + abort</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl">No</div>
+                    <div class="fc-seq">
+                        <div class="fc-box fc-pu">TherapyEventBroker.InformSubscribers(sender, args)</div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-box fc-gy">Iterate SortedList — lowest int first (highest priority)</div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-decision">AcceptedEvents matches incoming flags?</div>
+                        <div class="fc-fork">
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">No match</div>
+                                <div class="fc-box fc-gy">Skip subscriber</div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">Match</div>
+                                <div class="fc-seq">
+                                    <div class="fc-box fc-tl">subscriber.OnTherapyEvent(sender, args)</div>
+                                    <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                                    <div class="fc-decision">returns false?</div>
+                                    <div class="fc-fork">
+                                        <div class="fc-branch">
+                                            <div class="fc-branch-lbl">true — halted</div>
+                                            <div class="fc-box fc-rd">Stop dispatch<br><small>remaining subscribers skipped</small></div>
+                                        </div>
+                                        <div class="fc-branch">
+                                            <div class="fc-branch-lbl">false — continue</div>
+                                            <div class="fc-box fc-gn">Next subscriber</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════ CHOOSING ══════════════════════════════ -->
+<section id="choosing">
+    <h2>Choosing a System</h2>
+
+    <div class="grid3">
+        <div class="gcard" style="border-top-color: var(--error)">
+            <h4 style="color:var(--error)">Use Messenger when…</h4>
+            <ul>
+                <li>Modifying existing game code that already uses it</li>
+                <li>Broadcasting <code>"paramsUpdated"</code> (no alternative yet)</li>
+                <li>Firing <code>"correctAnswer"</code> / <code>"wrongAnswer"</code> in a ComboManager</li>
+            </ul>
+            <p style="margin-top:8px;"><strong>Do not</strong> add new Messenger keys for new features.</p>
+        </div>
+        <div class="gcard">
+            <h4>Use Broker&lt;T&gt; when…</h4>
+            <ul>
+                <li>Building any new system-wide or cross-scene event</li>
+                <li>You need compile-time type safety</li>
+                <li>You need pre-event validation or cancellation</li>
+                <li>You want structured logging</li>
+                <li>The event is not a therapy state command</li>
+            </ul>
+        </div>
+        <div class="gcard" style="border-top-color: var(--accent2)">
+            <h4 style="color:var(--accent2)">Use TherapyEventBroker when…</h4>
+            <ul>
+                <li>Responding to therapy state transitions (Enter, StartGame, Pause…)</li>
+                <li>Implementing a watchdog that can block therapy entry</li>
+                <li>You need priority-ordered dispatch</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════ COMPONENT REF ══════════════════════════════ -->
+<section id="component-ref">
+    <h2>Component Reference</h2>
+    <div class="tbl-wrap">
+        <table>
+            <tr><th>Component</th><th>File</th><th>System</th><th>Role</th></tr>
+            <tr>
+                <td><strong>Messenger</strong></td>
+                <td><code>Assets/Shared/Scripts/Helpers/Messenger/Messenger.cs</code></td>
+                <td><span class="b b-red">Obsolete</span></td>
+                <td>Static global event bus. All string-keyed events.</td>
+            </tr>
+            <tr>
+                <td><strong>MessengerHelper</strong></td>
+                <td>Same file</td>
+                <td><span class="b b-red">Obsolete</span></td>
+                <td>Hidden MonoBehaviour; calls <code>Messenger.Cleanup()</code> on scene load.</td>
+            </tr>
+            <tr>
+                <td><strong>Consts</strong></td>
+                <td><code>Assets/Shared/Scripts/Const/Consts.cs</code></td>
+                <td><span class="b b-red">Obsolete</span></td>
+                <td>All Messenger key string constants.</td>
+            </tr>
+            <tr>
+                <td><strong>Broker&lt;T&gt;</strong></td>
+                <td><code>Assets/Shared/Scripts/HierachicalBroker/Broker.cs</code></td>
+                <td><span class="b b-green">Preferred</span></td>
+                <td>Static root instance accessor for any <code>IEventArgs</code> type.</td>
+            </tr>
+            <tr>
+                <td><strong>BeforeBroker&lt;T&gt;</strong></td>
+                <td><code>Assets/Shared/Scripts/HierachicalBroker/BeforeBroker.cs</code></td>
+                <td><span class="b b-green">Preferred</span></td>
+                <td>Pre-event hook chain. Supports cancellation via <code>ref bool cancel</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Subscription</strong></td>
+                <td><code>Assets/Shared/Scripts/HierachicalBroker/Subscription.cs</code></td>
+                <td><span class="b b-green">Preferred</span></td>
+                <td><code>IDisposable</code> returned by <code>Subscribe()</code>. Dispose to unsubscribe.</td>
+            </tr>
+            <tr>
+                <td><strong>TherapyEventBroker</strong></td>
+                <td><code>Assets/Shared/Scripts/TherapyEvents/TherapyEventBroker.cs</code></td>
+                <td><span class="b b-purple">Therapy</span></td>
+                <td>Static dispatcher. Priority-sorted subscriber list.</td>
+            </tr>
+            <tr>
+                <td><strong>ITherapyEventReceiver</strong></td>
+                <td><code>Assets/Shared/Scripts/TherapyEvents/ITherapyEventReceiver.cs</code></td>
+                <td><span class="b b-purple">Therapy</span></td>
+                <td>Interface all therapy event subscribers implement.</td>
+            </tr>
+            <tr>
+                <td><strong>TherapyEventArgs</strong></td>
+                <td><code>Assets/Shared/Scripts/TherapyEvents/TherapyEventArgs.cs</code></td>
+                <td><span class="b b-purple">Therapy</span></td>
+                <td>Payload: <code>TherapyEventFlags</code> + <code>TherapyMode</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>TherapyEventFlags</strong></td>
+                <td><code>Assets/Shared/Scripts/TherapyEvents/TherapyEventFlags.cs</code></td>
+                <td><span class="b b-purple">Therapy</span></td>
+                <td>Bitmask enum for all therapy state command types.</td>
+            </tr>
+            <tr>
+                <td><strong>TherapyEventBrokerKnownSubscribers</strong></td>
+                <td><code>Assets/Shared/Scripts/TherapyEvents/TherapyEventBrokerKnownSubscribers.cs</code></td>
+                <td><span class="b b-purple">Therapy</span></td>
+                <td>Priority constants for watchdogs and LoaderController.</td>
+            </tr>
+        </table>
+    </div>
+
+</section>
+
+</main>
+
+<button id="btt" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const sections = [...links].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const a = [...links].find(l => l.getAttribute('href') === '#' + e.target.id);
+                if (a) a.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+    sections.forEach(s => obs.observe(s));
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => btt.classList.toggle('visible', window.scrollY > 400));
+</script>
+
+</body>
+</html>

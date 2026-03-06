@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Localization &amp; OTA</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117; --surface: #1a1d27; --surface2: #232633; --surface3: #2a2e3f;
+            --border: #2e3248; --text: #e1e4ed; --text-muted: #8b8fa7;
+            --accent: #6c8aff; --accent2: #a78bfa;
+            --success: #4ade80; --warning: #fbbf24; --error: #f87171;
+            --info: #38bdf8; --teal: #2dd4bf; --pink: #f472b6; --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+        .sidebar { position: fixed; top: 0; left: 0; width: 300px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; overflow-y: auto; z-index: 100; }
+        .sidebar-brand { padding: 0 20px 16px; font-size: 13px; font-weight: 800; color: var(--teal); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+        .sidebar-brand small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a { display: block; padding: 6px 20px; color: var(--text-muted); text-decoration: none; font-size: 12.5px; transition: all 0.15s; border-left: 3px solid transparent; }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        .topnav { position: fixed; top: 0; left: 300px; right: 0; z-index: 200; height: 40px; background: rgba(26,29,39,0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; padding: 0 24px; font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; }
+
+        #btt { position: fixed; bottom: 28px; right: 28px; z-index: 300; width: 38px; height: 38px; border-radius: 50%; background: var(--teal); color: #000; border: none; font-size: 17px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3); }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1100px; }
+        h1 { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+        .hero-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 32px; }
+        h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 44px 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        h3 { font-size: 15px; font-weight: 700; color: var(--teal); margin: 22px 0 10px; }
+        p { margin-bottom: 12px; font-size: 14px; }
+        ul, ol { padding-left: 20px; margin-bottom: 12px; font-size: 14px; }
+        li { margin-bottom: 4px; }
+        hr { border: none; border-top: 1px solid var(--border); margin: 44px 0; }
+        code { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12.5px; background: var(--surface3); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; }
+        section { scroll-margin-top: 60px; }
+
+        pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 20px; font-size: 12.5px; line-height: 1.65; }
+        pre code { background: none; border: none; padding: 0; font-size: inherit; }
+        .kw { color: #c084fc; } .ty { color: #38bdf8; } .fn { color: #6c8aff; }
+        .st { color: #4ade80; } .cm { color: #4b5563; font-style: italic; }
+        .tl { color: var(--teal); } .wa { color: var(--warning); }
+
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .b-teal  { background: rgba(45,212,191,0.12);  color: var(--teal);    border: 1px solid rgba(45,212,191,0.3); }
+        .b-green { background: rgba(74,222,128,0.12);  color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+        .b-yellow{ background: rgba(251,191,36,0.12);  color: var(--warning); border: 1px solid rgba(251,146,60,0.3); }
+        .b-gray  { background: rgba(139,143,167,0.12); color: var(--text-muted); border: 1px solid rgba(139,143,167,0.3); }
+
+        .alert { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 14px 0; font-size: 13.5px; }
+        .alert-info { background: rgba(56,189,248,0.08); border-color: var(--info); }
+        .alert-warn { background: rgba(251,191,36,0.08); border-color: var(--warning); }
+        .alert-ok   { background: rgba(74,222,128,0.08); border-color: var(--success); }
+
+        .f { font-family: 'Cascadia Code','Fira Code',Consolas,monospace; font-size: 12px; color: var(--text-muted); background: var(--surface2); border-left: 3px solid var(--teal); padding: 6px 12px; border-radius: 0 6px 6px 0; display: block; margin: 8px 0; }
+
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .gcard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-top: 3px solid var(--teal); }
+        .gcard h4 { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .gcard p  { font-size: 13px; margin-bottom: 6px; }
+        .gcard ul { font-size: 13px; }
+        .gcard.blue { border-top-color: var(--accent); }
+        .gcard.blue h4 { color: var(--accent); }
+        .gcard.orange { border-top-color: var(--orange); }
+        .gcard.orange h4 { color: var(--orange); }
+
+        .tbl-wrap { overflow-x: auto; margin: 16px 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tr:hover td { background: var(--surface); }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .grid2 { grid-template-columns: 1fr; }
+            .topnav { left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Localization &amp; OTA — Doc 08</small>
+    </div>
+
+    <a href="#localization" class="sh">Localization</a>
+    <a href="#localization">LocalizationManager</a>
+    <a href="#region-language" class="sub">Region → Language</a>
+    <a href="#load-flow" class="sub">Load &amp; Broadcast Flow</a>
+    <a href="#components" class="sub">In-Scene Components</a>
+    <a href="#loc-ota" class="sub">Remote Lang Updates</a>
+
+    <a href="#ota" class="sh">OTA Updater</a>
+    <a href="#ota">APK Update Flow</a>
+    <a href="#update-loop" class="sub">Check Loop</a>
+    <a href="#disable-update" class="sub">Disabling Updates</a>
+
+    <a href="#howto" class="sh">How-To</a>
+    <a href="#howto-key" class="sub">Add a Localization Key</a>
+    <a href="#howto-component" class="sub">Localize a UI Text</a>
+</nav>
+
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <a href="01_Login_Flow.html">Login Flow</a>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <span class="current">Localization &amp; OTA</span>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<button id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<div class="main">
+
+<h1>Localization &amp; OTA</h1>
+<p class="hero-sub">Language selection, JSON-based UI translation, remote language file updates, and over-the-air APK installation.</p>
+
+<!-- ══════════════════════════════ LOCALIZATION ══════════════════════════════ -->
+<section id="localization">
+<h2>1. Localization</h2>
+
+<p><code>LocalizationManager</code> is a persistent singleton (<code>DestroyedOnSceneChange() → false</code>) that loads a language JSON file on startup and fires a <code>Broker&lt;NewTranslation&gt;</code> event whenever the language changes. In-scene components subscribe to that event to refresh their text.</p>
+<span class="f">Assets/Shared/Scripts/LangLocalization/LocalizationManager.cs</span>
+
+<h3 id="region-language">Region → Language Mapping</h3>
+
+<div class="tbl-wrap">
+<table>
+    <thead><tr><th>ServerRegion</th><th>ISO 639-1 Code</th><th>CultureInfo</th><th>File</th></tr></thead>
+    <tbody>
+        <tr><td><code>POLAND</code></td><td><code>pl</code></td><td>Polish</td><td><code>pl.json</code></td></tr>
+        <tr><td><code>USA</code></td><td><code>en</code></td><td>English</td><td><code>en.json</code></td></tr>
+    </tbody>
+</table>
+</div>
+
+<p>The mapping is in <code>ServerToCultureInfo()</code>. Adding a new region requires adding a case there, a corresponding JSON file to <code>StreamingAssets/Localization/</code>, and an entry in <code>lang_meta.json</code>.</p>
+
+<p>The tablet can also override the language by sending a <code>data.lang</code> field (ISO code) over TCP. <code>LoaderController</code> calls <code>LocalizationManager.Instance.LoadLocalizedText()</code> directly when this arrives.</p>
+
+<h3 id="load-flow">Load &amp; Broadcast Flow</h3>
+
+<ol>
+    <li><strong>Awake</strong>: reads <code>GlobalConfig.serverRegion</code> → calls <code>LoadLocalizedText(culture)</code>. If first run after install, copies all JSON files from <code>StreamingAssets/Localization/</code> to <code>persistentDataPath/Localization/</code>.</li>
+    <li><strong>LoadLocalizedText</strong>: reads <code>{persistentDataPath}/Localization/{iso}.json</code> → deserializes into <code>Dictionary&lt;string, string&gt;</code> → fires <code>Broker&lt;NewTranslation&gt;.Invoke()</code>.</li>
+    <li><strong>Start</strong>: calls <code>CheckRemoteLocalization().Forget()</code> to async-check for newer JSON files on the server.</li>
+    <li><strong>Region change</strong>: <code>GlobalConfig.serverRegion.Changed</code> callback → <code>LoadLocalizedText(newCulture)</code>.</li>
+</ol>
+
+<div class="alert alert-info">
+    Language JSON files are always read from <code>persistentDataPath</code>, never directly from <code>StreamingAssets</code> at runtime (Android doesn't support direct file access there). <code>BetterStreamingAssets</code> is used for the first-install copy.
+</div>
+
+<h3 id="components">In-Scene Components</h3>
+
+<div class="grid2">
+    <div class="gcard">
+        <h4>LocalizedText</h4>
+        <p>Add to any GameObject with a <code>Text</code>, <code>TextMeshPro</code>, or <code>TextMeshProUGUI</code> component. Set the <code>key</code> field in the Inspector. Subscribes to <code>Broker&lt;NewTranslation&gt;</code> via <code>OnEnable</code> and calls <code>GetValue(key, defaultText)</code> on each language change.</p>
+        <p><strong>Note:</strong> <code>defaultText</code> is captured from the component's current text at <code>OnEnable</code> — set it in the prefab as a fallback.</p>
+    </div>
+    <div class="gcard blue">
+        <h4>LocalizedGameObject</h4>
+        <p>Maps ISO codes to child GameObjects — activates the matching one and deactivates the rest. Useful for swapping entire prefab variants per language (e.g. different layout images).</p>
+        <p>Set <code>updated = true</code> in Inspector if it should react to mid-session language changes; otherwise it only runs in <code>Awake</code>.</p>
+    </div>
+</div>
+
+<div class="gcard orange" style="margin: 0 0 16px;">
+    <h4>LocalizedMaterial</h4>
+    <p>Swaps a <code>Renderer</code>'s material based on current language. Same ISO-to-asset mapping pattern as <code>LocalizedGameObject</code>.</p>
+    <span class="f" style="margin-top:8px">Assets/Shared/Scripts/LangLocalization/LocalizedMaterial.cs</span>
+</div>
+
+<h3 id="loc-ota">Remote Language File Updates (OTA)</h3>
+
+<p>On <code>Start</code>, <code>LocalizationManager</code> calls <code>CheckRemoteLocalization()</code>. This fetches <code>{serverUrl}/{hash}/Update/Localization/lang_meta.json</code> and compares each entry's <code>ChangeDateTime</code> with the locally stored meta. Any language whose remote timestamp is newer is downloaded and written to <code>persistentDataPath/Localization/</code>. If the active language was updated, <code>LoadLocalizedText()</code> is called immediately to apply it.</p>
+
+<p>The local meta file is updated after a successful download. No hash/integrity check is applied to language files (unlike the APK updater).</p>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════ OTA UPDATER ══════════════════════════════ -->
+<section id="ota">
+<h2>2. OTA Updater</h2>
+
+<p><code>Updater</code> handles over-the-air installation of Android APKs for the main app, stream app, and service app. It uses the device's privileged <code>AndroidHelper.remmedService</code> (a custom Android service) for silent installs, so no user interaction is required.</p>
+<span class="f">Assets/Shared/Scripts/Updater/Updater.cs</span>
+
+<h3 id="update-loop">Check Loop</h3>
+
+<p>After <code>Start</code>, if <code>UpdaterEnabled</code> is true, <code>CheckForUpdateLoop(token)</code> runs indefinitely:</p>
+<ol>
+    <li>Wait 1 s → fetch <code>update_meta</code> JSON from <code>{serverUrl}/{hash}/Update/</code></li>
+    <li>For each entry in <code>files_info</code>: compare remote <code>version</code> string against installed APK version using <code>System.Version</code></li>
+    <li>If remote &gt; installed and <code>device</code> matches <code>HardwareInfo.DeviceType()</code>: add to download queue</li>
+    <li>Download each APK with progress bar → silent install via Android service</li>
+    <li>Fire <code>Broker&lt;UpdatingStateChanged&gt;</code> at start/end; stop TCP servers during install</li>
+    <li>Wait 4 s → loop again</li>
+</ol>
+
+<p><code>AppType</code> enum identifies update targets: <code>MAIN_APP</code>, <code>STREAM_APP</code>, <code>SERVICE_APP</code>. The <code>device</code> field in meta matches <code>NeoDeviceType</code> (e.g. <code>Neo3</code>, <code>ANY</code>).</p>
+
+<h3 id="disable-update">Disabling Updates</h3>
+
+<p><code>UpdaterEnabled</code> returns false when <code>Application.version</code> contains <code>"-no_update"</code> (e.g. <code>1.2.3-no_update</code>). In the Editor it reads from <code>RemmedMock.Instance.UpdaterEnabled</code>. When disabled, <code>StartChecking()</code> is never called.</p>
+
+<div class="alert alert-warn">
+    <strong>TCP servers are stopped during APK installation.</strong> The tablet will lose connection momentarily. <code>RunTabletTcpServ()</code> is called in the <code>finally</code> block to restart them after install regardless of success or failure.
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════ HOW-TO ══════════════════════════════ -->
+<section id="howto">
+<h2>3. How-To</h2>
+
+<h3 id="howto-key">Add a Localization Key</h3>
+<ol>
+    <li>Open <code>StreamingAssets/Localization/en.json</code> and <code>pl.json</code></li>
+    <li>Add a new <code>{ "Key": "MY_KEY", "Val": "My translated text" }</code> entry to the <code>Translation</code> array in each file</li>
+    <li>Update <code>lang_meta.json</code> — bump the <code>ChangeDateTime</code> for each modified language so remote devices pick up the new file</li>
+    <li>Redeploy the JSON files to the server under <code>{hash}/Update/Localization/</code></li>
+</ol>
+
+<div class="alert alert-info">
+    In Editor, validation runs in <code>LocalizationManager.OnValidate()</code> — it checks that all JSON files exist for every <code>ServerRegion</code> and logs errors for missing keys. Run it by making any change on the <code>LocalizationManager</code> GameObject.
+</div>
+
+<h3 id="howto-component">Localize a UI Text</h3>
+<ol>
+    <li>Add <code>LocalizedText</code> component to the GameObject</li>
+    <li>Set <code>key</code> to the JSON key (e.g. <code>"MY_KEY"</code>)</li>
+    <li>Set the TextMeshPro text to the English fallback — this becomes <code>defaultText</code> if the key is not found</li>
+    <li>No code needed — the component handles <code>Broker&lt;NewTranslation&gt;</code> subscription automatically</li>
+</ol>
+
+<p>For runtime lookup in code: <code>LocalizationManager.Instance.GetValue("MY_KEY", "fallback")</code> — returns the fallback and logs a warning if the key is missing.</p>
+</section>
+
+</div><!-- .main -->
+
+<script>
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('visible', window.scrollY > 400);
+    });
+    const links = document.querySelectorAll('.sidebar a[href^="#"]');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const match = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+                if (match) match.classList.add('active');
+            }
+        });
+    }, { rootMargin: '-60px 0px -70% 0px' });
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

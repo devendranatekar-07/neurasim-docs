@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuraSim VR - Login Flow Documentation</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; border: 2px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--teal); }
+        * { scrollbar-width: thin; scrollbar-color: var(--surface3) var(--bg); }
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #232633;
+            --surface3: #2a2e3f;
+            --border: #2e3248;
+            --text: #e1e4ed;
+            --text-muted: #8b8fa7;
+            --accent: #6c8aff;
+            --accent2: #a78bfa;
+            --accent3: #c084fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+            --info: #38bdf8;
+            --teal: #2dd4bf;
+            --pink: #f472b6;
+            --orange: #fb923c;
+            --code-bg: #141620;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 300px; height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 20px 0; overflow-y: auto; z-index: 100;
+        }
+        .sidebar-brand, .sidebar-title {
+            padding: 0 20px 16px;
+            font-size: 13px; font-weight: 800;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+        .sidebar-brand small, .sidebar-title small { display: block; font-size: 10px; color: var(--text-muted); font-weight: 400; letter-spacing: 0.5px; margin-top: 2px; }
+        .sidebar a {
+            display: block; padding: 6px 20px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: 12.5px; transition: all 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover { color: var(--text); background: var(--surface2); border-left-color: var(--teal); }
+        .sidebar a.sh, .sidebar a.section-head { font-weight: 700; color: var(--text); margin-top: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar a.sub, .sidebar a.indent { padding-left: 32px; font-size: 11.5px; }
+        .sidebar a.active { color: var(--teal); border-left-color: var(--teal); background: var(--surface2); }
+
+        /* ── Top Nav ── */
+        @media (max-width: 900px) { .topnav { left: 0; } }
+        .topnav {
+            position: fixed; top: 0; left: 300px; right: 0; z-index: 200;
+            height: 40px; background: rgba(26,29,39,0.92);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; padding: 0 24px;
+            font-size: 12px;
+        }
+        .topnav span { color: var(--text-muted); font-size: 12px; }
+        .topnav a { color: var(--text-muted); text-decoration: none; transition: color 0.15s; display: flex; align-items: center; gap: 5px; }
+        .topnav a:hover { color: var(--teal); }
+        .topnav .sep { color: var(--border); }
+        .topnav .current { color: var(--teal); font-weight: 600; cursor: default; }
+
+        /* ── Back to top ── */
+        #btt {
+            position: fixed; bottom: 28px; right: 28px; z-index: 300;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--teal); color: #000; border: none;
+            font-size: 17px; font-weight: 700; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            transition: transform 0.15s; box-shadow: 0 4px 16px rgba(45,212,191,0.3);
+        }
+        #btt:hover { transform: translateY(-2px); }
+        #btt.visible { display: flex; }
+
+        /* ── Main ── */
+        .main { margin-left: 300px; padding: 72px 56px 60px; max-width: 1140px; }
+
+        h1 { font-size: 38px; font-weight: 900;
+            background: linear-gradient(135deg, var(--teal), var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .hero-sub, .subtitle { font-size: 15px; color: var(--text-muted); margin-bottom: 36px; }
+        h2 {
+            font-size: 23px; font-weight: 700;
+            margin: 52px 0 16px; padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        h3 { font-size: 17px; font-weight: 600; margin: 28px 0 10px; color: var(--teal); }
+        h4 { font-size: 14px; font-weight: 600; margin: 18px 0 6px; color: var(--accent2); }
+
+        p { margin-bottom: 12px; }
+        ul, ol { margin: 0 0 12px 24px; }
+        li { margin-bottom: 4px; }
+
+        /* ── Code ── */
+        pre {
+            background: var(--code-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 18px 20px; overflow-x: auto;
+            font-size: 12.5px; line-height: 1.65; margin: 14px 0;
+            position: relative;
+        }
+        code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
+        p code, li code, td code {
+            background: var(--surface3); border: 1px solid var(--border);
+            border-radius: 4px; padding: 1px 6px; font-size: 12px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        }
+        /* Syntax highlight tokens — short and long aliases both work */
+        .kw, .keyword { color: #c678dd; }
+        .ty, .type    { color: #e5c07b; }
+        .fn, .method  { color: #61afef; }
+        .st, .string  { color: #98c379; }
+        .cm, .comment { color: #5c6370; font-style: italic; }
+        .nu, .number  { color: #d19a66; }
+        .in           { color: var(--info);    font-weight: 700; }
+        .tl           { color: var(--teal);    font-weight: 700; }
+        .wa           { color: var(--warning); font-weight: 700; }
+        .pk           { color: var(--pink);    font-weight: 700; }
+        .er           { color: var(--error);   font-weight: 700; }
+        .hl, .highlight { color: var(--accent);  font-weight: 600; }
+        .gr, .success { color: var(--success); }
+        .dim          { color: var(--text-muted); }
+        .warning      { color: var(--warning); }
+        .error        { color: var(--error); }
+        .info         { color: var(--info); }
+
+        /* ── Tables ── */
+        table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px; }
+        thead tr { background: var(--surface2); }
+        th { padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 700;
+             text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted);
+             border-bottom: 2px solid var(--border); }
+        td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        tbody tr:hover { background: var(--surface2); }
+        tbody tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+        /* ── Badges ── */
+        .b { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .b-blue  { background: rgba(108,138,255,0.18); color: var(--accent); }
+        .b-green { background: rgba(74,222,128,0.18);  color: var(--success); }
+        .b-yellow{ background: rgba(251,191,36,0.18);  color: var(--warning); }
+        .b-red   { background: rgba(248,113,113,0.18); color: var(--error); }
+        .b-teal  { background: rgba(45,212,191,0.18);  color: var(--teal); }
+        .b-purple{ background: rgba(167,139,250,0.18); color: var(--accent2); }
+        .b-orange{ background: rgba(251,146,60,0.18);  color: var(--orange); }
+        .b-grey  { background: rgba(139,143,167,0.18); color: var(--text-muted); }
+        /* Legacy badge classes */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .badge-error   { background: rgba(248,113,113,0.18); color: var(--error); }
+        .badge-success { background: rgba(74,222,128,0.18);  color: var(--success); }
+        .badge-warning { background: rgba(251,191,36,0.18);  color: var(--warning); }
+        .badge-info    { background: rgba(56,189,248,0.18);  color: var(--info); }
+        .badge-accent  { background: rgba(108,138,255,0.18); color: var(--accent); }
+
+        /* ── Alerts ── */
+        .alert { border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13.5px; border-left: 4px solid; }
+        .alert-title { font-weight: 700; margin-bottom: 6px; }
+        .alert-warn, .alert-warning { background: rgba(251,191,36,0.08);  border-color: var(--warning); color: var(--text); }
+        .alert-info    { background: rgba(56,189,248,0.08);  border-color: var(--info);    color: var(--text); }
+        .alert-error   { background: rgba(248,113,113,0.08); border-color: var(--error);   color: var(--text); }
+        .alert-teal    { background: rgba(45,212,191,0.08);  border-color: var(--teal);    color: var(--text); }
+        .alert-accent  { background: rgba(108,138,255,0.08); border-color: var(--accent);  color: var(--text); }
+
+        /* ── Flow diagrams ── */
+        .flow {
+            background: var(--code-bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 18px 20px; overflow-x: auto;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px; line-height: 1.8; margin: 14px 0;
+            white-space: pre;
+        }
+        .flow-legend {
+            display: flex; flex-wrap: wrap; gap: 14px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 16px; margin: 12px 0 4px;
+            font-size: 12px;
+        }
+        .flow-legend span { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+        .flow-legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── Step indicators ── */
+        .step {
+            display: flex; gap: 16px; margin: 16px 0; padding: 16px 20px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; border-left: 4px solid var(--teal);
+        }
+        .step-num {
+            flex-shrink: 0; width: 32px; height: 32px;
+            background: var(--teal); color: #000;
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-weight: 700; font-size: 14px;
+        }
+        .step-content { flex: 1; }
+        .step-content strong { display: block; margin-bottom: 4px; }
+        .step-content p { margin: 0; color: var(--text-muted); font-size: 13px; }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 20px; margin: 16px 0;
+        }
+        .card-header {
+            font-weight: 700; font-size: 14px; margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px; color: var(--teal);
+        }
+
+        /* ── Grid cards ── */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .gcard {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 18px;
+        }
+        .gcard strong { display: block; margin-bottom: 8px; font-size: 14px; }
+        .gcard p { font-size: 13px; color: var(--text-muted); margin-bottom: 0; }
+        .gcard p code { background: var(--surface3); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; font-size: 11.5px; }
+
+        /* ── Dependency grid ── */
+        .dep-graph { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+        .dep-item {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 14px 18px;
+        }
+        .dep-item strong { display: block; font-size: 13px; margin-bottom: 4px; }
+        .dep-item p { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+        /* ── File refs ── */
+        p.f, p.file-ref, .file-ref {
+            display: flex; width: fit-content; align-items: center; gap: 8px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-left: 3px solid var(--teal);
+            border-radius: 5px; padding: 4px 12px 4px 10px;
+            font-size: 12px; color: var(--text-muted); font-family: monospace;
+            margin-bottom: 12px;
+        }
+        p.f::before, p.file-ref::before, .file-ref::before { content: "📄"; font-size: 11px; }
+
+        /* ── Struct definition boxes ── */
+        .struct-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 14px 18px; margin: 12px 0;
+        }
+        .struct-box h4 { margin-top: 0; }
+        .struct-field { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .struct-field:last-child { border-bottom: none; }
+        .sf-type { color: var(--accent2); font-family: monospace; font-size: 12px; min-width: 140px; }
+        .sf-name { color: var(--teal); font-family: monospace; font-size: 12px; min-width: 200px; }
+        .sf-desc { color: var(--text-muted); font-size: 12px; }
+
+        /* ── Separator ── */
+        hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+        /* ── Code language label ── */
+        .code-block { position: relative; margin: 12px 0; }
+        .code-block pre { margin: 0; }
+        .code-lang {
+            position: absolute; top: 8px; right: 12px;
+            font-size: 10px; font-weight: 600; text-transform: uppercase;
+            color: var(--text-muted); letter-spacing: 1px; pointer-events: none;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; padding: 24px; }
+            .dep-graph, .grid2 { grid-template-columns: 1fr; }
+            .topnav { left: 0; }
+        }
+
+        /* ── Visual Flowchart ── */
+        .fc { margin: 16px 0; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+        .fc-seq { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-box { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; border: 1.5px solid; }
+        .fc-tl { background: rgba(45,212,191,0.12); border-color: var(--teal);    color: var(--teal); }
+        .fc-bl { background: rgba(108,138,255,0.12); border-color: var(--accent);  color: var(--accent); }
+        .fc-yw { background: rgba(251,191,36,0.12);  border-color: var(--warning); color: var(--warning); }
+        .fc-gn { background: rgba(74,222,128,0.12);  border-color: var(--success); color: var(--success); }
+        .fc-rd { background: rgba(248,113,113,0.12); border-color: var(--error);   color: var(--error); }
+        .fc-gy { background: var(--surface2);        border-color: var(--border);  color: var(--text); }
+        .fc-pu { background: rgba(167,139,250,0.12); border-color: var(--accent2); color: var(--accent2); }
+        .fc-decision { display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; border: 1.5px dashed var(--warning); color: var(--warning); background: rgba(251,191,36,0.08); }
+        .fc-conn { display: flex; flex-direction: column; align-items: center; margin-left: 22px; }
+        .fc-line { width: 2px; height: 18px; background: var(--border); }
+        .fc-arrow-d { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--border); }
+        .fc-note { font-size: 11.5px; color: var(--text-muted); margin: 3px 0 3px 4px; font-style: italic; }
+        .fc-fork { display: flex; gap: 24px; align-items: flex-start; margin: 4px 0; flex-wrap: wrap; }
+        .fc-branch { display: flex; flex-direction: column; align-items: flex-start; }
+        .fc-branch-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 7px; padding: 2px 8px; background: var(--surface2); border-radius: 4px; }
+        .fc-divider { display: flex; align-items: center; gap: 8px; margin: 16px 0 12px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .fc-divider::before, .fc-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    </style>
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<div class="topnav">
+    <a href="00_Application_Overview.html">Overview</a>
+    <span class="sep">/</span>
+    <span class="current">Login Flow</span>
+    <span class="sep">/</span>
+    <a href="02_Hub_Game_Selection.html">Hub</a>
+    <span class="sep">/</span>
+    <a href="03_Game_Framework.html">Game Framework</a>
+    <span class="sep">/</span>
+    <a href="04_Tablet_Communication.html">Tablet TCP</a>
+    <span class="sep">/</span>
+    <a href="05_Event_Systems.html">Event Systems</a>
+    <span class="sep">/</span>
+    <a href="06_VFX_and_Difficulty.html">VFX &amp; Difficulty</a>
+    <span class="sep">/</span>
+    <a href="07_Parameter_System.html">Parameters</a>
+    <span class="sep">/</span>
+    <a href="08_Localization_OTA.html">Localization &amp; OTA</a>
+    <span class="sep">/</span>
+    <a href="09_Game_Modules.html">Game Modules</a>
+</div>
+
+<!-- ── Back to top ── -->
+<button id="btt" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        NeuraSim VR
+        <small>Login Flow — Doc 01</small>
+    </div>
+
+    <a href="#overview" class="sh">Overview</a>
+    <a href="#auth-model">Authentication Model</a>
+
+    <a href="#high-level-flow" class="sh">High-Level Flow</a>
+    <a href="#flow-diagram" class="sub">Flow Diagram</a>
+
+    <a href="#phase1" class="sh">Phase 1: App Boot</a>
+    <a href="#loader-init" class="sub">LoaderController Init</a>
+    <a href="#globalconfig-init" class="sub">GlobalConfig Init</a>
+    <a href="#webapi-init" class="sub">WebApiPass Init</a>
+
+    <a href="#phase2" class="sh">Phase 2: WiFi</a>
+    <a href="#wifi-auto" class="sub">Auto-Connect</a>
+    <a href="#wifi-manual" class="sub">Manual Connect</a>
+
+    <a href="#phase3" class="sh">Phase 3: Login</a>
+    <a href="#login-request" class="sub">Login Request</a>
+    <a href="#totp" class="sub">TOTP Token (rkey)</a>
+    <a href="#device-id" class="sub">Device Identification</a>
+    <a href="#login-response" class="sub">Login Response</a>
+
+    <a href="#phase4" class="sh">Phase 4: Post-Login</a>
+    <a href="#stationary-mode" class="sub">Stationary Mode</a>
+    <a href="#home-mode" class="sub">Home Mode</a>
+    <a href="#first-time" class="sub">First-Time Login</a>
+
+    <a href="#phase5" class="sh">Phase 5: Ready State</a>
+
+    <a href="#errors" class="sh">Error Catalog</a>
+    <a href="#error-codes" class="sub">Error Codes</a>
+    <a href="#network-errors" class="sub">Network Errors</a>
+    <a href="#error-ui" class="sub">Error UI Flow</a>
+
+    <a href="#components" class="sh">Component Reference</a>
+    <a href="#dependencies" class="sh">Dependencies</a>
+    <a href="#api-reference" class="sh">API Reference</a>
+    <a href="#data-models" class="sh">Data Models</a>
+    <a href="#config" class="sh">Server Config</a>
+    <a href="#security" class="sh">Security Notes</a>
+
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+
+    <h1>Login Flow</h1>
+    <p class="hero-sub">Complete authentication flow from app launch to therapy-ready state — device auth, WiFi, TOTP, TCP servers, error handling, and all failure modes.</p>
+
+    <!-- ==================== SECTION 1: OVERVIEW ==================== -->
+    <h2 id="overview">1. Overview</h2>
+
+    <p>NeuraSim VR (product name: <strong>BeeVee</strong>) uses a <strong>device-centric authentication model</strong>. There are no user credentials (username/password). Instead, the VR headset itself is the identity &mdash; its serial number is pre-registered in the NeuraSim backend by clinic administrators.</p>
+
+    <div class="card" id="auth-model">
+        <div class="card-header">Authentication Model Summary</div>
+        <table>
+            <tbody>
+                <tr><td><strong>Auth Type</strong></td><td>Device-based (headset serial number)</td></tr>
+                <tr><td><strong>Credential</strong></td><td>Device UUID (Pico VR serial) + TOTP token + static API key</td></tr>
+                <tr><td><strong>Endpoint</strong></td><td><code>POST /web/login</code></td></tr>
+                <tr><td><strong>Session Token</strong></td><td>JWT-like <code>token_session.token</code> returned on success</td></tr>
+                <tr><td><strong>Therapy Modes</strong></td><td><span class="badge badge-info">stationary</span> (tablet-controlled) or <span class="badge badge-accent">home</span> (standalone)</td></tr>
+                <tr><td><strong>No User Input Required</strong></td><td>Login is automatic once WiFi is established</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== SECTION 2: HIGH LEVEL FLOW ==================== -->
+    <h2 id="high-level-flow">2. High-Level Flow</h2>
+
+    <div class="flow-legend">
+        <span><span class="dot" style="background:var(--accent)"></span>Phase / key component</span>
+        <span><span class="dot" style="background:var(--info)"></span>Phase label</span>
+        <span><span class="dot" style="background:var(--success)"></span>Success path</span>
+        <span><span class="dot" style="background:var(--error)"></span>Error path</span>
+        <span><span class="dot" style="background:var(--warning)"></span>Condition / mode</span>
+    </div>
+
+    <div class="fc" id="flow-diagram">
+        <div class="fc-seq">
+            <div class="fc-box fc-bl">App Launch<br><small>Loader scene loads</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+            <div class="fc-divider">Phase 1 — App Boot</div>
+            <div class="fc-box fc-tl">LoaderController.Awake()<br><small>GlobalConfig.Init() · WebApiPass.Init() · UnityThread.init()</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-gy">Singletons initialize<br><small>NetworkStatusWatchdog · TabletCommunication · LocalizationManager</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+            <div class="fc-divider">Phase 2 — WiFi</div>
+            <div class="fc-decision">AndroidHelper.IsWifiConnected()?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gn">Yes</div>
+                    <div class="fc-box fc-gn">Skip to Login</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-rd">No</div>
+                    <div class="fc-seq">
+                        <div class="fc-box fc-yw">Auto-connect from saved configs<br><small>20s timeout</small></div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-decision">connected?</div>
+                        <div class="fc-fork">
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl fc-gn">Yes</div>
+                                <div class="fc-box fc-gn">Proceed to Login</div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl fc-rd">Failed</div>
+                                <div class="fc-box fc-rd">Show WiFi selection window<br><small>manual connect</small></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+            <div class="fc-divider">Phase 3 — Device Auth</div>
+            <div class="fc-box fc-tl">ConnectServerWindow.StartModule()<br><small>builds ShortLogin { api, rkey, uuid, usetoken }</small></div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-bl">POST /web/login</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">response OK?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gn">Success</div>
+                    <div class="fc-box fc-gn">Parse: modeTherapy, token_session, clinic, patient</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-rd">Error</div>
+                    <div class="fc-box fc-rd">ServerErrorMessageBox<br><small>Retry button</small></div>
+                </div>
+            </div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+            <div class="fc-divider">Phase 4 — Post-Login Branching</div>
+            <div class="fc-decision">therapy mode?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-yw">Stationary</div>
+                    <div class="fc-seq">
+                        <div class="fc-box fc-yw">CommunicationMode = Tablet<br><small>Start TCP servers 8502 + 8503</small></div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-box fc-yw">Wait for tablet connection</div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-box fc-gn">Show Stationary UI</div>
+                    </div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-pu">Home</div>
+                    <div class="fc-seq">
+                        <div class="fc-box fc-pu">CommunicationMode = Standalone<br><small>Stop TCP servers</small></div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-box fc-bl">POST /therapy/get<br><small>fetch therapy plan + session dates</small></div>
+                        <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+                        <div class="fc-box fc-gn">Show Home UI<br><small>patient info · sessions count</small></div>
+                    </div>
+                </div>
+            </div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+
+            <div class="fc-divider">Phase 5 — Ready</div>
+            <div class="fc-decision">first-time login?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gn">Yes</div>
+                    <div class="fc-box fc-tl">Show tutorial → then therapy UI</div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-gy">Returning</div>
+                    <div class="fc-box fc-gn">Switch directly to therapy mode UI</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SECTION 3: PHASE 1 ==================== -->
+    <h2 id="phase1">3. Phase 1: App Boot &amp; Initialization</h2>
+
+    <p>The application starts in the <strong>Loader scene</strong> (<code>Assets/InitialScreen/Loader.unity</code>). Two key MonoBehaviours kick off the initialization sequence:</p>
+
+    <h3 id="loader-init">3.1 LoaderController Initialization</h3>
+    <p class="file-ref">Assets/LOADER/Scripts/LoaderController.cs</p>
+
+    <p><code>LoaderController</code> is a persistent singleton (<code>SingletonMonoBehaviour&lt;LoaderController&gt;</code>) that survives scene transitions. It is the central orchestrator for the entire application lifecycle.</p>
+
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <strong>LoaderController.Awake()</strong>
+            <p>Called once when the Loader scene loads. Performs critical initialization in this order:</p>
+        </div>
+    </div>
+
+    <pre><code><span class="comment">// Simplified Awake() sequence</span>
+<span class="type">GlobalConfig</span>.<span class="method">Init</span>();          <span class="comment">// Load server config from persistent storage</span>
+<span class="type">WebApiPass</span>.<span class="method">Init</span>();            <span class="comment">// Initialize API credentials container</span>
+<span class="type">UnityThread</span>.<span class="method">initUnityThread</span>(); <span class="comment">// Enable main-thread dispatching from TCP threads</span>
+<span class="type">Pvr_UnitySDKAPI.Sensor</span>       <span class="comment">// Initialize Pico VR sensor subsystem</span>
+<span class="type">TherapyEventBroker</span>.<span class="method">SubscribeToTherapyEvents</span>(<span class="keyword">this</span>);</code></pre>
+
+    <h3 id="globalconfig-init">3.2 GlobalConfig Initialization</h3>
+    <p class="file-ref">Assets/Shared/Scripts/Shared Scripts/GlobalConfig.cs</p>
+
+    <p><code>GlobalConfig.Init()</code> is a critical static initializer that sets up the entire server configuration. Here is what happens:</p>
+
+    <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-content">
+            <strong>Load or create server config file</strong>
+            <p>Reads <code>serverConfig.json</code> from <code>Application.persistentDataPath</code>. If this is the first run after installation (detected by comparing <code>Application.buildGUID</code> against <code>PlayerPrefs["BUILD_GUID_VERSION"]</code>), copies the config from <code>StreamingAssets</code> instead.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-content">
+            <strong>Construct server URL</strong>
+            <p>Currently <strong>hardcoded</strong> to <code>https://remmedvr-dashboard.neurasim.health/</code> regardless of region/instance settings (the dynamic URL construction exists but is overridden at lines 304-308).</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">C</div>
+        <div class="step-content">
+            <strong>Configure NetworkStatusWatchdog</strong>
+            <p>Sets up two health-check endpoints: <code>https://google.com</code> (HEAD, 200) for internet reachability, and the server URL (HEAD, 200) for server reachability. These are polled every 10 seconds.</p>
+        </div>
+    </div>
+
+    <div class="step">
+        <div class="step-num">D</div>
+        <div class="step-content">
+            <strong>Restore persisted settings</strong>
+            <p>Loads <code>communicationMode</code>, <code>userLoggedFirstTime</code>, <code>installationTargetDevice</code>, and <code>HandNess</code> from <code>PlayerPrefs</code>.</p>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <div class="alert-title">Server URL Note</div>
+        In <code>CreateUriFromConfig()</code>, the region/instance switch-case logic is present but overridden at the end of the method. All builds currently point to <code>https://remmedvr-dashboard.neurasim.health/</code>. This is likely a temporary hardcode.
+    </div>
+
+    <h3 id="webapi-init">3.3 WebApiPass Initialization</h3>
+    <p class="file-ref">Assets/Shared/Scripts/WebAPI/JsonArraySerializer.cs (contains WebApiPass class)</p>
+
+    <p><code>WebApiPass</code> is the credential store used by all subsequent API calls. On init, it creates a singleton instance with the hardcoded API key:</p>
+
+    <pre><code><span class="keyword">public</span> <span class="method">WebApiPass</span>()
+{
+    api = <span class="keyword">new</span> <span class="type">Api</span>();
+    api.key = <span class="string">"s4dfghjiko0j9h8g7f6d"</span>;  <span class="comment">// Static API key shared by all headsets</span>
+}</code></pre>
+
+    <p>After login, the <code>device</code>, <code>session</code>, and <code>token_session</code> fields are populated from the login response and used for all authenticated API calls.</p>
+
+    <!-- ==================== SECTION 4: PHASE 2 ==================== -->
+    <h2 id="phase2">4. Phase 2: WiFi Connection</h2>
+    <p class="file-ref">Assets/InitialScreen/Scripts/PreInitController.cs</p>
+
+    <p><code>PreInitController.Start()</code> calls <code>InitWaitingRoom()</code>, which orchestrates WiFi connectivity before login can proceed.</p>
+
+    <h3 id="wifi-auto">4.1 Auto-Connect Attempt</h3>
+
+    <pre><code><span class="keyword">private async</span> <span class="type">UniTaskVoid</span> <span class="method">InitWaitingRoom</span>(<span class="keyword">int</span> wifiAttempts = <span class="number">20</span>)
+{
+    <span class="type">LoadingCircle</span>.Instance.Show();
+    <span class="comment">// Show "Waiting for WiFi..." toast</span>
+
+    <span class="keyword">if</span> (!<span class="type">AndroidHelper</span>.<span class="method">IsWifiConnected</span>())
+    {
+        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i < wifiAttempts; i++)  <span class="comment">// 20 iterations, 1s each</span>
+        {
+            <span class="keyword">var</span> configuredWifis = <span class="type">AndroidWifiManager</span>.<span class="method">GetConfiguredNetworks</span>();
+            <span class="keyword">var</span> currentConfig = configuredWifis.FirstOrDefault(
+                w => w.status == <span class="type">Status</span>.ENABLED);
+            <span class="keyword">if</span> (currentConfig != <span class="keyword">null</span>)
+                <span class="type">AndroidWifiManager</span>.<span class="method">Connect</span>(currentConfig.SSID, currentConfig.preSharedKey);
+            <span class="keyword">await</span> <span class="type">UniTask</span>.<span class="method">Delay</span>(<span class="number">1000</span>);
+            <span class="keyword">if</span> (<span class="type">AndroidHelper</span>.<span class="method">IsWifiConnected</span>()) <span class="keyword">break</span>;
+        }
+    }
+}</code></pre>
+
+    <h3 id="wifi-manual">4.2 WiFi Window Decision</h3>
+
+    <table>
+        <thead><tr><th>Condition</th><th>Action</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>WiFi connected (immediately or after auto-connect)</td>
+                <td><code>slideMenu.Open(onlyServerConnectWindow: true)</code> &mdash; skip WiFi UI, go directly to login</td>
+            </tr>
+            <tr>
+                <td>WiFi NOT connected after 20s timeout</td>
+                <td><code>slideMenu.Open()</code> &mdash; show WiFi selection window first, then login</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>The <strong>SlideMenu</strong> is a sequential wizard containing these screens in order:</p>
+    <ol>
+        <li><strong>WifiWindow</strong> &mdash; WiFi network list &amp; manual connection</li>
+        <li><strong>WifiPass (PasswordWindow)</strong> &mdash; WiFi password entry</li>
+        <li><strong>ConnectServerWindow</strong> &mdash; Login / server authentication</li>
+        <li><strong>AssignmentVerification</strong> &mdash; Device assignment check</li>
+        <li><strong>PairStream</strong> &mdash; Stream pairing</li>
+        <li><strong>Tutorial / MainHandness</strong> &mdash; Device-specific (Neo 1/Goblin → handedness, others → tutorial)</li>
+        <li><strong>CompleteSetupWindow</strong> &mdash; Final setup confirmation</li>
+    </ol>
+
+    <p>When <code>onlyServerConnectWindow: true</code>, the wizard jumps directly to <code>ConnectServerWindow</code>, skipping WiFi screens.</p>
+
+    <!-- ==================== SECTION 5: PHASE 3 ==================== -->
+    <h2 id="phase3">5. Phase 3: Login (Device Authentication)</h2>
+    <p class="file-ref">Assets/InitialScreen/Scripts/ConnectServerWindow.cs</p>
+
+    <p>When <code>ConnectServerWindow.StartModule()</code> is called, it starts the <code>Login()</code> coroutine. This is the core authentication logic.</p>
+
+    <h3 id="login-request">5.1 Building the Login Request</h3>
+    <p class="file-ref">Assets/Shared/Scripts/WebAPI/Request.cs &mdash; WebRequest.ShortLogin</p>
+
+    <pre><code><span class="type">WebRequest.ShortLogin.CallBody</span> shortLoginCall = <span class="keyword">new</span> <span class="type">WebRequest.ShortLogin.CallBody</span>();
+<span class="comment">// Constructor automatically populates:</span>
+<span class="comment">//   api   = "s4dfghjiko0j9h8g7f6d"            (static API key)</span>
+<span class="comment">//   rkey  = GetRKey(192512341)                 (TOTP token)</span>
+<span class="comment">//   uuid  = HardwareInfo.DeviceUniqueIdentifier() (device serial)</span>
+<span class="comment">//   usetoken = true</span></code></pre>
+
+    <h4>Request Payload (JSON)</h4>
+    <pre><code>{
+    <span class="string">"api"</span>:      <span class="string">"s4dfghjiko0j9h8g7f6d"</span>,
+    <span class="string">"rkey"</span>:     <span class="string">"a3f2c1"</span>,                  <span class="comment">// 6-char TOTP (changes every 60s)</span>
+    <span class="string">"uuid"</span>:     <span class="string">"PB12345678"</span>,               <span class="comment">// Pico device serial number</span>
+    <span class="string">"usetoken"</span>: <span class="keyword">true</span>
+}</code></pre>
+
+    <h4>Endpoint</h4>
+    <pre><code>POST https://remmedvr-dashboard.neurasim.health/web/login
+Content-Type: application/json</code></pre>
+
+    <h3 id="totp">5.2 TOTP Token Generation (rkey)</h3>
+    <p class="file-ref">Assets/Shared/Scripts/WebAPI/Request.cs:14-29</p>
+
+    <p>The <code>rkey</code> is a Time-based One-Time Password with a <strong>60-second window</strong>:</p>
+
+    <pre><code><span class="keyword">public static</span> <span class="type">string</span> <span class="method">GetRKey</span>(<span class="type">Int64</span> secret)
+{
+    <span class="type">Int64</span> epochSeconds = (<span class="type">Int64</span>)(DateTime.UtcNow - <span class="keyword">new</span> DateTime(<span class="number">1970</span>,<span class="number">1</span>,<span class="number">1</span>)).TotalSeconds;
+    <span class="type">Int64</span> c = epochSeconds / <span class="number">60</span>;            <span class="comment">// Time window (60 seconds)</span>
+    <span class="type">Int64</span> j = c * secret;                    <span class="comment">// secret = 192512341</span>
+    <span class="type">Int64</span> p = j % <span class="number">1000000</span>;                  <span class="comment">// Modulo to 6 digits</span>
+    <span class="type">string</span> hash = <span class="type">SHA256Hash</span>.<span class="method">ComputeSha256Hash</span>(p.ToString());
+    <span class="keyword">return</span> hash.Substring(<span class="number">0</span>, <span class="number">6</span>);           <span class="comment">// First 6 chars of SHA-256</span>
+}</code></pre>
+
+    <div class="alert alert-warning">
+        <div class="alert-title">Clock Sync Requirement</div>
+        The device's system clock must be within ~60 seconds of the server's clock. If the clocks are out of sync, the TOTP token will be invalid and the server returns <code>"invalid_rkey"</code>, which maps to error code <strong>11 (Time_Out_Of_Sync)</strong>.
+    </div>
+
+    <h3 id="device-id">5.3 Device Identification</h3>
+    <p class="file-ref">Assets/Shared/Scripts/HardwareInfo.cs:34-40</p>
+
+    <table>
+        <thead><tr><th>Environment</th><th>Source</th><th>Value</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-success">Production</span></td>
+                <td><code>Pvr_UnitySDKAPI.System.UPvr_GetDeviceSN()</code></td>
+                <td>Pico headset hardware serial number</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-info">Unity Editor</span></td>
+                <td><code>RemmedMock.Instance.DeviceUniqueIdentifier</code></td>
+                <td>Configurable mock value from <code>RemmedMockWindow</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="login-response">5.4 Login Response</h3>
+
+    <p>On HTTP 200, the response is deserialized to <code>WebRequest.ShortLogin.ResponseBody</code>:</p>
+
+    <pre><code><span class="keyword">public class</span> <span class="type">ResponseBody</span>
+{
+    <span class="keyword">public string</span> modeTherapy;        <span class="comment">// "home" | "stationary"</span>
+    <span class="keyword">public</span> <span class="type">Assignment</span> assignment;      <span class="comment">// Patient-device assignment</span>
+    <span class="keyword">public</span> <span class="type">Device</span> device;              <span class="comment">// Device record (idkey, pin)</span>
+    <span class="keyword">public</span> <span class="type">Clinic</span> clinic;              <span class="comment">// Assigned clinic info</span>
+    <span class="keyword">public</span> <span class="type">User</span> user;                  <span class="comment">// User/patient data</span>
+    <span class="keyword">public int</span> ln;                     <span class="comment">// Login count (1 = first login ever)</span>
+    <span class="keyword">public</span> <span class="type">DevicePairing</span> device_pairing; <span class="comment">// device.idkey + session.sessionid</span>
+    <span class="keyword">public</span> <span class="type">TokenSession</span> token_session;  <span class="comment">// JWT-like token for subsequent calls</span>
+    <span class="keyword">public string</span> error;               <span class="comment">// null on success, error msg on failure</span>
+    <span class="keyword">public int</span> num_error;              <span class="comment">// 0 on success, LoginErrorCodes on failure</span>
+}</code></pre>
+
+    <h4>Success Determination</h4>
+    <pre><code><span class="keyword">if</span> (loginResponse.error <span class="keyword">is null</span>)
+{
+    <span class="comment">// SUCCESS PATH</span>
+    <span class="comment">// 1. Validate modeTherapy is present and valid</span>
+    <span class="comment">// 2. Validate clinic is assigned</span>
+    <span class="comment">// 3. Parse therapy mode (home/stationary)</span>
+    <span class="comment">// 4. Check first-time login (ln <= 1)</span>
+    <span class="comment">// 5. Branch by therapy mode</span>
+}
+<span class="keyword">else</span>
+{
+    <span class="comment">// ERROR PATH → Show ServerErrorMessageBox</span>
+}</code></pre>
+
+    <!-- ==================== SECTION 6: PHASE 4 ==================== -->
+    <h2 id="phase4">6. Phase 4: Post-Login Branching</h2>
+
+    <p>After successful login, the application branches based on <code>loginResponse.modeTherapy</code>:</p>
+
+    <h3 id="stationary-mode">6.1 Stationary Mode (Therapist-Controlled)</h3>
+
+    <div class="card">
+        <div class="card-header"><span class="badge badge-info">STATIONARY</span> Clinic-based, tablet-directed therapy</div>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Set communication mode</strong>
+                <p><code>GlobalConfig.SaveCommunicationMode(CommunicationMode.Tablet)</code> &mdash; saves to PlayerPrefs</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Display clinic name</strong>
+                <p>Shows <code>loginResponse.clinic.name</code> on the Stationary UI panel</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Start tablet TCP servers</strong>
+                <p><code>TabletCommunication.Instance.RunTabletTcpServ()</code> &mdash; starts listening on ports 8502 (sender) and 8503 (listener). Begins UDP broadcast discovery on port 8505 every 3s.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <strong>Complete</strong>
+                <p>After 2s delay, shows "Connected successfully" and calls <code>CompleteModule()</code> to advance the SlideMenu.</p>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <div class="alert-title">Tablet Credential Handoff</div>
+            In Stationary mode, the <code>device</code>, <code>session</code>, and <code>token_session</code> credentials are NOT stored from the login response directly. Instead, they arrive later via the tablet's <code>init_data</code> TCP message through <code>LoaderController.InitWebAPIData()</code>.
+        </div>
+    </div>
+
+    <h3 id="home-mode">6.2 Home Mode (Patient Self-Directed)</h3>
+
+    <div class="card">
+        <div class="card-header"><span class="badge badge-accent">HOME</span> Patient home use, standalone operation</div>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <strong>Set communication mode</strong>
+                <p><code>GlobalConfig.SaveCommunicationMode(CommunicationMode.Standalone)</code></p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <strong>Display patient info</strong>
+                <p>Shows username, patient name, specialist name/surname, and clinic name from the login response.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <strong>Stop tablet servers</strong>
+                <p><code>TabletCommunication.Instance.StopTabletTcpServ()</code> &mdash; no tablet needed in home mode.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <strong>Store credentials</strong>
+                <p>Builds <code>InitData</code> from <code>loginResponse.device_pairing</code> and <code>loginResponse.token_session</code>, then calls <code>LoaderController.Instance.InitWebAPIData(initData, Standalone)</code> to populate <code>WebApiPass</code>.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-content">
+                <strong>Resend any unsent therapy data</strong>
+                <p><code>HomeTherapySession.CheckAndResendPreviousTherapy()</code> &mdash; ensures previously completed but unsubmitted sessions are sent.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">6</div>
+            <div class="step-content">
+                <strong>Fetch therapy details</strong>
+                <p><code>POST /therapy/get</code> with device, session, api, and token_session credentials.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">7</div>
+            <div class="step-content">
+                <strong>Display therapy info &amp; check limits</strong>
+                <p>Shows completed sessions vs daily limit, therapy date range. Checks if daily session limit is reached and if the therapy stage has completed (last day + all sessions done).</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">8</div>
+            <div class="step-content">
+                <strong>Complete</strong>
+                <p>Shows "Therapy Data Acquired", then calls <code>CompleteModule()</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="first-time">6.3 First-Time Login Detection</h3>
+
+    <pre><code><span class="comment">// First-time login is determined by login count from server</span>
+<span class="keyword">if</span> (loginResponse.ln <= <span class="number">1</span> && therapyMode == <span class="type">TherapyMode</span>.home)
+{
+    loggedFirstTime = <span class="keyword">true</span>;
+    <span class="type">GlobalConfig</span>.<span class="method">SaveFirstLoginFlag</span>(isFirstLog: <span class="keyword">true</span>);
+    <span class="type">HomeTherapySession</span>.<span class="method">ClearUnsentTherapyData</span>();  <span class="comment">// Clean slate</span>
+    <span class="type">DemoTracker</span>.Instance.<span class="method">ClearPlayedDemos</span>();     <span class="comment">// Reset demo history</span>
+}</code></pre>
+
+    <p>When <code>userLoggedFirstTime</code> is true, the <code>SlideMenu</code> continues to Tutorial/Handedness screens instead of closing immediately after login.</p>
+
+    <div class="alert alert-info">
+        <div class="alert-title">What is DemoTracker?</div>
+        <code>DemoTracker</code> is a persistent singleton that records which game demos the patient has already watched. On first login it is cleared so the patient sees intro demos for each game fresh. On subsequent logins it persists so they are not shown the same demos repeatedly.
+    </div>
+
+    <!-- ==================== SECTION 7: PHASE 5 ==================== -->
+    <h2 id="phase5">7. Phase 5: Ready State</h2>
+
+    <p>After <code>ConnectServerWindow.CompleteModule()</code> is called:</p>
+
+    <pre><code><span class="comment">// In SlideMenu.ContainerCompletedCallback():</span>
+<span class="keyword">if</span> (currentMenuContainer <span class="keyword">is</span> <span class="type">ConnectServerWindow</span>)
+{
+    <span class="keyword">if</span> (!<span class="type">GlobalConfig</span>.userLoggedFirstTime)
+    {
+        <span class="method">Close</span>();  <span class="comment">// Returning user → close wizard immediately</span>
+        <span class="keyword">return</span>;
+    }
+    <span class="comment">// First-time → continue to next wizard screens (Tutorial, etc.)</span>
+}</code></pre>
+
+    <p>After the SlideMenu closes, <code>PreInitController.SlideMenuCompleteModule()</code> is called, which invokes <code>SwitchUIBasedOnTherapyMode()</code>:</p>
+
+    <table>
+        <thead><tr><th>Therapy Mode</th><th>UI Mode</th><th>What Happens Next</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><code>stationary</code></td>
+                <td><code>LoaderMode.Stationary</code></td>
+                <td>Shows stationary UI. Waits for therapist to send "Enter" command from tablet.</td>
+            </tr>
+            <tr>
+                <td><code>home</code></td>
+                <td><code>LoaderMode.Home</code></td>
+                <td>Shows home UI with "Enter VT Office" button. Patient taps to enter Hub.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>The "Enter VT Office" button (<code>PreInitController.EnterVTOffice()</code>) performs final checks before entering the Hub:</p>
+    <ul>
+        <li><code>NetworkStatusWatchdog.ConnectionState == TargetServerReachable</code> — server must be reachable</li>
+        <li><code>BatteryLevelWatchdog.Instance.CheckBatteryLevels()</code> — headset and controller batteries above minimum threshold</li>
+    </ul>
+    <p>If either check fails, a blocking <code>MessageDisplay</code> dialog appears with an appropriate error. The patient cannot enter the Hub until both conditions are satisfied. <code>BatteryLevelWatchdog</code> is a persistent singleton monitoring battery levels continuously throughout the session.</p>
+
+    <!-- ==================== SECTION 8: ERRORS ==================== -->
+    <h2 id="errors">8. Error Catalog</h2>
+
+    <h3 id="error-codes">8.1 Server-Side Error Codes</h3>
+    <p class="file-ref">Assets/InitialScreen/Scripts/HeadsetAuthorization.cs</p>
+
+    <table>
+        <thead>
+            <tr><th>Code</th><th>Enum Name</th><th>Description</th><th>Cause</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-error">1</span></td>
+                <td><code>Not_Present_In_Database</code></td>
+                <td>Device UUID not registered</td>
+                <td>Headset serial number was never added to the NeuraSim dashboard by a clinic admin</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-error">2</span></td>
+                <td><code>Not_Assigned_To_Patient</code></td>
+                <td>Device not paired to a patient</td>
+                <td>Device exists in DB but hasn't been assigned to any patient by a specialist</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-error">3</span></td>
+                <td><code>No_Active_Therapy_Assigned</code></td>
+                <td>No active therapy</td>
+                <td>Patient exists but has no active therapy plan configured</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-error">4</span></td>
+                <td><code>Therapy_Get_Error</code></td>
+                <td>Failed to fetch therapy</td>
+                <td>Server error when retrieving therapy details; also used when <code>modeTherapy</code> is empty/invalid in login response</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-warning">5</span></td>
+                <td><code>WiFi_Disconnected</code></td>
+                <td>No WiFi connection</td>
+                <td>Client-side: <code>NetworkReachability.NotReachable</code></td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-warning">6</span></td>
+                <td><code>Internet_Unreachable</code></td>
+                <td>WiFi connected, no internet</td>
+                <td>Client-side: local network OK but google.com HEAD request fails</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-warning">7</span></td>
+                <td><code>Server_Unresponsive</code></td>
+                <td>Internet OK, server down</td>
+                <td>Client-side: google.com reachable but server URL HEAD fails</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-error">8</span></td>
+                <td><code>Server_Error</code></td>
+                <td>HTTP 500</td>
+                <td>Server returned status code 500</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-error">9</span></td>
+                <td><code>Unknown_Error</code></td>
+                <td>Catch-all</td>
+                <td>Any unrecognized error condition</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-error">10</span></td>
+                <td><code>Clinic_Not_Assigned</code></td>
+                <td>No clinic on device</td>
+                <td>Login succeeds but <code>loginResponse.clinic</code> is null</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-warning">11</span></td>
+                <td><code>Time_Out_Of_Sync</code></td>
+                <td>Device clock mismatch</td>
+                <td>TOTP token invalid because device time is &gt;60s off from server. Server returns <code>error: "invalid_rkey"</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="network-errors">8.2 Network-Level Error Handling</h3>
+    <p class="file-ref">Assets/Shared/Scripts/WebAPI/RestAPI.cs</p>
+
+    <p>The <code>RestApiCall.PostRequest&lt;T&gt;</code> method handles HTTP-level errors:</p>
+
+    <table>
+        <thead><tr><th>HTTP Code</th><th>Handling</th></tr></thead>
+        <tbody>
+            <tr><td><code>200</code></td><td>Parse JSON via LitJson. If JSON is &lt;= 2 chars (<code>[]</code>), treat as empty.</td></tr>
+            <tr><td><code>500</code></td><td>Save server error HTML to <code>persistentDataPath/serverError.html</code>. Invoke <code>errCallback</code> with code 500.</td></tr>
+            <tr><td><code>0</code></td><td>Network disconnected. Invoke <code>errCallback</code>.</td></tr>
+            <tr><td>Other</td><td>Log error. Invoke <code>errCallback</code>.</td></tr>
+        </tbody>
+    </table>
+
+    <p>For the login call, <code>retryOnError: false</code> &mdash; the request does NOT auto-retry. Instead, errors are shown in the <code>ServerErrorMessageBox</code> which has a retry button.</p>
+
+    <h3 id="error-ui">8.3 Error UI Flow</h3>
+    <p class="file-ref">Assets/InitialScreen/Scripts/ServerErrorMessageBox.cs</p>
+
+    <div class="fc">
+        <div class="fc-seq">
+            <div class="fc-box fc-rd">Error occurs during login</div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-decision">error source?</div>
+            <div class="fc-fork">
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-rd">Server error response</div>
+                    <div class="fc-seq">
+                        <div class="fc-decision">num_error type?</div>
+                        <div class="fc-fork">
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">num_error != 0</div>
+                                <div class="fc-box fc-rd">ShowError(LoginErrorCodes)<br><small>codes 1–11</small></div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">"invalid_rkey"</div>
+                                <div class="fc-box fc-rd">ShowError(Time_Out_Of_Sync)</div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">other</div>
+                                <div class="fc-box fc-rd">ShowError(Unknown_Error,<br>error message)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-branch-lbl fc-yw">HTTP error (errCallback)</div>
+                    <div class="fc-seq">
+                        <div class="fc-decision">errorCode?</div>
+                        <div class="fc-fork">
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">0 — network</div>
+                                <div class="fc-seq">
+                                    <div class="fc-box fc-yw">ShowErrorFromNetworkStatus()</div>
+                                    <div class="fc-note">NoConnection → WiFi_Disconnected + WiFi btn</div>
+                                    <div class="fc-note">LocalNetwork → Internet_Unreachable + WiFi btn</div>
+                                    <div class="fc-note">AccessToInternet → Server_Unresponsive</div>
+                                </div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">500</div>
+                                <div class="fc-box fc-rd">ShowError(Server_Error)</div>
+                            </div>
+                            <div class="fc-branch">
+                                <div class="fc-branch-lbl">other</div>
+                                <div class="fc-box fc-rd">ShowError(Unknown_Error,<br>"code : message")</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fc-conn"><div class="fc-line"></div><div class="fc-arrow-d"></div></div>
+            <div class="fc-box fc-bl">ServerErrorMessageBox displays<br><small>error code · description (localized) · device UUID</small></div>
+            <div class="fc-fork" style="margin-top:10px">
+                <div class="fc-branch">
+                    <div class="fc-box fc-gn">[Retry] button<br><small>re-runs Login() coroutine</small></div>
+                </div>
+                <div class="fc-branch">
+                    <div class="fc-box fc-yw">[WiFi] button<br><small>codes 5, 6 only → opens WiFi settings</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SECTION 9: COMPONENTS ==================== -->
+    <h2 id="components">9. Component Reference</h2>
+
+    <table>
+        <thead>
+            <tr><th>Component</th><th>File</th><th>Role in Login</th><th>Lifecycle</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>LoaderController</strong></td>
+                <td><code>Assets/LOADER/Scripts/LoaderController.cs</code></td>
+                <td>Main orchestrator. Initializes GlobalConfig, WebApiPass. Manages scene transitions.</td>
+                <td>Persistent singleton (survives scene loads)</td>
+            </tr>
+            <tr>
+                <td><strong>PreInitController</strong></td>
+                <td><code>Assets/InitialScreen/Scripts/PreInitController.cs</code></td>
+                <td>WiFi auto-connect, launches SlideMenu, transitions to therapy mode UI after login.</td>
+                <td>Scene-bound (Loader scene only)</td>
+            </tr>
+            <tr>
+                <td><strong>ConnectServerWindow</strong></td>
+                <td><code>Assets/InitialScreen/Scripts/ConnectServerWindow.cs</code></td>
+                <td>Core login UI. Executes Login() coroutine, handles response branching.</td>
+                <td>Scene-bound, child of SlideMenu</td>
+            </tr>
+            <tr>
+                <td><strong>SlideMenu</strong></td>
+                <td><code>Assets/InitialScreen/Scripts/SlideMenu.cs</code></td>
+                <td>Sequential wizard container. Manages screen flow from WiFi to login to setup.</td>
+                <td>Scene-bound (Loader scene only)</td>
+            </tr>
+            <tr>
+                <td><strong>ServerErrorMessageBox</strong></td>
+                <td><code>Assets/InitialScreen/Scripts/ServerErrorMessageBox.cs</code></td>
+                <td>Error display dialog with retry and WiFi buttons.</td>
+                <td>Scene-bound, child of SlideMenu</td>
+            </tr>
+            <tr>
+                <td><strong>GlobalConfig</strong></td>
+                <td><code>Assets/Shared/Scripts/Shared Scripts/GlobalConfig.cs</code></td>
+                <td>Static class. Server URL construction, region/instance config, persisted settings.</td>
+                <td>Static (app lifetime)</td>
+            </tr>
+            <tr>
+                <td><strong>WebApiPass</strong></td>
+                <td><code>Assets/Shared/Scripts/WebAPI/JsonArraySerializer.cs</code></td>
+                <td>Credential store. Holds API key, device, session, and token for all API calls.</td>
+                <td>Static singleton (app lifetime)</td>
+            </tr>
+            <tr>
+                <td><strong>RestApiCall</strong></td>
+                <td><code>Assets/Shared/Scripts/WebAPI/RestAPI.cs</code></td>
+                <td>HTTP layer. Wraps UnityWebRequest, handles JSON serialization/deserialization with LitJson.</td>
+                <td>Static utility class</td>
+            </tr>
+            <tr>
+                <td><strong>HardwareInfo</strong></td>
+                <td><code>Assets/Shared/Scripts/HardwareInfo.cs</code></td>
+                <td>Device info abstraction. Returns serial number, device type, IPD, battery level.</td>
+                <td>Static utility class</td>
+            </tr>
+            <tr>
+                <td><strong>NetworkStatusWatchdog</strong></td>
+                <td><code>Assets/Shared/Scripts/Watchdogs/NetworkStatusWatchdog.cs</code></td>
+                <td>Periodically checks connectivity (local, internet, server). Used for error diagnosis.</td>
+                <td>Persistent singleton</td>
+            </tr>
+            <tr>
+                <td><strong>TabletCommunication</strong></td>
+                <td><code>Assets/Shared/Scripts/TabletCommunication/TabletCommunication.cs</code></td>
+                <td>TCP server manager. Started in stationary mode, stopped in home mode.</td>
+                <td>Persistent singleton</td>
+            </tr>
+            <tr>
+                <td><strong>HeadsetAuthorization</strong></td>
+                <td><code>Assets/InitialScreen/Scripts/HeadsetAuthorization.cs</code></td>
+                <td>Contains <code>LoginErrorCodes</code> enum definition.</td>
+                <td>Static definition only</td>
+            </tr>
+            <tr>
+                <td><strong>BatteryLevelWatchdog</strong></td>
+                <td><code>Assets/Shared/Scripts/Watchdogs/BatteryLevelWatchdog.cs</code></td>
+                <td>Monitors headset and controller battery. Blocks Hub entry if battery too low. Used by <code>PreInitController.EnterVTOffice()</code>.</td>
+                <td>Persistent singleton</td>
+            </tr>
+            <tr>
+                <td><strong>DemoTracker</strong></td>
+                <td><code>Assets/Shared/Scripts/DemoTracker.cs</code></td>
+                <td>Tracks which game demos the patient has watched. Cleared on first login to ensure all intro demos are shown fresh.</td>
+                <td>Persistent singleton</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ==================== SECTION 10: DEPENDENCIES ==================== -->
+    <h2 id="dependencies">10. Dependencies</h2>
+
+    <h3>10.1 Runtime Dependencies</h3>
+    <div class="dep-graph">
+        <div class="dep-item">
+            <strong>WiFi Connection</strong>
+            <p>Required before login. Checked via <code>AndroidHelper.IsWifiConnected()</code>. Auto-connect uses <code>FSG.Android.Wifi.AndroidWifiManager</code>.</p>
+        </div>
+        <div class="dep-item">
+            <strong>NeuraSim Server</strong>
+            <p>Must be reachable at <code>https://remmedvr-dashboard.neurasim.health/</code>. Monitored by <code>NetworkStatusWatchdog</code> (HEAD request every 10s).</p>
+        </div>
+        <div class="dep-item">
+            <strong>Pico VR SDK</strong>
+            <p><code>Pvr_UnitySDKAPI.System.UPvr_GetDeviceSN()</code> provides device serial number. <code>PicoMobileSDK</code> must be initialized.</p>
+        </div>
+        <div class="dep-item">
+            <strong>System Clock</strong>
+            <p>Device time must be within ~60s of server time for TOTP token validation. Uses <code>DateTime.UtcNow</code>.</p>
+        </div>
+        <div class="dep-item">
+            <strong>BatteryLevelWatchdog</strong>
+            <p>Persistent singleton monitoring headset and controller battery levels. Blocks entry to the Hub (<code>EnterVTOffice</code>) if batteries are too low. Fires <code>Broker&lt;BatteryLevelChanged&gt;</code> events.</p>
+        </div>
+        <div class="dep-item">
+            <strong>LitJson</strong>
+            <p>JSON serialization/deserialization for all API communication. <code>JsonMapper.ToJson()</code> / <code>JsonMapper.ToObject&lt;T&gt;()</code>.</p>
+        </div>
+        <div class="dep-item">
+            <strong>UniTask (Cysharp)</strong>
+            <p>Async/await framework. Used in WiFi polling, post-login delays, and non-coroutine async flows.</p>
+        </div>
+    </div>
+
+    <h3>10.2 Singleton Initialization Order</h3>
+    <p>These singletons must be alive before login proceeds:</p>
+    <ol>
+        <li><code>LoaderController</code> &mdash; initializes GlobalConfig, WebApiPass</li>
+        <li><code>NetworkStatusWatchdog</code> &mdash; configured by GlobalConfig.Init()</li>
+        <li><code>TabletCommunication</code> &mdash; started/stopped based on therapy mode</li>
+        <li><code>LoadingCircle</code> &mdash; UI feedback during login</li>
+        <li><code>ToastText3D</code> &mdash; toast notifications</li>
+        <li><code>LocalizationManager</code> &mdash; provides localized strings</li>
+    </ol>
+
+    <!-- ==================== SECTION 11: API REFERENCE ==================== -->
+    <h2 id="api-reference">11. API Reference</h2>
+
+    <h3>11.1 POST /web/login</h3>
+    <div class="card">
+        <div class="card-header">Device Authentication</div>
+        <h4>Request</h4>
+        <pre><code>{
+    <span class="string">"api"</span>:      <span class="string">"s4dfghjiko0j9h8g7f6d"</span>,
+    <span class="string">"rkey"</span>:     <span class="string">"&lt;6-char-totp&gt;"</span>,
+    <span class="string">"uuid"</span>:     <span class="string">"&lt;device-serial-number&gt;"</span>,
+    <span class="string">"usetoken"</span>: true
+}</code></pre>
+        <h4>Success Response (200)</h4>
+        <pre><code>{
+    <span class="string">"modeTherapy"</span>: <span class="string">"home"</span> | <span class="string">"stationary"</span>,
+    <span class="string">"assignment"</span>:  { <span class="string">"id"</span>: <span class="number">1</span>, <span class="string">"uid"</span>: { <span class="string">"username"</span>: <span class="string">"..."</span>, <span class="string">"patientname"</span>: <span class="string">"..."</span>, ... } },
+    <span class="string">"device"</span>:      { <span class="string">"idkey"</span>: <span class="string">"..."</span>, <span class="string">"pin"</span>: <span class="string">"..."</span> },
+    <span class="string">"clinic"</span>:      { <span class="string">"name"</span>: <span class="string">"Vision Clinic"</span>, <span class="string">"cid"</span>: <span class="number">1</span>, ... },
+    <span class="string">"user"</span>:        { <span class="string">"patientname"</span>: <span class="string">"John"</span>, <span class="string">"username"</span>: <span class="string">"john123"</span>, ... },
+    <span class="string">"ln"</span>:          <span class="number">5</span>,
+    <span class="string">"device_pairing"</span>: {
+        <span class="string">"device"</span>:  { <span class="string">"idkey"</span>: <span class="string">"..."</span> },
+        <span class="string">"session"</span>: { <span class="string">"sessionid"</span>: <span class="string">"..."</span> }
+    },
+    <span class="string">"token_session"</span>: {
+        <span class="string">"token"</span>:       <span class="string">"&lt;jwt-like-token&gt;"</span>,
+        <span class="string">"sessionid"</span>:   <span class="string">"..."</span>,
+        <span class="string">"datadecoded"</span>: { <span class="string">"user"</span>: {...}, <span class="string">"lang"</span>: <span class="string">"En"</span> }
+    },
+    <span class="string">"error"</span>:  null,
+    <span class="string">"num_error"</span>: <span class="number">0</span>
+}</code></pre>
+        <h4>Error Response (200 with error body)</h4>
+        <pre><code>{
+    <span class="string">"error"</span>:     <span class="string">"Not assigned to patient"</span>,
+    <span class="string">"num_error"</span>: <span class="number">2</span>
+}</code></pre>
+    </div>
+
+    <h3>11.2 POST /therapy/get</h3>
+    <div class="card">
+        <div class="card-header">Fetch Therapy Details (Home Mode Only)</div>
+        <h4>Request</h4>
+        <pre><code>{
+    <span class="string">"api"</span>:           { <span class="string">"key"</span>: <span class="string">"s4dfghjiko0j9h8g7f6d"</span> },
+    <span class="string">"device"</span>:        { <span class="string">"idkey"</span>: <span class="string">"&lt;from-login&gt;"</span> },
+    <span class="string">"session"</span>:       { <span class="string">"sessionid"</span>: <span class="string">"&lt;from-login&gt;"</span> },
+    <span class="string">"usetoken"</span>:      true,
+    <span class="string">"token_session"</span>: <span class="string">"&lt;token-from-login&gt;"</span>
+}</code></pre>
+        <h4>Success Response</h4>
+        <pre><code>{
+    <span class="string">"therapy"</span>: {
+        <span class="string">"tid"</span>: <span class="number">123</span>,
+        <span class="string">"sessionsperday"</span>: <span class="number">2</span>,
+        <span class="string">"startDateSimplify"</span>: <span class="string">"2026-01-01"</span>,
+        <span class="string">"endDateSimplify"</span>: <span class="string">"2026-03-01"</span>,
+        <span class="string">"sessionset"</span>: [...],
+        ...
+    },
+    <span class="string">"today_sessions"</span>: <span class="number">1</span>,
+    <span class="string">"error"</span>: null
+}</code></pre>
+    </div>
+
+    <!-- ==================== SECTION 12: DATA MODELS ==================== -->
+    <h2 id="data-models">12. Key Data Models</h2>
+    <p class="file-ref">Assets/Shared/Scripts/WebAPI/JsonArraySerializer.cs (contains all model classes)</p>
+
+    <table>
+        <thead><tr><th>Class</th><th>Key Fields</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><code>Device</code></td><td><code>idkey</code>, <code>pin</code>, <code>deviceuuid</code>, <code>cid</code></td><td>VR headset record</td></tr>
+            <tr><td><code>Session</code></td><td><code>sessionid</code>, <code>datestart</code>, <code>device</code></td><td>Active device session</td></tr>
+            <tr><td><code>TokenSession</code></td><td><code>token</code>, <code>datadecoded</code>, <code>sessionid</code></td><td>JWT-like auth token with embedded user data</td></tr>
+            <tr><td><code>DevicePairing</code></td><td><code>device</code>, <code>session</code>, <code>apitoken</code></td><td>Login credential bundle</td></tr>
+            <tr><td><code>Assignment</code></td><td><code>uid</code> (patient), <code>did</code> (device), <code>active</code></td><td>Patient-to-device binding</td></tr>
+            <tr><td><code>Clinic</code></td><td><code>name</code>, <code>cid</code>, <code>address</code></td><td>Clinic details</td></tr>
+            <tr><td><code>Therapy</code></td><td><code>tid</code>, <code>sessionsperday</code>, <code>startDateSimplify</code>, <code>endDateSimplify</code>, <code>sessionset</code></td><td>Active therapy plan</td></tr>
+            <tr><td><code>InitData</code></td><td><code>device</code>, <code>session</code>, <code>token_session</code></td><td>Credential payload for <code>LoaderController.InitWebAPIData()</code></td></tr>
+            <tr><td><code>Api</code></td><td><code>key</code></td><td>Static API key wrapper</td></tr>
+            <tr><td><code>WebApiPass</code></td><td><code>device</code>, <code>session</code>, <code>token_session</code>, <code>api</code></td><td>Global credential store singleton</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ==================== SECTION 13: SERVER CONFIG ==================== -->
+    <h2 id="config">13. Server Configuration</h2>
+
+    <h3>13.1 ServerConfig JSON</h3>
+    <pre><code><span class="comment">// Stored at: Application.persistentDataPath/serverConfig.json</span>
+{
+    <span class="string">"serverRegion"</span>:   <span class="number">0</span>,  <span class="comment">// 0=POLAND, 1=USA</span>
+    <span class="string">"serverInstance"</span>: <span class="number">3</span>   <span class="comment">// 0=DEV, 1=TEST, 2=PRE_PROD, 3=PROD</span>
+}</code></pre>
+
+    <h3>13.2 URL Construction (currently overridden)</h3>
+    <p>The <code>CreateUriFromConfig()</code> method has logic for dynamic URLs but is currently hardcoded:</p>
+
+    <table>
+        <thead><tr><th>Setting</th><th>Intended URL Pattern</th><th>Actual URL</th></tr></thead>
+        <tbody>
+            <tr><td>POLAND + DEV</td><td><code>https://dev.neurasim.pl</code></td><td rowspan="4"><code>https://remmedvr-dashboard.neurasim.health/</code></td></tr>
+            <tr><td>POLAND + PROD</td><td><code>https://panel.neurasim.pl</code></td></tr>
+            <tr><td>USA + DEV</td><td><code>https://dev.neurasim.com</code></td></tr>
+            <tr><td>USA + PROD</td><td><code>https://dashboard.neurasim.com</code></td></tr>
+        </tbody>
+    </table>
+
+    <h3>13.3 PlayerPrefs Keys Used During Login</h3>
+    <table>
+        <thead><tr><th>Key</th><th>Type</th><th>Purpose</th></tr></thead>
+        <tbody>
+            <tr><td><code>COMM_MODE</code></td><td>string</td><td>"Standalone" or "Tablet" &mdash; persisted therapy communication mode</td></tr>
+            <tr><td><code>BUILD_GUID_VERSION</code></td><td>string</td><td>Detects first run after new installation/update</td></tr>
+            <tr><td><code>FIRST_USER_LOGIN</code></td><td>string</td><td>"True"/"False" &mdash; whether user has logged in before</td></tr>
+            <tr><td><code>TARGET_DEVICE_APP_KEY</code></td><td>string</td><td>Device type enum name (NEO_1, NEO_2, GOBLIN_2, etc.)</td></tr>
+            <tr><td><code>HANDNESS</code></td><td>int</td><td>Controller handedness preference (0=Left, 1=Right)</td></tr>
+        </tbody>
+    </table>
+
+    <!-- ==================== SECTION 14: SECURITY ==================== -->
+    <h2 id="security">14. Security Notes</h2>
+
+    <div class="alert alert-warning">
+        <div class="alert-title">Observations for Security Review</div>
+        <ul>
+            <li><strong>Static API Key</strong>: The API key <code>s4dfghjiko0j9h8g7f6d</code> is hardcoded in the client binary. It is the same for all headsets and provides no real security by itself.</li>
+            <li><strong>TOTP Shared Secret</strong>: The secret <code>192512341</code> is also hardcoded. The 60-second TOTP window mitigates replay attacks but the secret is extractable from the APK.</li>
+            <li><strong>HTTPS</strong>: All API communication uses HTTPS. The <code>ForceAcceptAll</code> certificate handler exists but <code>AcceptAnyCertificate</code> defaults to <code>false</code> (strict SSL enabled by default).</li>
+            <li><strong>Device-Only Auth</strong>: Physical access to a registered headset grants full therapy access with no additional authentication. This is by design for patient usability.</li>
+            <li><strong>Token Persistence</strong>: The <code>token_session.token</code> is held in memory only (WebApiPass) and not persisted to disk, so it is lost on app restart.</li>
+        </ul>
+    </div>
+
+    <hr>
+    <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 40px;">
+        NeuraSim VR Login Flow Documentation &mdash; Generated 2026-02-24
+    </p>
+
+</div>
+
+<script>
+    // ── Back-to-top visibility ──
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+
+    // ── Active sidebar link on scroll ──
+    const sections = Array.from(document.querySelectorAll('h2[id], h3[id], div[id]'));
+    const sideLinks = Array.from(document.querySelectorAll('.sidebar a[href^="#"]'));
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                sideLinks.forEach(a => {
+                    const isActive = a.getAttribute('href') === '#' + id;
+                    a.classList.toggle('active', isActive);
+                });
+            }
+        });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // ── Code language labels ──
+    document.querySelectorAll('pre').forEach(pre => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+        const text = pre.textContent;
+        const label = text.includes('public class') || text.includes('keyword') || text.includes('yield return') ? 'C#' :
+                      text.trim().startsWith('{') || text.includes('"error"') ? 'JSON' : null;
+        if (label) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+            const lbl = document.createElement('span');
+            lbl.className = 'code-lang';
+            lbl.textContent = label;
+            wrapper.appendChild(lbl);
+        }
+    });
+</script>
+</body>
+</html>
