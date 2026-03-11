@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app_tablet — NeuraSim Android Documentation</title>
+  <style>
+    :root {
+      --bg: #13151f;
+      --surface: #1c1f2e;
+      --surface2: #252840;
+      --surface3: #2d3150;
+      --border: #353a57;
+      --accent: #6ba3ff;
+      --accent2: #a78bfa;
+      --accent3: #4ade80;
+      --accent4: #fbbf24;
+      --accent5: #f87171;
+      --text: #eef0f6;
+      --text-muted: #a8b0c4;
+      --text-dim: #6b7595;
+      --code-bg: #0e1018;
+      --tag-blue: #1a3a6e;
+      --tag-green: #1a4a35;
+      --tag-orange: #4a3010;
+      --tag-red: #4a1a1a;
+      --tag-purple: #2d1a6e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    nav {
+      width: 270px;
+      min-width: 270px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 28px 0 40px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .nav-logo {
+      padding: 0 24px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .nav-logo .app-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .nav-logo h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .nav-logo p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .nav-section {
+      padding: 6px 24px 2px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 14px;
+    }
+
+    nav a {
+      display: block;
+      padding: 7px 24px 7px 28px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    nav a:hover {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(107, 163, 255, 0.08);
+    }
+
+    /* ── Main content ──────────────────────────────────── */
+    main {
+      flex: 1;
+      padding: 48px 56px;
+      max-width: 1100px;
+    }
+
+    /* ── Page header ─────────────────────────────────── */
+    .page-header {
+      margin-bottom: 52px;
+    }
+    .page-header .breadcrumb {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+    .page-header .breadcrumb span { color: var(--text-muted); }
+    .page-header h1 {
+      font-size: 38px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .page-header .subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 680px;
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+    }
+    .badge-blue  { background: rgba(107,163,255,.14); border-color: rgba(107,163,255,.4); color: #93c5fd; }
+    .badge-green { background: rgba(74,222,128,.12);  border-color: rgba(74,222,128,.38);  color: #86efac; }
+    .badge-purple{ background: rgba(167,139,250,.12); border-color: rgba(167,139,250,.38); color: #c4b5fd; }
+    .badge-orange{ background: rgba(251,191,36,.12);  border-color: rgba(251,191,36,.38);  color: #fcd34d; }
+
+    /* ── Sections ────────────────────────────────────── */
+    section { margin-bottom: 56px; }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2 .sec-num {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 28px 0 12px;
+    }
+
+    h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent4);
+      margin: 18px 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    p { color: var(--text-muted); margin-bottom: 12px; }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .tag-java    { background: #1a3a6e; color: #93c5fd; }
+    .tag-service { background: #1a4a35; color: #6ee7b7; }
+    .tag-act     { background: #2d1a6e; color: #c4b5fd; }
+    .tag-db      { background: #4a3010; color: #fcd34d; }
+    .tag-net     { background: #0c3355; color: #7dd3fc; }
+    .tag-util    { background: #252840; color: #a8b0c4; }
+    .card p { font-size: 13.5px; margin-bottom: 6px; }
+    .card ul { margin-left: 18px; }
+    .card ul li { color: var(--text-muted); font-size: 13.5px; margin-bottom: 3px; }
+
+    /* ── Grid layouts ────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* ── Tables ──────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin-bottom: 20px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead tr { background: var(--surface2); }
+    thead th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td {
+      padding: 9px 16px;
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+    tbody td:first-child { color: var(--text); font-weight: 600; }
+
+    /* ── Code blocks ─────────────────────────────────── */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 22px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      color: #c9d1d9;
+    }
+    pre code { color: #c9d1d9; }
+    .kw  { color: #ff7b72; }
+    .cm  { color: #8b949e; font-style: italic; }
+    .st  { color: #a5d6ff; }
+    .fn  { color: #d2a8ff; }
+    .cl  { color: #ffa657; }
+    .num { color: #79c0ff; }
+    .anno{ color: #3fb950; }
+
+    inline-code, .ic {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 12.5px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #c9d1d9;
+    }
+
+    /* ── Flow diagram ────────────────────────────────── */
+    .flow {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .flow .fl-box {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 14px;
+      color: var(--text);
+      font-weight: 600;
+    }
+    .flow .fl-box.blue   { border-color: rgba(79,142,247,.5);  color: #7eb8ff; background: rgba(79,142,247,.1);  }
+    .flow .fl-box.green  { border-color: rgba(61,214,140,.5);  color: #5cdb9b; background: rgba(61,214,140,.1);  }
+    .flow .fl-box.orange { border-color: rgba(247,169,79,.5);  color: #fbbf5a; background: rgba(247,169,79,.1);  }
+    .flow .fl-box.purple { border-color: rgba(124,92,252,.5);  color: #a78bfa; background: rgba(124,92,252,.1);  }
+    .flow .fl-box.red    { border-color: rgba(247,95,95,.5);   color: #f87171; background: rgba(247,95,95,.1);   }
+    .flow .fl-arrow { color: var(--text-dim); }
+    .flow .fl-label { font-size: 11px; color: var(--text-dim); font-style: italic; }
+
+    /* ── Info box ────────────────────────────────────── */
+    .info-box {
+      display: flex;
+      gap: 12px;
+      background: rgba(107,163,255,.08);
+      border: 1px solid rgba(107,163,255,.3);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 13.5px;
+      color: #bdd5ff;
+    }
+    .info-box .icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+    .warn-box {
+      background: rgba(251,191,36,.07);
+      border-color: rgba(251,191,36,.3);
+      color: #fde68a;
+    }
+
+    /* ── Port chips ──────────────────────────────────── */
+    .port {
+      display: inline-block;
+      font-family: 'Cascadia Code', monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: rgba(247,169,79,.15);
+      border: 1px solid rgba(247,169,79,.35);
+      color: #fbbf5a;
+      padding: 1px 7px;
+      border-radius: 4px;
+    }
+
+    /* ── JS method list ──────────────────────────────── */
+    .method-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .method-pill {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 11.5px;
+      background: rgba(167,139,250,.12);
+      border: 1px solid rgba(167,139,250,.35);
+      color: #c4b5fd;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Stat cards ──────────────────────────────────── */
+    .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 22px;
+      min-width: 130px;
+      text-align: center;
+    }
+    .stat-card .num  { font-size: 32px; font-weight: 800; }
+    .stat-card .lbl  { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-top: 2px; }
+
+    /* ── TOC ─────────────────────────────────────────── */
+    .toc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      transition: all .15s;
+    }
+    .toc-item:hover { border-color: var(--accent); color: var(--accent); background: rgba(107,163,255,.08); }
+    .toc-item .toc-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      min-width: 20px;
+    }
+
+    /* ── scrollbar ──────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── responsive ──────────────────────────────────── */
+    @media (max-width: 900px) {
+      nav { display: none; }
+      main { padding: 28px 20px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .toc-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ═══════════════════  SIDEBAR  ═══════════════════ -->
+  <nav>
+    <div class="nav-logo">
+      <div class="app-tag">app_tablet</div>
+      <h2>NeuraSim Android</h2>
+      <p>Technical Documentation</p>
+    </div>
+
+    <div class="nav-section">Overview</div>
+    <a href="#overview">Introduction</a>
+    <a href="#stats">At a Glance</a>
+    <a href="#architecture">Architecture</a>
+
+    <div class="nav-section">Core Components</div>
+    <a href="#application">Application Class</a>
+    <a href="#activities">Activities</a>
+    <a href="#services">Services</a>
+    <a href="#dialogs">Dialogs &amp; Adapters</a>
+
+    <div class="nav-section">Data Layer</div>
+    <a href="#database">Database &amp; ORMLite</a>
+    <a href="#entities">Domain Entities</a>
+    <a href="#repositories">Repositories</a>
+
+    <div class="nav-section">Networking</div>
+    <a href="#streaming">Video Streaming</a>
+    <a href="#gogle-protocol">Gogle Protocol</a>
+    <a href="#webserver">Local Web Server</a>
+
+    <div class="nav-section">UI &amp; Integration</div>
+    <a href="#webview">WebView &amp; JS Bridge</a>
+    <a href="#threading">Threading Model</a>
+    <a href="#managers">Managers</a>
+
+    <div class="nav-section">Build &amp; Config</div>
+    <a href="#build-variants">Build Variants</a>
+    <a href="#permissions">Permissions</a>
+    <a href="#receivers">Broadcast Receivers</a>
+
+    <div class="nav-section">Reference</div>
+    <a href="#ports">Port Reference</a>
+    <a href="#enums">Enums</a>
+    <a href="#utils">Utilities</a>
+  </nav>
+
+  <!-- ═══════════════════  MAIN  ═══════════════════════ -->
+  <main>
+
+    <!-- ── Page Header ──────────────────────────────── -->
+    <header class="page-header">
+      <div class="breadcrumb">NeuraSim Android <span>›</span> Modules <span>›</span> app_tablet</div>
+      <h1>app_tablet</h1>
+      <p class="subtitle">
+        The clinician-facing Odroid tablet application — command &amp; control centre for VR-based
+        eye therapy sessions. Manages device pairing, real-time stream viewing, therapy lifecycle,
+        and a WebView-based clinical portal.
+      </p>
+      <div class="badge-row">
+        <span class="badge badge-blue">Java</span>
+        <span class="badge badge-green">App ID: com.neurasim.health.odroid</span>
+        <span class="badge badge-purple">compileSdk 35 · minSdk 26</span>
+        <span class="badge badge-orange">ORMLite · Volley · Firebase</span>
+      </div>
+    </header>
+
+    <!-- ── Table of Contents ─────────────────────────── -->
+    <section id="toc">
+      <h2><span class="sec-num">TOC</span> Contents</h2>
+      <div class="toc-grid">
+        <a class="toc-item" href="#overview"><span class="toc-num">01</span> Overview &amp; Purpose</a>
+        <a class="toc-item" href="#architecture"><span class="toc-num">02</span> Architecture</a>
+        <a class="toc-item" href="#application"><span class="toc-num">03</span> Application Class</a>
+        <a class="toc-item" href="#activities"><span class="toc-num">04</span> Activities</a>
+        <a class="toc-item" href="#services"><span class="toc-num">05</span> Services</a>
+        <a class="toc-item" href="#database"><span class="toc-num">06</span> Database Layer</a>
+        <a class="toc-item" href="#streaming"><span class="toc-num">07</span> Video Streaming</a>
+        <a class="toc-item" href="#gogle-protocol"><span class="toc-num">08</span> Gogle Protocol</a>
+        <a class="toc-item" href="#webview"><span class="toc-num">09</span> WebView &amp; JS Bridge</a>
+        <a class="toc-item" href="#threading"><span class="toc-num">10</span> Threading Model</a>
+        <a class="toc-item" href="#managers"><span class="toc-num">11</span> Managers</a>
+        <a class="toc-item" href="#build-variants"><span class="toc-num">12</span> Build Variants</a>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         01 – OVERVIEW
+    ══════════════════════════════════════════════════════ -->
+    <section id="overview">
+      <h2><span class="sec-num">01</span> Overview &amp; Purpose</h2>
+
+      <p>
+        <strong>app_tablet</strong> is the clinician-side Android application installed on an Odroid
+        tablet. It serves as the primary control panel through which a clinician monitors and
+        manages VR-based eye therapy sessions delivered via a paired VR headset (<em>app_gogle</em>).
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">What it does</div>
+          <ul>
+            <li>Displays a live mirror of the VR headset screen over TCP</li>
+            <li>Sends therapy commands (start, stop, pause, resume) to the headset</li>
+            <li>Hosts the clinical WebView portal (therapy prescriptions, patients, reports)</li>
+            <li>Manages clinician login, patient records, and therapy sessions in a local SQLite DB</li>
+            <li>Discovers and pairs with VR headsets on the local network</li>
+            <li>Uploads recorded therapy sessions to the remote backend</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Module dependencies</div>
+          <ul>
+            <li><strong>base</strong> — shared networking, streaming, NSD, PermissionUtils, BaseService</li>
+            <li><strong>ORMLite 6.1</strong> — SQLite ORM (entities, DAOs)</li>
+            <li><strong>Volley</strong> — HTTP request queue</li>
+            <li><strong>tus-java-client</strong> — Resumable upload protocol</li>
+            <li><strong>Firebase Crashlytics + AppCenter</strong> — Crash analytics</li>
+            <li><strong>Gson + Joda-Time</strong> — Serialization / date handling</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         AT A GLANCE
+    ══════════════════════════════════════════════════════ -->
+    <section id="stats">
+      <h2><span class="sec-num">—</span> At a Glance</h2>
+      <div class="stats">
+        <div class="stat-card"><div class="num" style="color:#7eb8ff">127</div><div class="lbl">Java Classes</div></div>
+        <div class="stat-card"><div class="num" style="color:#c084fc">3</div><div class="lbl">Activities</div></div>
+        <div class="stat-card"><div class="num" style="color:#34d399">8</div><div class="lbl">Services</div></div>
+        <div class="stat-card"><div class="num" style="color:#fb923c">9</div><div class="lbl">DB Entities</div></div>
+        <div class="stat-card"><div class="num" style="color:#f87171">52</div><div class="lbl">JS Bridge Methods</div></div>
+        <div class="stat-card"><div class="num" style="color:#fbbf5a">6</div><div class="lbl">Build Variants</div></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         02 – ARCHITECTURE
+    ══════════════════════════════════════════════════════ -->
+    <section id="architecture">
+      <h2><span class="sec-num">02</span> Architecture</h2>
+
+      <p>
+        app_tablet follows an <strong>Application-as-Hub</strong> pattern with no dependency
+        injection framework. The <code class="ic">RemmedApplication</code> singleton holds
+        references to active view interfaces and routes data from background services to the UI.
+        Interface-driven contracts decouple UI from business logic.
+      </p>
+
+      <h3>High-Level Component Map</h3>
+      <div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;"><code>
+  ┌───────────────────────────────────────────────────────────────────────────┐
+  │                         app_tablet (Odroid Tablet)                        │
+  │                                                                           │
+  │  ┌─────────────────────────────────────────────────────────────────────┐  │
+  │  │                      RemmedApplication (Hub)                        │  │
+  │  │   setStreamFrame()  │  receivedGogleResponse()  │  connectionInfo() │  │
+  │  └────────┬───────────────────────┬─────────────────────────┬──────────┘  │
+  │           │                       │                         │             │
+  │  ┌────────▼──────────┐  ┌─────────▼──────────┐  ┌──────────▼───────────┐ │
+  │  │   IStreamView      │  │  IGogleResponse     │  │  IWebViewTherapy /   │ │
+  │  │   ─────────────── │  │  ─────────────────  │  │  IWebViewUser / etc. │ │
+  │  │  HomeActivity      │  │  HomeActivity       │  │  HomeActivity        │ │
+  │  │  FullscreenStream  │  │  FullscreenStream   │  │                      │ │
+  │  └───────────────────┘  └─────────────────────┘  └──────────────────────┘ │
+  │                                                                           │
+  │  ┌─────────────────────────────────────────────────────────────────────┐  │
+  │  │                         Service Layer                                │  │
+  │  │  DownstreamService(6776) │ GogleSendDataService(8502)               │  │
+  │  │  DownstreamEyetrackerService(6778) │ GogleReceiveDataService(8503)  │  │
+  │  │  WebServerService(8080)  │ UploadStreamWebService │ ZipService       │  │
+  │  └─────────────────────────────────────────────────────────────────────┘  │
+  │                                                                           │
+  │  ┌─────────────────────────────────────────────────────────────────────┐  │
+  │  │                         Data Layer                                   │  │
+  │  │  DatabaseHelper (neurasim.db v3)  │  DaoLayers                      │  │
+  │  │  GenericRepository  │  TherapyDbRepository │  UserDbRepository      │  │
+  │  │  PatientDbRepository │ CacheDbRepository                            │  │
+  │  └─────────────────────────────────────────────────────────────────────┘  │
+  └───────────────────────────────────────────────────────────────────────────┘
+            │ TCP 6776/6778                    │ TCP 8502/8503
+  ┌─────────▼─────────────────────────────────▼────────────────┐
+  │                    app_gogle (VR Headset)                   │
+  └────────────────────────────────────────────────────────────┘
+</code></pre>
+      </div>
+
+      <h3>Package Structure</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Package</th><th>Contents</th></tr></thead>
+          <tbody>
+            <tr><td>vision.remmed.remmed.api.repository</td><td>Repository interfaces (contracts for DB &amp; web repos)</td></tr>
+            <tr><td>vision.remmed.remmed.api.view</td><td>View interfaces: IStreamView, IGogleResponse, IWebView*</td></tr>
+            <tr><td>vision.remmed.remmed.data_access.database</td><td>DatabaseHelper, DaoLayers</td></tr>
+            <tr><td>vision.remmed.remmed.data_access.domain</td><td>ORMLite entity classes (9 entities)</td></tr>
+            <tr><td>vision.remmed.remmed.enums</td><td>GogleTherapyMode, StreamStatus, GogleTherapyStatus, StatusCheckType</td></tr>
+            <tr><td>vision.remmed.remmed.factory</td><td>GogleSendDataFactory, TherapyGogleDataFactory</td></tr>
+            <tr><td>vision.remmed.remmed.manager</td><td>Local* and Remote* manager classes</td></tr>
+            <tr><td>vision.remmed.remmed.receiver</td><td>Broadcast receivers (Boot, Shutdown, Phone, Network)</td></tr>
+            <tr><td>vision.remmed.remmed.repository</td><td>Concrete repository implementations</td></tr>
+            <tr><td>vision.remmed.remmed.runnable</td><td>Background Runnable threads</td></tr>
+            <tr><td>vision.remmed.remmed.service</td><td>Android Service subclasses</td></tr>
+            <tr><td>vision.remmed.remmed.upload</td><td>Stream upload helpers</td></tr>
+            <tr><td>vision.remmed.remmed.util</td><td>Utility classes (App, Stream, Web, Call, String, etc.)</td></tr>
+            <tr><td>vision.remmed.remmed.view</td><td>Activities, Dialogs, Adapters, custom views</td></tr>
+            <tr><td>vision.remmed.remmed.webview</td><td>RemmedWebView, JavascriptInterface</td></tr>
+            <tr><td>com.android.internal.telephony</td><td>ITelephony system-level utility (AIDL stub)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         03 – APPLICATION CLASS
+    ══════════════════════════════════════════════════════ -->
+    <section id="application">
+      <h2><span class="sec-num">03</span> Application Class — RemmedApplication</h2>
+
+      <p>
+        <code class="ic">RemmedApplication</code> is the singleton coordinator of the entire app.
+        It initialises all subsystems on startup and acts as the message bus between background
+        services and the active UI.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Startup Responsibilities</div>
+          <ul>
+            <li>Initialise <code class="ic">DatabaseHelper</code> (ORMLite)</li>
+            <li>Set <code class="ic">SERVER_ADDRESS</code> and <code class="ic">WEB_SOCKET_ADDRESS</code> from build variant</li>
+            <li>Configure Firebase Crashlytics &amp; AppCenter analytics</li>
+            <li>Load current user via <code class="ic">LocalUserManager</code></li>
+            <li>Register <code class="ic">CrashAppHandler</code> as global UncaughtExceptionHandler</li>
+            <li>Reset Gogle IP on first run</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Routing Methods</div>
+          <ul>
+            <li><code class="ic">setStreamFrame(Bitmap)</code> — routes video frame to active IStreamView</li>
+            <li><code class="ic">setEyetrackerStreamFrame(Bitmap)</code> — routes eye-tracker frame</li>
+            <li><code class="ic">connectionInfo(boolean)</code> — notifies UI of Gogle connect/disconnect</li>
+            <li><code class="ic">receivedGogleResponse(GogleReceiveData)</code> — routes parsed JSON response to IGogleResponse</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Key Static Fields</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>SERVER_ADDRESS</td><td>String</td><td>Backend server URL, set per build variant</td></tr>
+            <tr><td>WEB_SOCKET_ADDRESS</td><td>String</td><td>WebSocket endpoint, paired with SERVER_ADDRESS</td></tr>
+            <tr><td>BOOTED_ON</td><td>long</td><td>System boot timestamp</td></tr>
+            <tr><td>daoLayers</td><td>DaoLayers</td><td>Central access point for all ORMLite DAOs</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         04 – ACTIVITIES
+    ══════════════════════════════════════════════════════ -->
+    <section id="activities">
+      <h2><span class="sec-num">04</span> Activities</h2>
+
+      <!-- SplashScreenActivity -->
+      <div class="card">
+        <div class="card-title">
+          SplashScreenActivity
+          <span class="tag tag-act">LAUNCHER</span>
+        </div>
+        <p><strong>Layout:</strong> <code class="ic">activity_splash_screen.xml</code></p>
+        <p>
+          Displays a branded splash screen for ~3 seconds, then checks the app version against the
+          backend and downloads any pending translations before navigating to HomeActivity.
+        </p>
+        <h4>Responsibilities</h4>
+        <ul>
+          <li>Version check via <code class="ic">RemoteVersionManager</code></li>
+          <li>Translation download via <code class="ic">RemoteTranslationManager</code></li>
+          <li>Timed auto-advance to <code class="ic">HomeActivity</code></li>
+        </ul>
+      </div>
+
+      <!-- HomeActivity -->
+      <div class="card">
+        <div class="card-title">
+          HomeActivity
+          <span class="tag tag-act">MAIN</span>
+        </div>
+        <p><strong>Layout:</strong> <code class="ic">activity_home.xml</code></p>
+        <p>
+          The primary activity. Hosts the clinical portal WebView, live VR stream preview,
+          navigation drawer, and device-pairing controls. It implements five view interfaces
+          to receive callbacks from background services.
+        </p>
+        <h4>Interfaces Implemented</h4>
+        <div class="method-list">
+          <span class="method-pill">IGogleResponse</span>
+          <span class="method-pill">IStreamView</span>
+          <span class="method-pill">IWebViewUser</span>
+          <span class="method-pill">IWebViewTherapy</span>
+          <span class="method-pill">IWebViewLanguage</span>
+        </div>
+        <h4>Key UI Components</h4>
+        <ul>
+          <li><code class="ic">RemmedWebView</code> — clinical portal (therapy management)</li>
+          <li>Stream preview <code class="ic">ImageView</code> — renders live frames from DownstreamService</li>
+          <li>Eye-tracker <code class="ic">ImageView</code> — renders eyetracker overlay</li>
+          <li>Navigation drawer (<code class="ic">NavDrawerMenu</code>)</li>
+          <li>Device discovery popup (<code class="ic">DevicesListDialog</code>)</li>
+          <li>Status check dialog (<code class="ic">StatusCheckDialog</code>)</li>
+        </ul>
+        <h4>Therapy Session Lifecycle</h4>
+        <ul>
+          <li>Start/Stop/Pause/Resume therapy via JS bridge → GogleSendDataService</li>
+          <li>Monitors <code class="ic">NetworkChangeReceiver</code> broadcasts for WiFi changes</li>
+          <li>Registers permissions at runtime via <code class="ic">ActivityResultLauncher&lt;String[]&gt;</code></li>
+        </ul>
+        <h4>Static Flags</h4>
+        <ul>
+          <li><code class="ic">DEVICE_LIST_POPUP_SHOWED</code> — prevents duplicate dialogs</li>
+          <li><code class="ic">isInternetFirstAppStartUp</code> — tracks first-run internet state</li>
+          <li><code class="ic">backPressExit</code> — double-back to exit guard</li>
+        </ul>
+      </div>
+
+      <!-- FullscreenStreamActivity -->
+      <div class="card">
+        <div class="card-title">
+          FullscreenStreamActivity
+          <span class="tag tag-act">STREAM</span>
+        </div>
+        <p><strong>Layout:</strong> <code class="ic">activity_fullscreen_stream.xml</code></p>
+        <p>
+          Opens when the clinician taps the stream preview. Shows the VR headset screen at full
+          resolution. Also implements <code class="ic">IGogleResponse</code> to maintain
+          connection awareness while in fullscreen.
+        </p>
+        <h4>Interfaces Implemented</h4>
+        <div class="method-list">
+          <span class="method-pill">IStreamView</span>
+          <span class="method-pill">IGogleResponse</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         05 – SERVICES
+    ══════════════════════════════════════════════════════ -->
+    <section id="services">
+      <h2><span class="sec-num">05</span> Services</h2>
+
+      <div class="info-box">
+        <span class="icon">ℹ</span>
+        <div>All services extend <code class="ic">BaseService</code> from the <strong>base</strong> module.
+        They use <code class="ic">START_STICKY</code> so the OS restarts them if killed, and run as
+        foreground services with persistent notifications. Static volatile fields (e.g. <code class="ic">IS_RUNNING</code>,
+        <code class="ic">IS_STREAMING</code>) expose runtime state to the rest of the app.</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Port / Connection</th>
+              <th>Direction</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>DownstreamService</td>
+              <td><span class="port">6776</span> TCP</td>
+              <td>← Headset</td>
+              <td>Receives JPEG-compressed video frames; decompresses to Bitmap; queues up to 30 frames; calculates FPS; feeds RemmedApplication.setStreamFrame()</td>
+            </tr>
+            <tr>
+              <td>DownstreamEyetrackerService</td>
+              <td><span class="port">6778</span> TCP</td>
+              <td>← Headset</td>
+              <td>Same as DownstreamService but for the eye-tracker data stream</td>
+            </tr>
+            <tr>
+              <td>GogleSendDataService</td>
+              <td><span class="port">8502</span> TCP</td>
+              <td>→ Headset</td>
+              <td>Maintains a persistent socket; sends JSON therapy commands (start/stop/pause); includes ping keepalive mechanism</td>
+            </tr>
+            <tr>
+              <td>GogleReceiveDataService</td>
+              <td><span class="port">8503</span> TCP</td>
+              <td>← Headset</td>
+              <td>Listens for JSON status/telemetry responses; deserialises GogleReceiveData; routes via RemmedApplication</td>
+            </tr>
+            <tr>
+              <td>WebServerService</td>
+              <td><span class="port">8080</span> HTTP (local)</td>
+              <td>↔ WebView</td>
+              <td>Runs a local HTTP proxy; WebView loads localhost:8080; server forwards requests to the configured backend, enabling mixed-content and cookie injection</td>
+            </tr>
+            <tr>
+              <td>UpstreamWebService</td>
+              <td>HTTPS backend</td>
+              <td>→ Server</td>
+              <td>Sends recorded stream data to the remote backend server</td>
+            </tr>
+            <tr>
+              <td>UploadStreamWebService</td>
+              <td>HTTPS (tus)</td>
+              <td>→ Server</td>
+              <td>Resumable therapy recording upload using tus-java-client; survives network interruptions</td>
+            </tr>
+            <tr>
+              <td>ZipService</td>
+              <td>Local storage</td>
+              <td>internal</td>
+              <td>Compresses therapy recording files in background; notifies UI on completion</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         DIALOGS & ADAPTERS
+    ══════════════════════════════════════════════════════ -->
+    <section id="dialogs">
+      <h2><span class="sec-num">—</span> Dialogs &amp; Adapters</h2>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">StatusCheckDialog</div>
+          <p>Pre-session system checks: server reachability, stream availability, Gogle connection. Uses StatusCheckAdapter to render pass/fail items.</p>
+          <p><em>Layout:</em> <code class="ic">dialog_check_status.xml</code></p>
+        </div>
+        <div class="card">
+          <div class="card-title">DevicesListDialog</div>
+          <p>Shows discovered Gogle headsets on the local network. Allows clinician to select and pair a device. Uses DeviceListAdapter.</p>
+          <p><em>Layout:</em> <code class="ic">dialog_device_list.xml</code></p>
+        </div>
+        <div class="card">
+          <div class="card-title">GameResultsDialog</div>
+          <p>Displays therapy game results and telemetry after a session ends. Uses GameResultsAdapter to list metrics.</p>
+          <p><em>Layout:</em> <code class="ic">dialog_game_results.xml</code></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         06 – DATABASE LAYER
+    ══════════════════════════════════════════════════════ -->
+    <section id="database">
+      <h2><span class="sec-num">06</span> Database Layer</h2>
+
+      <p>
+        The app uses <strong>ORMLite 6.1</strong> over SQLite. The database file is
+        <code class="ic">neurasim.db</code> (schema version 3).
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">DatabaseHelper <span class="tag tag-db">OrmLiteSqliteOpenHelper</span></div>
+          <ul>
+            <li>Creates and upgrades database schema</li>
+            <li>Returns DAO instances for each entity</li>
+            <li>Managed by RemmedApplication (singleton)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">DaoLayers</div>
+          <ul>
+            <li>Facade class providing lazy-loaded DAO properties</li>
+            <li>Accessed via <code class="ic">RemmedApplication.daoLayers</code></li>
+            <li>One DAO per entity class</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         ENTITIES
+    ══════════════════════════════════════════════════════ -->
+    <section id="entities">
+      <h2><span class="sec-num">—</span> Domain Entities</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Entity</th><th>Key Fields</th><th>Relationships</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>User</td>
+              <td>id, username, password (encrypted), role, remoteId</td>
+              <td>Base class for Patient</td>
+            </tr>
+            <tr>
+              <td>Patient</td>
+              <td>Extends User; therapyAssignment metadata</td>
+              <td>FK → Parent, FK → User (createdBy)</td>
+            </tr>
+            <tr>
+              <td>Parent</td>
+              <td>id, name, phone, email, relationship</td>
+              <td>FK ← Patient</td>
+            </tr>
+            <tr>
+              <td>Therapy</td>
+              <td>id, name, sessionLimit, visionMeasurements, remoteId (tid)</td>
+              <td>FK → Patient</td>
+            </tr>
+            <tr>
+              <td>TherapySession</td>
+              <td>id, startTime, endTime, parentAgreement flag</td>
+              <td>FK → DeviceSession</td>
+            </tr>
+            <tr>
+              <td>Assignment</td>
+              <td>therapyId, patientId, gameId</td>
+              <td>Links Therapy + Patient + Game</td>
+            </tr>
+            <tr>
+              <td>Device</td>
+              <td>uuid, model, firmwareVersion</td>
+              <td>Referenced by DeviceSession</td>
+            </tr>
+            <tr>
+              <td>DeviceSession</td>
+              <td>deviceId, therapyId, sessionTimestamp</td>
+              <td>FK → Device; FK ← TherapySession</td>
+            </tr>
+            <tr>
+              <td>Cache</td>
+              <td>key, value, expiresAt</td>
+              <td>Standalone; used by CacheDbRepository</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         REPOSITORIES
+    ══════════════════════════════════════════════════════ -->
+    <section id="repositories">
+      <h2><span class="sec-num">—</span> Repositories</h2>
+
+      <div class="info-box">
+        <span class="icon">ℹ</span>
+        <div>All database repositories extend <code class="ic">GenericRepository&lt;T extends BasicEntity&gt;</code>
+        which provides generic CRUD: <code class="ic">create()</code>, <code class="ic">update()</code>,
+        <code class="ic">delete()</code>, <code class="ic">getAll()</code>, <code class="ic">getById()</code>.
+        Web repositories use Volley <code class="ic">GsonRequest</code> for async HTTP calls.
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Database Repositories</div>
+          <ul>
+            <li><strong>TherapyDbRepository</strong> — query by remote <code class="ic">tid</code></li>
+            <li><strong>UserDbRepository</strong> — query by username/userId, manage login state</li>
+            <li><strong>PatientDbRepository</strong> — query by patient ID</li>
+            <li><strong>CacheDbRepository</strong> — transient local key-value cache</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Web (HTTP) Repositories</div>
+          <ul>
+            <li><strong>TherapyWebRepository</strong> — sync therapy data from backend</li>
+            <li><strong>UserWebRepository</strong> — user authentication endpoints</li>
+            <li><strong>VersionWebRepository</strong> — app version check</li>
+            <li><strong>RemoteTranslationManager</strong> — fetch UI translations</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         07 – VIDEO STREAMING
+    ══════════════════════════════════════════════════════ -->
+    <section id="streaming">
+      <h2><span class="sec-num">07</span> Video Streaming</h2>
+
+      <p>
+        The VR headset captures its display, compresses each frame as JPEG, and sends a continuous
+        stream over TCP. The tablet receives, decompresses, and renders each frame.
+      </p>
+
+      <div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;"><code>
+  ┌─────────────────────────────────────────┐
+  │  app_gogle — UpstreamService            │
+  │  Capture display → compress JPEG bytes  │
+  └─────────────────┬───────────────────────┘
+                    │ TCP port 6776
+                    ▼
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  DownstreamService                                                │
+  │  1. ServerSocket.accept() on port 6776                           │
+  │  2. while (running) { read DataInputStream → byte[] frame }      │
+  │  3. BitmapFactory.decodeByteArray() → Bitmap                     │
+  │  4. bytesReceivedStream.add(bitmap)   // max 30 frames queued    │
+  │  5. StreamUtils.calculateFPS(frames, duration_ms)                │
+  └─────────────────────────────┬────────────────────────────────────┘
+                                │ Bitmap
+                                ▼
+  ┌───────────────────────────────────────────────────────┐
+  │  RemmedApplication.setStreamFrame(Bitmap)             │
+  │  → active IStreamView.setStreamFrame(bitmap)          │
+  └───────────────────────────────┬───────────────────────┘
+                                  │ runOnUiThread
+                    ┌─────────────┴───────────────┐
+                    ▼                             ▼
+  ┌─────────────────────────┐    ┌───────────────────────────────┐
+  │  HomeActivity            │    │  FullscreenStreamActivity     │
+  │  ImageView (preview)     │    │  ImageView (full resolution)  │
+  └─────────────────────────┘    └───────────────────────────────┘
+</code></pre>
+      </div>
+
+      <h3>FPS Calculation</h3>
+      <p>
+        <code class="ic">StreamUtils</code> computes FPS as:
+      </p>
+      <pre><code><span class="fn">fps</span> = (frames / duration_ms) * <span class="num">1000</span></code></pre>
+
+      <p>The eye-tracker stream follows an identical path via <code class="ic">DownstreamEyetrackerService</code> on port <span class="port">6778</span>.</p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         08 – GOGLE PROTOCOL
+    ══════════════════════════════════════════════════════ -->
+    <section id="gogle-protocol">
+      <h2><span class="sec-num">08</span> Gogle Communication Protocol</h2>
+
+      <p>
+        A bidirectional JSON command channel operates alongside the video stream.
+        The tablet <strong>sends</strong> commands on port <span class="port">8502</span>
+        (Gogle's receive port) and <strong>listens</strong> for responses on port
+        <span class="port">8503</span> (Gogle's send port).
+      </p>
+
+      <div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;"><code>
+  ┌──────────────────────────────────────────────────────────────┐
+  │  HomeActivity / JavascriptInterface (UI events)              │
+  │  e.g. startStationaryTherapy()                               │
+  └──────────────────────────┬───────────────────────────────────┘
+                             │  GogleSendDataFactory.create(action)
+                             ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │  GogleSendDataService                                        │
+  │  sendRunnable: serialise GogleSendData → JSON                │
+  │  → Socket.write()        port 8502 →  VR Headset             │
+  │  pingRunnable: periodic keepalive                            │
+  └──────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────────────────────────────────────────────┐
+  │  VR Headset                    port 8503 →                   │
+  └──────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │  GogleReceiveDataService                                     │
+  │  receiveDataRunnable: read JSON → GogleReceiveData           │
+  └──────────────────────────┬───────────────────────────────────┘
+                             ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │  RemmedApplication.receivedGogleResponse(data)               │
+  │  → active IGogleResponse.receivedGogleResponse(data)         │
+  └──────────────────────────┬───────────────────────────────────┘
+                             ▼
+  ┌───────────────────────────────────────────────────────────┐
+  │  HomeActivity / FullscreenStreamActivity                  │
+  │  Routes to: TelemetryGogleData / CompletedGameGogleData / │
+  │  CompletedTherapyGogleData / ConnectionStatusGogleData    │
+  └───────────────────────────────────────────────────────────┘
+</code></pre>
+      </div>
+
+      <h3>GogleSendData — Outbound Command Object</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>therapy</td><td>TherapyGogleData</td><td>Therapy mode, idkey, gameId, action (start/stop/pause/resume)</td></tr>
+            <tr><td>initData</td><td>InitDataGogleData</td><td>Pairing credentials: apitoken, idkey, pin</td></tr>
+            <tr><td>serviceMode</td><td>boolean</td><td>Puts headset in service/maintenance mode</td></tr>
+            <tr><td>gogleStatusRequest</td><td>boolean</td><td>Requests current device status snapshot</td></tr>
+            <tr><td>lang</td><td>String</td><td>UI language code sent to headset</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>GogleReceiveData — Inbound Response Object</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Payload Type</th><th>Key Fields</th></tr></thead>
+          <tbody>
+            <tr><td>TelemetryGogleData</td><td>battery %, controller state, head position, safety zone status</td></tr>
+            <tr><td>CompletedGameGogleData</td><td>game ID, score, duration, result metrics</td></tr>
+            <tr><td>CompletedTherapyGogleData</td><td>session completion data, vision measurements</td></tr>
+            <tr><td>ConnectionStatusGogleData</td><td>connection state flag</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Therapy Modes (GogleTherapyMode enum)</h3>
+      <div class="method-list">
+        <span class="method-pill">STATIONARY</span>
+        <span class="method-pill">HOME_THERAPY</span>
+        <span class="method-pill">CREATOR</span>
+        <span class="method-pill">DEMO</span>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         LOCAL WEB SERVER
+    ══════════════════════════════════════════════════════ -->
+    <section id="webserver">
+      <h2><span class="sec-num">—</span> Local Web Server (WebServerService)</h2>
+
+      <p>
+        The WebView loads <code class="ic">http://localhost:8080</code>. <code class="ic">WebServerService</code>
+        runs a lightweight HTTP server that proxies all requests to the configured backend server.
+        This approach solves mixed-content restrictions and allows the server to inject
+        session cookies transparently.
+      </p>
+
+      <div class="flow">
+<pre style="background:none;border:none;padding:0;margin:0;"><code>
+  RemmedWebView → http://localhost:8080/some/path
+                        │
+                        ▼
+              WebServerService (port 8080)
+                        │ forward request + inject headers/cookies
+                        ▼
+              Backend Server (e.g. dev.remmedvr.com)
+                        │ response
+                        ▼
+              WebServerService → response → WebView
+</code></pre>
+      </div>
+
+      <p>
+        <code class="ic">WebServerUtils</code> handles URL parameter parsing.
+        <code class="ic">WebViewParamsUtils</code> manages WebView-specific parameter extraction.
+      </p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         09 – WEBVIEW & JS BRIDGE
+    ══════════════════════════════════════════════════════ -->
+    <section id="webview">
+      <h2><span class="sec-num">09</span> WebView &amp; JavaScript Bridge</h2>
+
+      <p>
+        <code class="ic">RemmedWebView</code> is a custom <code class="ic">AdvancedWebView</code>
+        subclass that hosts the clinical portal. A <code class="ic">JavascriptInterface</code>
+        class (52 methods) provides bidirectional communication between the HTML/JS frontend
+        and Android Java.
+      </p>
+
+      <h3>RemmedWebView Configuration</h3>
+      <div class="card">
+        <ul>
+          <li>JavaScript enabled, DOM storage enabled</li>
+          <li>Universal file access enabled (cross-origin)</li>
+          <li>Mixed content allowed (HTTP within HTTPS)</li>
+          <li>No user gesture requirement for media playback</li>
+          <li>SSL errors suppressed in non-production builds</li>
+          <li><code class="ic">reloadWebviewRunnable</code> — auto-retry on load failure</li>
+        </ul>
+      </div>
+
+      <h3>JS → Java Methods (JavascriptInterface)</h3>
+
+      <h4>Authentication</h4>
+      <div class="method-list">
+        <span class="method-pill">loggedIn(userJson)</span>
+        <span class="method-pill">loginSuccessfull(login, pwd)</span>
+        <span class="method-pill">loggedOut()</span>
+        <span class="method-pill">loginPageReady()</span>
+      </div>
+
+      <h4>Stream Control</h4>
+      <div class="method-list">
+        <span class="method-pill">showStream()</span>
+        <span class="method-pill">hideStream()</span>
+        <span class="method-pill">sendInfo(String)</span>
+      </div>
+
+      <h4>Therapy Mode Control</h4>
+      <div class="method-list">
+        <span class="method-pill">startStationaryTherapy()</span>
+        <span class="method-pill">stopStationaryTherapy()</span>
+        <span class="method-pill">startCreatorTherapy()</span>
+        <span class="method-pill">stopCreatorTherapy()</span>
+        <span class="method-pill">startHomeTherapy()</span>
+        <span class="method-pill">stopHomeTherapy()</span>
+      </div>
+
+      <h4>Game Lifecycle</h4>
+      <div class="method-list">
+        <span class="method-pill">startStationaryGame()</span>
+        <span class="method-pill">stopStationaryGame()</span>
+        <span class="method-pill">pauseStationaryGame()</span>
+        <span class="method-pill">resumeStationaryGame()</span>
+        <span class="method-pill">forcestopStationaryGame()</span>
+        <span class="method-pill">startCreatorGame()</span>
+      </div>
+
+      <h4>Demo &amp; Calibration</h4>
+      <div class="method-list">
+        <span class="method-pill">startDemo()</span>
+        <span class="method-pill">continueDemo()</span>
+        <span class="method-pill">stopDemo()</span>
+        <span class="method-pill">startCreator()</span>
+      </div>
+
+      <h4>Status Checks &amp; Device</h4>
+      <div class="method-list">
+        <span class="method-pill">waitingForPassedTests()</span>
+        <span class="method-pill">waitingGogleAvailabilityTests()</span>
+        <span class="method-pill">requestCheckGoogleConnection()</span>
+        <span class="method-pill">checkVersion()</span>
+        <span class="method-pill">autopairing(apitoken, idkey, pin)</span>
+        <span class="method-pill">checkDeviceConnected(uuid)</span>
+      </div>
+
+      <h4>Parameters &amp; Utilities</h4>
+      <div class="method-list">
+        <span class="method-pill">paramChanged(json)</span>
+        <span class="method-pill">chosenLanguage(lang)</span>
+        <span class="method-pill">call(phoneNumber)</span>
+        <span class="method-pill">startNotifications()</span>
+        <span class="method-pill">stopNotifications()</span>
+      </div>
+
+      <h3>Java → JS Callbacks</h3>
+      <p>Called via <code class="ic">webView.evaluateJavascript("functionName(args)", null)</code></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Callback</th><th>Triggered By</th></tr></thead>
+          <tbody>
+            <tr><td>loginFromAndroid(username, password)</td><td>Restored session on resume</td></tr>
+            <tr><td>notifyAboutDeviceConnected(uuid)</td><td>Gogle connection confirmed</td></tr>
+            <tr><td>notifyAboutGameEnded(results)</td><td>CompletedGameGogleData received</td></tr>
+            <tr><td>notifyAboutSessionEnded(results)</td><td>CompletedTherapyGogleData received</td></tr>
+            <tr><td>notifyAboutPassedTests()</td><td>Status checks pass</td></tr>
+            <tr><td>notifyAboutFailedTests()</td><td>Status checks fail</td></tr>
+            <tr><td>notifyGogleConnected()</td><td>connectionInfo(true)</td></tr>
+            <tr><td>notifyGogleDisconnected()</td><td>connectionInfo(false)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         10 – THREADING MODEL
+    ══════════════════════════════════════════════════════ -->
+    <section id="threading">
+      <h2><span class="sec-num">10</span> Threading Model</h2>
+
+      <div class="info-box warn-box">
+        <span class="icon">⚠</span>
+        <div>All stream I/O runs on dedicated background threads. UI updates are always dispatched
+        via <code class="ic">runOnUiThread()</code> or <code class="ic">Handler(Looper.main)</code>.
+        Shared mutable state uses <code class="ic">volatile</code> fields and
+        <code class="ic">synchronized</code> collections.
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Runnable / Thread</th><th>Home</th><th>Pattern</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>downstreamRunnable</td>
+              <td>DownstreamService</td>
+              <td>Continuous while-loop</td>
+              <td>TCP frame reception</td>
+            </tr>
+            <tr>
+              <td>sendRunnable</td>
+              <td>GogleSendDataService</td>
+              <td>Continuous, 100ms sleep</td>
+              <td>Drain command queue → socket</td>
+            </tr>
+            <tr>
+              <td>receiveDataRunnable</td>
+              <td>GogleReceiveDataService</td>
+              <td>Continuous while-loop</td>
+              <td>JSON response reception</td>
+            </tr>
+            <tr>
+              <td>pingRunnable</td>
+              <td>GogleSendDataService</td>
+              <td>Periodic interval</td>
+              <td>TCP keepalive to Gogle</td>
+            </tr>
+            <tr>
+              <td>webServerRunnable</td>
+              <td>WebServerService</td>
+              <td>Blocking accept loop</td>
+              <td>Serve HTTP on port 8080</td>
+            </tr>
+            <tr>
+              <td>StatusCheckRunnable</td>
+              <td>HomeActivity</td>
+              <td>On-demand, max 2 retries</td>
+              <td>Pre-session server/device checks</td>
+            </tr>
+            <tr>
+              <td>GogleCheckingConnectionRunnable</td>
+              <td>HomeActivity</td>
+              <td>On-demand</td>
+              <td>Verify Gogle reachability</td>
+            </tr>
+            <tr>
+              <td>TetheringStatusRunnable</td>
+              <td>HomeActivity</td>
+              <td>Background poll</td>
+              <td>Monitor WiFi tethering state</td>
+            </tr>
+            <tr>
+              <td>reloadWebviewRunnable</td>
+              <td>RemmedWebView</td>
+              <td>Delayed retry</td>
+              <td>Reload WebView on load failure</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Thread-Safe State Variables</h3>
+      <pre><code><span class="kw">volatile static boolean</span> IS_RUNNING;      <span class="cm">// Service alive?</span>
+<span class="kw">volatile static boolean</span> IS_STREAMING;   <span class="cm">// Active stream?</span>
+<span class="kw">volatile static boolean</span> IS_GOGLE_CONNECTED;
+<span class="kw">static</span> StreamStatus STREAM_STATUS;      <span class="cm">// NOT_CONNECTED | CONNECTED | STREAMING | ENDED</span>
+
+<span class="kw">synchronized</span> List&lt;Bitmap&gt; bytesReceivedStream; <span class="cm">// max 30 frames</span></code></pre>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         11 – MANAGERS
+    ══════════════════════════════════════════════════════ -->
+    <section id="managers">
+      <h2><span class="sec-num">11</span> Manager Classes</h2>
+
+      <p>
+        Managers encapsulate domain-specific business logic and state. <em>Local</em> managers
+        operate on device state; <em>Remote</em> managers wrap HTTP calls.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Local Managers</div>
+          <ul>
+            <li><strong>LocalTherapyManager</strong> — therapy state, session limits, local caching</li>
+            <li><strong>LocalUserManager</strong> — current user state, login persistence, role checks</li>
+            <li><strong>LocalPairingManager</strong> — Gogle pairing state, stored credentials</li>
+            <li><strong>LocalCacheManager</strong> — generic local key-value cache operations</li>
+            <li><strong>GogleAvailabilityManager</strong> — Gogle reachability and status tracking</li>
+            <li><strong>ConnectingGogleProgressManager</strong> — UI progress state during connection</li>
+            <li><strong>AppWallpaperManager</strong> — dynamic wallpaper per therapy type</li>
+            <li><strong>CellLocationManager</strong> — cellular location tracking</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Remote Managers (HTTP)</div>
+          <ul>
+            <li><strong>RemoteTherapyManager</strong> — sync therapies from backend</li>
+            <li><strong>RemoteVersionManager</strong> — app version check at splash</li>
+            <li><strong>RemoteUserManager</strong> — user auth and profile sync</li>
+            <li><strong>RemoteWebLogManager</strong> — send client-side logs to server</li>
+            <li><strong>RemoteDeviceTypeManager</strong> — fetch device type catalog</li>
+            <li><strong>RemoteTranslationManager</strong> — download localised string sets</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         12 – BUILD VARIANTS
+    ══════════════════════════════════════════════════════ -->
+    <section id="build-variants">
+      <h2><span class="sec-num">12</span> Build Variants</h2>
+
+      <div class="warn-box info-box">
+        <span class="icon">⚠</span>
+        <div>The default <code class="ic">debug</code> / <code class="ic">release</code> build types
+        are filtered out. Always use the custom build type names listed below.</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Build Type</th><th>App ID Suffix</th><th>Server</th><th>Signing</th><th>R8</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>debug_develop</td><td>.debug</td><td>dev.remmedvr.com</td><td>Debug keystore</td><td>Off</td></tr>
+            <tr><td>debug_production</td><td>.debug</td><td>remmedvr-dashboard.neurasim.health</td><td>Debug keystore</td><td>Off</td></tr>
+            <tr><td>dev_us</td><td>.debug</td><td>dev.remmedvr.com</td><td>Debug keystore</td><td>Off</td></tr>
+            <tr><td>v_test_us</td><td>.debug</td><td>test.remmedvr.com</td><td>Debug keystore</td><td>Off</td></tr>
+            <tr><td>preprod_us</td><td>.debug</td><td>preprod.remmedvr.com</td><td>Debug keystore</td><td>Off</td></tr>
+            <tr><td>prod_us</td><td>(none)</td><td>remmedvr-dashboard.neurasim.health</td><td>Release keystore</td><td><strong>On</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Gradle Build Commands</h3>
+      <pre><code><span class="cm"># Development build (most common)</span>
+./gradlew :app_tablet:assembleDebug_develop
+
+<span class="cm"># Production (R8 obfuscation enabled)</span>
+./gradlew :app_tablet:assembleProd_us
+
+<span class="cm"># Unit tests</span>
+./gradlew :app_tablet:testDebug_developUnitTest
+
+<span class="cm"># Instrumentation tests (connected device required)</span>
+./gradlew :app_tablet:connectedDebug_developAndroidTest</code></pre>
+
+      <h3>Signing</h3>
+      <p>Development keystore: <code class="ic">app_tablet/app_tablet_dev.keystore</code><br/>
+      Alias: <code class="ic">Remmed-tablet-dev</code> &nbsp;·&nbsp; Password: <code class="ic">remmed</code></p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         PERMISSIONS
+    ══════════════════════════════════════════════════════ -->
+    <section id="permissions">
+      <h2><span class="sec-num">—</span> Permissions</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Network &amp; WiFi</div>
+          <ul>
+            <li>INTERNET</li>
+            <li>ACCESS_NETWORK_STATE</li>
+            <li>CHANGE_NETWORK_STATE</li>
+            <li>ACCESS_WIFI_STATE</li>
+            <li>CHANGE_WIFI_STATE</li>
+            <li>CHANGE_WIFI_MULTICAST_STATE</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Storage</div>
+          <ul>
+            <li>READ_EXTERNAL_STORAGE</li>
+            <li>WRITE_EXTERNAL_STORAGE</li>
+            <li>READ_MEDIA_IMAGES</li>
+            <li>READ_MEDIA_VIDEO</li>
+            <li>READ_MEDIA_AUDIO</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Location</div>
+          <ul>
+            <li>ACCESS_FINE_LOCATION</li>
+            <li>ACCESS_COARSE_LOCATION</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Phone &amp; System</div>
+          <ul>
+            <li>READ_PHONE_STATE</li>
+            <li>CALL_PHONE</li>
+            <li>PROCESS_OUTGOING_CALLS</li>
+            <li>RECEIVE_BOOT_COMPLETED</li>
+            <li>FOREGROUND_SERVICE</li>
+            <li>WRITE_SETTINGS (protected)</li>
+            <li>SET_WALLPAPER</li>
+          </ul>
+        </div>
+      </div>
+
+      <p style="margin-top:12px;">
+        Runtime permissions are handled by <code class="ic">PermissionUtils</code> (base module)
+        registered in <code class="ic">HomeActivity</code> via <code class="ic">ActivityResultLauncher&lt;String[]&gt;</code>.
+      </p>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         BROADCAST RECEIVERS
+    ══════════════════════════════════════════════════════ -->
+    <section id="receivers">
+      <h2><span class="sec-num">—</span> Broadcast Receivers</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Receiver</th><th>Intent / Trigger</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>BootReceiver</td><td>ACTION_BOOT_COMPLETED</td><td>Starts HomeActivity automatically after device reboot</td></tr>
+            <tr><td>ShutdownReceiver</td><td>ACTION_SHUTDOWN</td><td>Performs cleanup (close sockets, flush DB) on device shutdown</td></tr>
+            <tr><td>PhoneCallReceiver</td><td>PHONE_STATE, NEW_OUTGOING_CALL</td><td>Monitors call state; notifies UI to handle incoming/outgoing calls during therapy</td></tr>
+            <tr><td>NetworkChangeReceiver</td><td>CONNECTIVITY_CHANGE</td><td>Notifies HomeActivity of WiFi / Internet connectivity changes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         PORT REFERENCE
+    ══════════════════════════════════════════════════════ -->
+    <section id="ports">
+      <h2><span class="sec-num">—</span> Port Reference</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Port</th><th>Protocol</th><th>Direction</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><span class="port">6776</span></td><td>TCP</td><td>Headset → Tablet</td><td>Video stream (JPEG frames)</td></tr>
+            <tr><td><span class="port">6777</span></td><td>TCP</td><td>Headset → Tablet</td><td>FPS telemetry data</td></tr>
+            <tr><td><span class="port">6778</span></td><td>TCP</td><td>Headset → Tablet</td><td>Eye-tracker stream</td></tr>
+            <tr><td><span class="port">8080</span></td><td>HTTP</td><td>Local (WebView ↔ Proxy)</td><td>Local web server / WebView proxy</td></tr>
+            <tr><td><span class="port">8502</span></td><td>TCP</td><td>Tablet → Headset</td><td>Command channel (Gogle receive)</td></tr>
+            <tr><td><span class="port">8503</span></td><td>TCP</td><td>Headset → Tablet</td><td>Response channel (Gogle send)</td></tr>
+            <tr><td><span class="port">8504</span></td><td>TCP</td><td>—</td><td>ADB exec (base module)</td></tr>
+            <tr><td><span class="port">8505</span></td><td>UDP</td><td>Broadcast</td><td>Address discovery / device detection</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         ENUMS
+    ══════════════════════════════════════════════════════ -->
+    <section id="enums">
+      <h2><span class="sec-num">—</span> Enums</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">GogleTherapyMode</div>
+          <div class="method-list">
+            <span class="method-pill">STATIONARY</span>
+            <span class="method-pill">HOME_THERAPY</span>
+            <span class="method-pill">CREATOR</span>
+            <span class="method-pill">DEMO</span>
+          </div>
+          <p>Therapy execution mode sent to the VR headset.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">StreamStatus</div>
+          <div class="method-list">
+            <span class="method-pill">NOT_CONNECTED</span>
+            <span class="method-pill">CONNECTED</span>
+            <span class="method-pill">STREAMING</span>
+            <span class="method-pill">ENDED_STREAM</span>
+          </div>
+          <p>State machine for the video stream lifecycle.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">GogleTherapyStatus</div>
+          <p>Session state flags corresponding to therapy phase transitions.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">StatusCheckType</div>
+          <p>Categories for the pre-session system check dialog items.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         UTILITIES
+    ══════════════════════════════════════════════════════ -->
+    <section id="utils">
+      <h2><span class="sec-num">—</span> Utilities</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Class</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>AppUtil</td><td>App restart, service start/stop helpers, DB and cache clearing, cookie management</td></tr>
+            <tr><td>StreamUtils</td><td>FPS calculation: <code class="ic">(frames / duration_ms) * 1000</code></td></tr>
+            <tr><td>CallUtils</td><td>Phone call initiation (wraps ITelephony)</td></tr>
+            <tr><td>StringUtils</td><td>String manipulation (trim, format, null-safe ops)</td></tr>
+            <tr><td>WallpaperUtils</td><td>Set/reset device wallpaper programmatically</td></tr>
+            <tr><td>WebServerUtils</td><td>URL query-parameter parsing for local proxy server</td></tr>
+            <tr><td>WebViewParamsUtils</td><td>Extract parameters from WebView-originated requests</td></tr>
+            <tr><td>CrashAppHandler</td><td>Global <code class="ic">UncaughtExceptionHandler</code> — logs stack trace to Firebase Crashlytics before re-raising</td></tr>
+            <tr><td>RemmedToast</td><td>Custom-styled toast notifications</td></tr>
+            <tr><td>GogleSendDataFactory</td><td>Factory: creates <code class="ic">GogleSendData</code> objects for each command action</td></tr>
+            <tr><td>TherapyGogleDataFactory</td><td>Factory: creates <code class="ic">TherapyGogleData</code> per therapy mode</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── Footer ─────────────────────────────────────── -->
+    <footer style="border-top:1px solid var(--border); padding-top:28px; margin-top:20px;">
+      <p style="font-size:12px; color:var(--text-dim);">
+        NeuraSim Android · app_tablet module · Generated 2026-02-26 · compileSdk 35 · AGP 8.11.1 · Gradle 8.14.3
+      </p>
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>

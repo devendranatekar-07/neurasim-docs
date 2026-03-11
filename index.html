@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuraSim VR - Documentation</title>
+    <title>NeuraSim Documentation</title>
     <style>
         :root {
             --bg: #0f1117;
@@ -28,9 +28,15 @@
             justify-content: center;
         }
         .container {
-            max-width: 800px;
+            max-width: 1280px;
             width: 100%;
-            padding: 40px 24px;
+            padding: 28px 20px;
+        }
+        @media (min-width: 1100px) {
+            .container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
         }
         h1 {
             font-size: 2.4rem;
@@ -42,15 +48,22 @@
         .subtitle {
             color: var(--text-muted);
             font-size: 1.1rem;
-            margin-bottom: 40px;
+            margin-bottom: 32px;
+        }
+        .section-title {
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--teal);
+            margin-bottom: 14px;
+        }
+        .doc-section + .doc-section {
+            margin-top: 30px;
         }
         .card-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 16px;
-        }
-        @media (max-width: 600px) {
-            .card-grid { grid-template-columns: 1fr; }
         }
         a.card {
             display: block;
@@ -89,60 +102,75 @@
 </head>
 <body>
     <div class="container">
-        <h1>NeuraSim VR</h1>
-        <p class="subtitle">Technical Documentation - BeeVee VR Vision Therapy</p>
-        <div class="card-grid">
-            <a class="card" href="00_Application_Overview.html">
-                <span class="card-number">00</span>
-                <div class="card-title">Application Overview</div>
-                <div class="card-desc">High-level architecture, scene flow, and project structure.</div>
-            </a>
-            <a class="card" href="01_Login_Flow.html">
-                <span class="card-number">01</span>
-                <div class="card-title">Login Flow</div>
-                <div class="card-desc">Device authentication, WiFi setup, and tablet connection.</div>
-            </a>
-            <a class="card" href="02_Hub_Game_Selection.html">
-                <span class="card-number">02</span>
-                <div class="card-title">Hub & Game Selection</div>
-                <div class="card-desc">3D lobby, game portals, and scene transitions.</div>
-            </a>
-            <a class="card" href="03_Game_Framework.html">
-                <span class="card-number">03</span>
-                <div class="card-title">Game Framework</div>
-                <div class="card-desc">UGC core framework, game controllers, and level management.</div>
-            </a>
-            <a class="card" href="04_Tablet_Communication.html">
-                <span class="card-number">04</span>
-                <div class="card-title">Tablet Communication</div>
-                <div class="card-desc">TCP protocol, device discovery, and data exchange.</div>
-            </a>
-            <a class="card" href="05_Event_Systems.html">
-                <span class="card-number">05</span>
-                <div class="card-title">Event Systems</div>
-                <div class="card-desc">Messenger, HierarchicalBroker, and TherapyEventBroker.</div>
-            </a>
-            <a class="card" href="06_VFX_and_Difficulty.html">
-                <span class="card-number">06</span>
-                <div class="card-title">VFX & Difficulty</div>
-                <div class="card-desc">Visual effects, eye patching, combo system, and difficulty scaling.</div>
-            </a>
-            <a class="card" href="07_Parameter_System.html">
-                <span class="card-number">07</span>
-                <div class="card-title">Parameter System</div>
-                <div class="card-desc">IParam, ScriptableParameter, and parameter flow from dashboard.</div>
-            </a>
-            <a class="card" href="08_Localization_OTA.html">
-                <span class="card-number">08</span>
-                <div class="card-title">Localization & OTA</div>
-                <div class="card-desc">Language management, OTA updates, and StreamingAssets.</div>
-            </a>
-            <a class="card" href="09_Game_Modules.html">
-                <span class="card-number">09</span>
-                <div class="card-title">Game Modules</div>
-                <div class="card-desc">Individual therapy game implementations and mechanics.</div>
-            </a>
-        </div>
+        <h1>NeuraSim Documentation</h1>
+        <p class="subtitle">Technical documentation for VR and Android applications.</p>
+
+        <section class="doc-section">
+            <h2 class="section-title">VR Documentation</h2>
+            <div class="card-grid">
+                <a class="card" href="00_Application_Overview.html">
+                    <span class="card-number">00</span>
+                    <div class="card-title">Application Overview</div>
+                    <div class="card-desc">High-level architecture, scene flow, and project structure.</div>
+                </a>
+                <a class="card" href="01_Login_Flow.html">
+                    <span class="card-number">01</span>
+                    <div class="card-title">Login Flow</div>
+                    <div class="card-desc">Device authentication, WiFi setup, and tablet connection.</div>
+                </a>
+                <a class="card" href="02_Hub_Game_Selection.html">
+                    <span class="card-number">02</span>
+                    <div class="card-title">Hub & Game Selection</div>
+                    <div class="card-desc">3D lobby, game portals, and scene transitions.</div>
+                </a>
+                <a class="card" href="03_Game_Framework.html">
+                    <span class="card-number">03</span>
+                    <div class="card-title">Game Framework</div>
+                    <div class="card-desc">UGC core framework, game controllers, and level management.</div>
+                </a>
+                <a class="card" href="04_Tablet_Communication.html">
+                    <span class="card-number">04</span>
+                    <div class="card-title">Tablet Communication</div>
+                    <div class="card-desc">TCP protocol, device discovery, and data exchange.</div>
+                </a>
+                <a class="card" href="05_Event_Systems.html">
+                    <span class="card-number">05</span>
+                    <div class="card-title">Event Systems</div>
+                    <div class="card-desc">Messenger, HierarchicalBroker, and TherapyEventBroker.</div>
+                </a>
+                <a class="card" href="06_VFX_and_Difficulty.html">
+                    <span class="card-number">06</span>
+                    <div class="card-title">VFX & Difficulty</div>
+                    <div class="card-desc">Visual effects, eye patching, combo system, and difficulty scaling.</div>
+                </a>
+                <a class="card" href="07_Parameter_System.html">
+                    <span class="card-number">07</span>
+                    <div class="card-title">Parameter System</div>
+                    <div class="card-desc">IParam, ScriptableParameter, and parameter flow from dashboard.</div>
+                </a>
+                <a class="card" href="08_Localization_OTA.html">
+                    <span class="card-number">08</span>
+                    <div class="card-title">Localization & OTA</div>
+                    <div class="card-desc">Language management, OTA updates, and StreamingAssets.</div>
+                </a>
+                <a class="card" href="09_Game_Modules.html">
+                    <span class="card-number">09</span>
+                    <div class="card-title">Game Modules</div>
+                    <div class="card-desc">Individual therapy game implementations and mechanics.</div>
+                </a>
+            </div>
+        </section>
+
+        <section class="doc-section">
+            <h2 class="section-title">Android Documentation</h2>
+            <div class="card-grid">
+                <a class="card" href="app_tablet_overview.html">
+                    <span class="card-number">APP</span>
+                    <div class="card-title">Tablet App Overview</div>
+                    <div class="card-desc">Android tablet application architecture, navigation, and key modules.</div>
+                </a>
+            </div>
+        </section>
     </div>
 </body>
 </html>
